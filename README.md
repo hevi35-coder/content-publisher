@@ -4,34 +4,43 @@ Automated content pipeline for MandaAct's engineering blog on Dev.to.
 
 ## 🚀 Features
 
-*   **Topic Selection**: OpenAI (GPT-4o) analyzes trends and selects topics weekly.
-*   **Draft Generation**: Writes full articles based on MandaAct context, including **Fact-Checking** to prevent hallucinations.
-*   **Cover Image**: Automatically generates clean, branded cover images using Puppeteer.
-*   **Auto-Publish**: Publishes to Dev.to automatically when a PR is merged to `main`.
+*   **Topic Selection**: GPT-4o analyzes trends and selects topics weekly.
+*   **Draft Generation**: Writes articles with **Fact-Checking** to prevent hallucinations.
+*   **Quality Gate**: SEO, readability, and content length validation (0-100 score).
+*   **Cover Image**: Auto-generates branded cover images using Puppeteer.
+*   **Auto-Publish**: Publishes when PR is merged; archives automatically.
+*   **Auto-Merge**: PRs auto-merge after 24 hours if no review requested.
 
 ## 🔄 Workflow
 
-1.  **Sunday**: `select_topic.js` runs via GitHub Actions -> Updates `TOPIC_QUEUE.md`.
-2.  **Monday**: `generate_draft.js` runs -> Creates a Draft + Cover Image -> Opens a PR.
-3.  **Tuesday**: Human Review -> **Merge PR**.
-4.  **Immediate**: `auto-publish.yml` triggers -> Publishes article to Dev.to.
+| Day | Step | Script | Output |
+|-----|------|--------|--------|
+| Sun | Topic Selection | `select_topic.js` | `TOPIC_QUEUE.md` |
+| Mon | Draft + Quality Check | `generate_draft.js` | PR + Score |
+| Mon | Auto-Merge Enabled | GitHub Actions | Scheduled Merge |
+| Tue+ | Publish (on merge) | `publish.js` | Dev.to Article |
 
 ## 🛠️ Tech Stack
 
-*   **Node.js**: Scripting logic.
-*   **Puppeteer**: Cover image generation & browser verification.
-*   **GitHub Actions**: Scheduling and CI/CD.
-*   **OpenAI API (GPT-4o)**: Content intelligence.
+*   **Node.js**: Core scripting.
+*   **Puppeteer**: Cover images & verification.
+*   **GitHub Actions**: CI/CD + scheduling.
+*   **OpenAI GPT-4o**: Content intelligence via GitHub Models.
 *   **Dev.to API**: CMS integration.
 
 ## 📂 Key Files
 
-*   `MandaAct_Context.md`: The "Brain" (Product knowledge base). [Obsidian Link](obsidian://open?vault=MyObsidianVault&file=30_Technical%2FMandaAct_Context.md)
-*   `ARCHIVE.md`: History of published topics.
-*   `TOPIC_QUEUE.md`: Backlog of upcoming topics.
-*   `AUTOMATION_FLOW.md`: Detailed diagram of the pipeline.
-*   `WEEKLY_CONTENT_PLAN.md`: Strategic content pillars.
+| File | Purpose |
+|------|---------|
+| `config.js` | Centralized settings (GitHub, paths, AI) |
+| `lib/ai-client.js` | Shared OpenAI client |
+| `quality_gate.js` | SEO + readability checker |
+| `MandaAct_Context.md` | Product knowledge base |
+| `TOPIC_QUEUE.md` | Upcoming topics |
+| `ARCHIVE.md` | Published history (auto-updated) |
 
 ## 🔗 Knowledge Base (Obsidian)
-*   **Project Overview**: [00_Overview.md](obsidian://open?vault=MyObsidianVault&file=10_Projects%2F01_Active%2FDevTo%20Publisher%2F00_Overview.md)
-*   **Architecture**: [DevTo_Publisher_Architecture.md](obsidian://open?vault=MyObsidianVault&file=30_Technical%2FDevTo_Publisher_Architecture.md)
+*   [Project Overview](obsidian://open?vault=MyObsidianVault&file=10_Projects%2F01_Active%2FDevTo%20Publisher%2F00_Overview.md)
+*   [Architecture](obsidian://open?vault=MyObsidianVault&file=30_Technical%2FDevTo_Publisher_Architecture.md)
+*   [MandaAct Context](obsidian://open?vault=MyObsidianVault&file=30_Technical%2FMandaAct_Context.md)
+
