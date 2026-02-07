@@ -1,0 +1,67 @@
+name: Weekly Content Automation
+
+on:
+  schedule:
+    # 1. Topic Committee: Sunday at 00:00 UTC (9:00 AM KST)
+    - cron: '0 0 * * 0'
+    # 2. Draft Writer: Monday at 00:00 UTC (9:00 AM KST)
+    - cron: '0 0 * * 1'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  automation:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed to push changes (QUEUE updates, new Drafts)
+      pull-requests: write # Needed if we want to make a PR (future)
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Topic Committee (Sunday)
+        if: github.event.schedule == '0 0 * * 0' || github.event_name == 'workflow_dispatch'
+        env:
+          GITHUB_MODELS_TOKEN: ${{ secrets.GITHUB_MODELS_TOKEN }}
+        run: |
+          node select_topic.js
+          git config --global user.name "MandaAct Bot"
+          git config --global user.email "bot@mandaact.com"
+          git add TOPIC_QUEUE.md
+          git commit -m "chore(topic): weekly topic selection" || echo "No changes to commit"
+          git push
+
+      - name: Run Draft Writer (Monday)
+        if: github.event.schedule == '0 0 * * 1' || github.event_name == 'workflow_dispatch'
+        env:
+          GITHUB_MODELS_TOKEN: ${{ secrets.GITHUB_MODELS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node generate_draft.js
+          
+          # Configure Git
+          git config --global user.name "MandaAct Bot"
+          git config --global user.email "bot@mandaact.com"
+          
+          # Create a new branch for the draft
+          BRANCH_NAME="draft/weekly-$(date +%Y-%m-%d)"
+          git checkout -b $BRANCH_NAME
+          
+          # Commit changes
+          git add drafts/ TOPIC_QUEUE.md
+          git commit -m "chore(content): generate weekly draft" || echo "No changes to commit"
+          
+          # Push branch
+          git push origin $BRANCH_NAME
+          
+          # Create Pull Request (Needs GITHUB_TOKEN)
+          echo "🚀 Creating Pull Request..."
+          gh pr create --title "📝 Weekly Draft: $(date +%Y-%m-%d)" --body "Here is this week's draft. Please review and merge to publish." --base main --head $BRANCH_NAME
