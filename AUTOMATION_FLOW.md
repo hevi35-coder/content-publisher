@@ -34,10 +34,11 @@ graph TD
         Queue[📄 TOPIC_QUEUE.md] --> DraftWriter
         
         DraftWriter -->|GPT-4o API| AI_Draft[🤖 Draft Generation]
-        
+        AI_Draft -->|Puppeteer| CoverGen[🖼️ Cover Image Generation]
+
         %% Phase 3: Fact Checker
         subgraph "Phase 3: Fact Checker (Self-Correction)"
-            AI_Draft --> FactCheck[🕵️‍♂️ Fact-Checker Agent]
+            CoverGen --> FactCheck[🕵️‍♂️ Fact-Checker Agent]
             Context -->|Ground Truth| FactCheck
             
             FactCheck -->|Verify Features| Hallucination{Hallucination?}
@@ -52,8 +53,10 @@ graph TD
     Branch -->|Push & Open PR| PR[🚀 Pull Request]
     
     %% User Action
-    PR -->|Mobile Notification| UserPhone[� User Review]
-    UserPhone -->|Merge| Deploy[📢 Dev.to Publish]
+    PR -->|User Merge| Merge[🔀 Merge to Main]
+    Merge -->|Trigger| AutoPublish[🚀 Auto-Publish Workflow]
+    AutoPublish -->|Exec| PublishScript[Script: publish.js]
+    PublishScript -->|API| DevTo[📢 Dev.to Live]
 ```
 
 ## Workflow Steps
