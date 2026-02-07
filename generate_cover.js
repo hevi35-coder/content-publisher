@@ -10,29 +10,13 @@ async function generateCover(title, outputPath) {
     const page = await browser.newPage();
 
     // Set viewport to Dev.to recommended aspect ratio (1000x420 is common for social, let's go with 1000x500 for a nice banner)
+    // Set viewport to Dev.to recommended aspect ratio
     await page.setViewport({ width: 1000, height: 420 });
 
-    // Extract keywords (simplistic approach: remove stopwords, pick longest words)
-    const stopwords = ['the', 'a', 'an', 'to', 'for', 'of', 'in', 'on', 'with', 'by', 'at', 'from'];
-    const keywords = title.split(' ')
-        .filter(w => !stopwords.includes(w.toLowerCase()))
-        .filter(w => w.length > 3)
-        .slice(0, 3) // Take top 3 potential keywords
-        .join(' ');
-
-    const gradients = [
-        'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', // Deep Purple/Blue
-        'linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%)', // Mint/Blue
-        'linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%)', // Silver/White (Subtle)
-        'linear-gradient(to right, #4facfe 0%, #00f2fe 100%)', // Bright Blue
-        'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)', // Misty
-        'linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%)'  // Cloud
-    ];
-
-    // Pick a random gradient based on title length or simple math
-    const gradientIndex = title.length % gradients.length;
-    const bg = gradients[gradientIndex];
-    const textColor = (gradientIndex === 2 || gradientIndex === 4 || gradientIndex === 5) ? '#333' : '#fff';
+    // Use full title but ensure it doesn't overflow visually
+    // We can let CSS handle wrapping, but maybe limit length if needed. 
+    // validTitle for display
+    const validTitle = title;
 
     const htmlContent = `
     <!DOCTYPE html>
@@ -47,36 +31,46 @@ async function generateCover(title, outputPath) {
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                background: ${bg};
+                background: #FFFFFF;
                 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-                color: ${textColor};
                 text-align: center;
             }
             .container {
-                padding: 40px;
-                max-width: 800px;
+                padding: 60px;
+                max-width: 850px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                height: 100%;
             }
             h1 {
-                font-size: 64px;
-                font-weight: 800;
+                font-size: 72px;
+                font-weight: 900;
                 margin: 0;
-                line-height: 1.2;
+                line-height: 1.1;
                 letter-spacing: -0.02em;
-                text-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                background: linear-gradient(90deg, #00C6FF 0%, #9D50BB 50%, #FF6B6B 100%);
+                -webkit-background-clip: text;
+                background-clip: text;
+                color: transparent;
+                padding-bottom: 10px; /* Prevent descender clipping */
             }
             .brand {
                 position: absolute;
                 bottom: 30px;
                 right: 40px;
-                font-size: 20px;
-                font-weight: 600;
-                opacity: 0.8;
+                font-size: 24px;
+                font-weight: 700;
+                color: #e0e0e0;
+                letter-spacing: 0.1em;
+                text-transform: uppercase;
             }
         </style>
     </head>
     <body>
         <div class="container">
-            <h1>${keywords || title}</h1>
+            <h1>${validTitle}</h1>
         </div>
         <div class="brand">MandaAct</div>
     </body>
