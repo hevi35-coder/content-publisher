@@ -22,12 +22,24 @@ We will focus on the intersection of **Developer Life** and **Productivity Scien
 
 We will implement a **semi-automated** workflow initially to ensure quality, moving to **fully automated** as confidence grows.
 
+### **Phase 0: The Topic Committee (Sunday - Fully Automated)**
+*   **Trigger**: Scheduled GitHub Action (Sunday 00:00 UTC).
+*   **Mechanism**: `node select_topic.js`
+*   **The "Committee" (Simulated Agents)**:
+    1.  **Trend Analyst**: Scans for "Hot keywords" in productivity (e.g., "Developer Burnout", "Rust vs Go", "Deep Work").
+    2.  **Product Owner**: Ensures alignment with MandaAct features (OCR, 9x9 Grid).
+    3.  **Editor-in-Chief**: Checks for duplicates against `ARCHIVE.md` and selects the winner.
+*   **Output**: appends the winning topic to `TOPIC_QUEUE.md` with a "Rationale" and "Target Audience".
+
 ### **Phase 1: "Assisted Autopilot" (Current)**
-*   **Timeline**:
-    *   **Monday (Agent)**:
-        *   Select topic from `TOPIC_QUEUE.md`.
-        *   Generate Draft (Markdown).
-        *   Generate Cover Image (SD/DALL-E or layered text).
+### 2. The Ghostwriter (Monday)
+*   **Role**: Content Creator
+*   **Persona**: "The Vibe Coder" (Enthusiastic, Relatable, "Shipping over Admin")
+*   **Action**: 
+    1.  Reads the top topic from `TOPIC_QUEUE.md`.
+    2.  Generates a draft using `MandaAct_Context.md` as ground truth.
+    3.  **Fact-Check**: Self-corrects any feature hallucinations.
+    4.  **Delivery**: Creates a Pull Request (PR) for mobile review. (SD/DALL-E or layered text).
         *   **Action**: Create Pull Request (PR) to `main`.
     *   **Tuesday (User)**:
         *   Review PR.
@@ -42,14 +54,18 @@ We will implement a **semi-automated** workflow initially to ensure quality, mov
 
 ## 3. Implementation Steps
 
-### Step 1: Content Queue (`TOPIC_QUEUE.md`)
-Create a prioritized list of upcoming articles.
-*   *Idea 1*: "Why 'To-Do' Lists Fail Developers (And What to Use Instead)"
-*   *Idea 2*: "Decomposing Your Life: Applying 'Divide and Conquer' to Annual Goals"
-*   *Idea 3*: "From `git commit` to `goal complete`: Tracking Life Progress"
-*   *Idea 4*: "The 64-Action Rule: How Ohtani Shohei Designed His Career"
+### Step 1: Content Queue & Archive
+*   `TOPIC_QUEUE.md`: Upcoming topics.
+*   `ARCHIVE.md`: List of already published titles (to avoid duplicates).
 
-### Step 2: Content Generator Script (`generate_draft.js`)
+### Step 2: The Committee Script (`select_topic.js`)
+*   **Role**: The "Brain" that runs on Sundays.
+*   **Logic**:
+    *   Input: `ARCHIVE.md` list.
+    *   Process: Calls LLM with `System: You are a fierce editorial board...`.
+    *   Output: Adds 1 high-quality topic to Queue.
+
+### Step 3: Content Generator Script (`generate_draft.js`)
 *   **Input**: Topic Title + Tone (Professional/Witty).
 *   **Output**: `drafts/YYYY-MM-DD-slug.md` with:
     *   Frontmatter (tags, series).

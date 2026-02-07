@@ -6,6 +6,7 @@
     *   The script reads the draft.
     *   Replaces local `../assets` links with `raw.githubusercontent.com` links.
     *   Posts to Dev.to.
+    *   **Auto-Verification**: Fetches the published URL and checks if all images load (200 OK).
 
 ## Setup
 ```bash

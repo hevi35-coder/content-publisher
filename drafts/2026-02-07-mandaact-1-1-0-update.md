@@ -1,6 +1,6 @@
 ---
 title: "I Supercharged My Goals with AI & React Native (MandaAct 1.1.0 Update)"
-published: false
+published: true
 description: "How I turned a 9x9 grid into an executable plan. Introducing 'Goal Diagnosis' and 'AI Suggestions' to bridge the gap between planning and doing."
 tags: ["productivity", "reactnative", "showdev", "career"]
 series: "Building MandaAct"
@@ -26,7 +26,7 @@ A plan is useless if it's vague. "Exercise more" is a wish, not a plan. "Do 30 p
 
 In 1.1.0, I introduced **Goal Diagnosis**. The app analyzes your grid and gives you a **Clarity Score**.
 
-![Goal Diagnosis Screen](../assets/screenshots/screenshot_diagnosis.png)
+![Goal Diagnosis Screen](../assets/screenshots/screenshot_report.png)
 *(Caption: The new Report screen showing 34% completion and 100% clarity score)*
 
 It checks:
@@ -38,7 +38,7 @@ Filing a 9x9 grid means coming up with 64 actionable tasks. That's mentally exha
 
 In 1.1.0, **AI Suggestions** come to the rescue.
 
-![AI Suggestion Screen](../assets/screenshots/screenshot_ai_suggestion.png)
+![AI Suggestion Screen](../assets/screenshots/screenshot_ai_suggest.png)
 *(Caption: AI suggesting concrete actions like 'Morning Routine' and 'Mindful Breathing' for a health goal)*
 
 *   **Idea Generation**: Stuck on "Financial Stability"? The AI suggests actions you might not have thought of (e.g., "Review subscriptions monthly", "Set up auto-transfer").

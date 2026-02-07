@@ -56,7 +56,7 @@ jobs:
           git checkout -b $BRANCH_NAME
           
           # Commit changes
-          git add drafts/ TOPIC_QUEUE.md
+          git add drafts/ TOPIC_QUEUE.md assets/
           git commit -m "chore(content): generate weekly draft" || echo "No changes to commit"
           
           # Push branch
