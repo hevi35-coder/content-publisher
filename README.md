@@ -26,8 +26,12 @@ Automated content pipeline for MandaAct's engineering blog on Dev.to.
 
 ## 📂 Key Files
 
-*   `MandaAct_Context.md`: The "Brain" (Product knowledge base).
+*   `MandaAct_Context.md`: The "Brain" (Product knowledge base). [Obsidian Link](obsidian://open?vault=MyObsidianVault&file=30_Technical%2FMandaAct_Context.md)
 *   `ARCHIVE.md`: History of published topics.
 *   `TOPIC_QUEUE.md`: Backlog of upcoming topics.
 *   `AUTOMATION_FLOW.md`: Detailed diagram of the pipeline.
 *   `WEEKLY_CONTENT_PLAN.md`: Strategic content pillars.
+
+## 🔗 Knowledge Base (Obsidian)
+*   **Project Overview**: [00_Overview.md](obsidian://open?vault=MyObsidianVault&file=10_Projects%2F01_Active%2FDevTo%20Publisher%2F00_Overview.md)
+*   **Architecture**: [DevTo_Publisher_Architecture.md](obsidian://open?vault=MyObsidianVault&file=30_Technical%2FDevTo_Publisher_Architecture.md)
