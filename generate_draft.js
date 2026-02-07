@@ -114,8 +114,14 @@ You are NOT a dry technical writer. You are a creative maker who loves building 
 
         console.log(`✅ Draft saved (Verified): drafts/${filename}`);
 
-        // 7. Remove from Queue
-        const updatedQueue = queueContent.replace(`*   **${title}**`, `*   **${title}** (Drafted & Verified ✅)`);
+        // 7. Quality Gate Check
+        const { checkQuality, printReport } = require('./quality_gate');
+        const qualityReport = checkQuality(filePath);
+        printReport(qualityReport);
+
+        // 8. Remove from Queue (with quality score)
+        const qualityBadge = qualityReport.passed ? `✅ Score: ${qualityReport.score}` : `⚠️ Score: ${qualityReport.score}`;
+        const updatedQueue = queueContent.replace(`*   **${title}**`, `*   **${title}** (Drafted ${qualityBadge})`);
         fs.writeFileSync(QUEUE_PATH, updatedQueue, 'utf8');
 
     } catch (error) {
