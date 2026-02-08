@@ -1,0 +1,44 @@
+name: Notify on Workflow Failure
+
+on:
+  workflow_run:
+    workflows: ["Weekly Content Automation"]
+    types:
+      - completed
+
+jobs:
+  notify-failure:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Send Failure Notification
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          NOTIFY_EMAIL_TO: ${{ secrets.NOTIFY_EMAIL_TO }}
+        run: |
+          node -e "
+            const { notifier } = require('./lib/notifier');
+            notifier.send({
+              type: 'step_failed',
+              step: 'pipeline',
+              status: 'failed',
+              details: {
+                workflow: '${{ github.event.workflow_run.name }}',
+                runUrl: '${{ github.event.workflow_run.html_url }}',
+                error: 'Workflow failed. Check GitHub Actions for details.'
+              }
+            }).then(() => console.log('Notification sent'));
+          "
