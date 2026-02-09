@@ -49,5 +49,6 @@
     App Store에서 다운로드
   </a>
 </p>
+<p style="font-size:12px;color:#999;word-break:break-all;">(링크: https://apps.apple.com/kr/app/mandaact/id6504776417)</p>
 
 <p><small>iOS, iPadOS, macOS에서 사용 가능합니다.</small></p>

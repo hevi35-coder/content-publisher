@@ -177,43 +177,55 @@
 <p style="margin:15px 0;line-height:1.8;">App Store에서 다운로드</p>
 </a>
 </p>
+<p style="font-size:12px;color:#999;word-break:break-all;">(링크: https://apps.apple.com/kr/app/mandaact/id6504776417)</p>
 
 <p><small>iOS, iPadOS, macOS에서 사용 가능합니다.</small></p>
 
 </div>
 
 <script>
-    function copyContent() {
-        // Select the content div
+    async function copyContent() {
         const content = document.getElementById('naver-content');
-        
-        // Create a range and selection
-        const range = document.createRange();
-        range.selectNode(content);
-        window.getSelection().removeAllRanges();
-        window.getSelection().addRange(range);
+        const btn = document.getElementById('copy-btn');
+        const originalText = btn.innerText;
 
         try {
-            // Execute copy command
-            document.execCommand('copy');
-            
-            // Show toast
+            // Method 1: Modern Clipboard API (Best structure preservation)
+            if (navigator.clipboard && navigator.clipboard.write) {
+                const htmlBlob = new Blob([content.innerHTML], { type: 'text/html' });
+                const textBlob = new Blob([content.innerText], { type: 'text/plain' });
+                
+                await navigator.clipboard.write([
+                    new ClipboardItem({
+                        'text/html': htmlBlob,
+                        'text/plain': textBlob
+                    })
+                ]);
+            } 
+            // Method 2: Fallback to execCommand (Legacy)
+            else {
+                const range = document.createRange();
+                range.selectNode(content);
+                window.getSelection().removeAllRanges();
+                window.getSelection().addRange(range);
+                document.execCommand('copy');
+                window.getSelection().removeAllRanges();
+            }
+
+            // Success Feedback
             const toast = document.getElementById("toast");
             toast.className = "show";
-            setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
+            setTimeout(() => toast.className = toast.className.replace("show", ""), 3000);
             
-            // Change button text temporarily
-            const btn = document.getElementById('copy-btn');
-            const originalText = btn.innerText;
-            btn.innerText = "✅ 복사됨!";
+            btn.innerText = "✅ 스타일 복사됨!";
             setTimeout(() => btn.innerText = originalText, 2000);
-            
-        } catch (err) {
-            alert('복사에 실패했습니다. 수동으로 선택해서 복사해주세요.');
-        }
 
-        // Clear selection
-        window.getSelection().removeAllRanges();
+        } catch (err) {
+            console.error('Copy failed:', err);
+            btn.innerText = "❌ 복사 실패";
+            alert('클립보드 권한이 필요하거나 브라우저가 지원하지 않습니다.');
+            setTimeout(() => btn.innerText = originalText, 2000);
+        }
     }
 </script>
 
