@@ -51,16 +51,20 @@ jobs:
           git config --global user.name "MandaAct Bot"
           git config --global user.email "bot@mandaact.com"
           
-          # Create a new branch for the draft
+          # Create a new branch for the draft (handle existing branch)
           BRANCH_NAME="draft/weekly-$(date +%Y-%m-%d)"
+          
+          # Delete remote branch if it exists (prevent conflicts on re-runs)
+          git push origin --delete $BRANCH_NAME 2>/dev/null || echo "No existing branch to delete"
+          
           git checkout -b $BRANCH_NAME
           
           # Commit changes
           git add drafts/ TOPIC_QUEUE.md assets/
           git commit -m "chore(content): generate weekly draft" || echo "No changes to commit"
           
-          # Push branch
-          git push origin $BRANCH_NAME
+          # Push branch (force to overwrite if somehow still exists)
+          git push -f origin $BRANCH_NAME
           
           # Create Pull Request (Needs GITHUB_TOKEN)
           echo "🚀 Creating Pull Request..."
