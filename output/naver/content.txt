@@ -45,4 +45,4 @@ MandaAct 시작하기
 목표를 9x9 그리드로 시각화하고, 매일 실천 가능한 액션으로 분해하세요.
 iOS, iPadOS, macOS에서 사용 가능합니다.
 
-App Store: https://apps.apple.com/app/id6475651581
+App Store: https://apps.apple.com/app/id6756198473
