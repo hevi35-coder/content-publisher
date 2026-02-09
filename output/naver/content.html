@@ -15,6 +15,7 @@
             padding: 30px;
             background: #fff;
         }
+        /* ... (styles remain same) ... */
         h2 { 
             font-size: 22px; 
             font-weight: bold; 
@@ -77,9 +78,56 @@
             margin: 3px;
             font-size: 14px;
         }
+
+        /* Web Copy Button Styles */
+        #copy-control {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            text-align: center;
+        }
+        #copy-btn {
+            background: #03c75a;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        #copy-btn:active { transform: scale(0.95); }
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 2px;
+            padding: 16px;
+            position: fixed;
+            z-index: 1000;
+            left: 50%;
+            bottom: 80px;
+            transform: translateX(-50%);
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        #toast.show { visibility: visible; opacity: 1; }
     </style>
 </head>
 <body>
+
+<div id="copy-control">
+    <button id="copy-btn" onclick="copyContent()">📋 블로그용 복사</button>
+</div>
+<div id="toast">복사완료! 블로그 앱에 붙여넣으세요.</div>
+
+<div id="naver-content">
 
 
 <h2 style="font-size:22px;font-weight:bold;color:#222;margin:30px 0 15px;padding-bottom:10px;border-bottom:2px solid #03c75a;">문제 인식: 왜 기존 방법은 실패하는가?</h2>
@@ -131,6 +179,43 @@
 </p>
 
 <p><small>iOS, iPadOS, macOS에서 사용 가능합니다.</small></p>
+
+</div>
+
+<script>
+    function copyContent() {
+        // Select the content div
+        const content = document.getElementById('naver-content');
+        
+        // Create a range and selection
+        const range = document.createRange();
+        range.selectNode(content);
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
+
+        try {
+            // Execute copy command
+            document.execCommand('copy');
+            
+            // Show toast
+            const toast = document.getElementById("toast");
+            toast.className = "show";
+            setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
+            
+            // Change button text temporarily
+            const btn = document.getElementById('copy-btn');
+            const originalText = btn.innerText;
+            btn.innerText = "✅ 복사됨!";
+            setTimeout(() => btn.innerText = originalText, 2000);
+            
+        } catch (err) {
+            alert('복사에 실패했습니다. 수동으로 선택해서 복사해주세요.');
+        }
+
+        // Clear selection
+        window.getSelection().removeAllRanges();
+    }
+</script>
 
 </body>
 </html>
