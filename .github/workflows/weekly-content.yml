@@ -68,7 +68,7 @@ jobs:
           
           # Create Pull Request (Needs GITHUB_TOKEN)
           echo "🚀 Creating Pull Request..."
-          PR_URL=$(gh pr create --title "📝 Weekly Draft: $(date +%Y-%m-%d)" --body "Here is this week's draft. Please review and merge to publish. **Auto-merge will occur in 24 hours if no changes requested.**" --base main --head $BRANCH_NAME)
+          PR_URL=$(gh pr create --title "📝 Weekly Draft: $(date +%Y-%m-%d)" --body "This week's draft is ready. **Auto-merge enabled** - will merge immediately after creation." --base main --head $BRANCH_NAME)
           echo "📝 PR Created: $PR_URL"
           
           # Enable Auto-Merge (requires repo setting: Settings > General > Allow auto-merge)
