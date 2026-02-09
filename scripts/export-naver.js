@@ -242,6 +242,14 @@ ${html}
     const htmlPath = path.join(outputDir, 'content.html');
     fs.writeFileSync(htmlPath, fullHtml);
 
+    // Create timestamped backup (Versioning)
+    const dateStr = new Date().toISOString().split('T')[0];
+    const safeTitle = koTitle.replace(/[^a-z0-9가-힣]+/g, '-').substring(0, 30);
+    const versionedFilename = `content-${dateStr}-${safeTitle}.html`;
+    const versionedPath = path.join(outputDir, versionedFilename);
+    fs.writeFileSync(versionedPath, fullHtml);
+    console.log(`📦 백업 생성: ${versionedFilename}`);
+
     // Save plain text version for easy copy
     const plainText = koContent
         .replace(/\*\*([^*]+)\*\*/g, '$1')  // Remove bold markers
@@ -291,12 +299,22 @@ ${html}
     console.log('💡 팁: 모바일 대응은 네이버 블로그 자체에서 자동 처리됨');
     console.log('============================================\n');
 
-    // Send notification
+    // Send notification with attachments
     await notifier.stepComplete('naver_export', {
         title: koTitle,
         images: images.length,
-        htmlPath: htmlPath
-    });
+        htmlPath: htmlPath,
+        backupPath: versionedPath
+    }, [
+        {
+            filename: versionedFilename,
+            path: versionedPath
+        },
+        {
+            filename: 'content.txt',
+            path: textPath
+        }
+    ]);
 
     return { title: koTitle, html, images };
 }
