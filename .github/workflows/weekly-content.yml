@@ -30,7 +30,7 @@ jobs:
       - name: Run Topic Committee (Sunday)
         if: github.event.schedule == '0 0 * * 0' || github.event_name == 'workflow_dispatch'
         env:
-          GITHUB_MODELS_TOKEN: ${{ secrets.GITHUB_MODELS_TOKEN }}
+          GITHUB_MODELS_TOKEN: ${{ secrets.MODELS_TOKEN }}
         run: |
           node select_topic.js
           git config --global user.name "MandaAct Bot"
@@ -42,7 +42,7 @@ jobs:
       - name: Run Draft Writer (Monday)
         if: github.event.schedule == '0 0 * * 1' || github.event_name == 'workflow_dispatch'
         env:
-          GITHUB_MODELS_TOKEN: ${{ secrets.GITHUB_MODELS_TOKEN }}
+          GITHUB_MODELS_TOKEN: ${{ secrets.MODELS_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           node generate_draft.js
@@ -70,4 +70,25 @@ jobs:
           # Enable Auto-Merge (requires repo setting: Settings > General > Allow auto-merge)
           echo "🔄 Enabling Auto-Merge..."
           gh pr merge --auto --squash $BRANCH_NAME || echo "⚠️ Auto-merge not enabled on this repo. Please enable in Settings."
+
+      - name: Notify on Failure
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.GMAIL_USER }}
+          password: ${{ secrets.GMAIL_APP_PASSWORD }}
+          subject: "❌ [Content Publisher] Weekly Workflow Failed"
+          to: ${{ secrets.NOTIFY_EMAIL_TO }}
+          from: MandaAct Bot <${{ secrets.GMAIL_USER }}>
+          body: |
+            Weekly content automation workflow failed.
+            
+            Run ID: ${{ github.run_id }}
+            Trigger: ${{ github.event_name }}
+            Time: (check logs for details)
+            
+            🔗 View Logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
