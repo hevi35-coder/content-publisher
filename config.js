@@ -1,6 +1,6 @@
 /**
- * Centralized configuration for the Dev.to Publisher project.
- * Eliminates hardcoded values scattered across scripts.
+ * Centralized configuration for Content Publisher.
+ * Supports multi-platform publishing.
  */
 
 const path = require('path');
@@ -8,7 +8,7 @@ const path = require('path');
 module.exports = {
     github: {
         username: 'hevi35-coder',
-        repo: 'devto-publisher',
+        repo: 'content-publisher',
         branch: 'main',
         get rawBaseUrl() {
             return `https://raw.githubusercontent.com/${this.username}/${this.repo}/${this.branch}`;
@@ -27,5 +27,10 @@ module.exports = {
     ai: {
         baseURL: 'https://models.inference.ai.azure.com',
         model: 'gpt-4o'
+    },
+    platforms: {
+        devto: { enabled: true },
+        hashnode: { enabled: true },
+        blogger: { enabled: true, translate: true }
     }
 };

@@ -45,7 +45,7 @@ class DevtoAdapter extends BaseAdapter {
                 body_markdown: article.content,
                 published: article.rawFrontmatter.published !== undefined ? article.rawFrontmatter.published : true,
                 tags: article.tags,
-                main_image: article.coverImage,
+                main_image: article.coverImage ? `${article.coverImage}?v=${Date.now()}` : undefined,
                 series: article.series
             }
         };
@@ -74,7 +74,7 @@ class DevtoAdapter extends BaseAdapter {
                 body_markdown: article.content,
                 published: true,
                 tags: article.tags,
-                main_image: article.coverImage,
+                main_image: article.coverImage ? `${article.coverImage}?v=${Date.now()}` : undefined,
                 series: article.series
             }
         };

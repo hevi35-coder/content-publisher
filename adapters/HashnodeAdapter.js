@@ -70,7 +70,7 @@ class HashnodeAdapter extends BaseAdapter {
                 contentMarkdown: article.content,
                 tags: article.tags?.map(tag => ({ slug: tag.toLowerCase(), name: tag })) || [],
                 coverImageOptions: article.coverImage ? {
-                    coverImageURL: article.coverImage
+                    coverImageURL: `${article.coverImage}?v=${Date.now()}`
                 } : undefined
                 // Note: Hashnode doesn't support draft status in PublishPostInput
                 // Published articles can be unpublished manually from dashboard
@@ -111,7 +111,7 @@ class HashnodeAdapter extends BaseAdapter {
                 contentMarkdown: article.content,
                 tags: article.tags?.map(tag => ({ slug: tag.toLowerCase(), name: tag })) || [],
                 coverImageOptions: article.coverImage ? {
-                    coverImageURL: article.coverImage
+                    coverImageURL: `${article.coverImage}?v=${Date.now()}`
                 } : undefined
             }
         };

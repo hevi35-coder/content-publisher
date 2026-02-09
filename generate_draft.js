@@ -3,6 +3,7 @@ const path = require('path');
 const matter = require('gray-matter');
 const config = require('./config');
 const client = require('./lib/ai-client');
+const { notifier } = require('./lib/notifier');
 
 const QUEUE_PATH = config.paths.queue;
 const CONTEXT_PATH = config.paths.context;
@@ -124,8 +125,17 @@ You are NOT a dry technical writer. You are a creative maker who loves building 
         const updatedQueue = queueContent.replace(`*   **${title}**`, `*   **${title}** (Drafted ${qualityBadge})`);
         fs.writeFileSync(QUEUE_PATH, updatedQueue, 'utf8');
 
+        // Send notification
+        await notifier.stepComplete('draft_generation', {
+            title: title,
+            file: filename,
+            qualityScore: qualityReport.score
+        });
+
     } catch (error) {
         console.error("❌ Generation Failed:", error.message);
+        // Send failure notification
+        await notifier.stepFailed('draft_generation', error);
     }
 }
 

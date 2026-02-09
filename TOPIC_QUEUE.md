@@ -8,20 +8,10 @@
 *This file is automatically updated by the Sunday Topic Committee.*
 
 ## On Deck (Next Up)
-*   **Coding in Chaos: Structuring Your Developer Workflow in Unpredictable Times**
-    *   *Rationale*: Many developers today face unpredictable schedules, constant tech disruptions, and shifting project priorities. The challenge of staying organized and productive amidst these uncertainties has become a critical issue. This topic is timely as it addresses the growing need for adaptable yet structured workflows to navigate chaos effectively.
-    *   *MandaAct Angle*: MandaAct's 9x9 grid provides developers with a flexible visual framework to organize their goals and tasks, even in volatile environments. By breaking down large, uncertain objectives into smaller, actionable steps, MandaAct enables developers to regain clarity and focus. Features like Goal Diagnosis help identify priorities, while the grid structure ensures alignment with overarching goals, no matter how chaotic the day-to-day becomes.
-    *   *Target*: Developers, indie hackers, and junior devs who struggle with maintaining structure and productivity in the face of unpredictable schedules or shifting priorities.
-
-*   **How to Stay Productive in an Async-First World: A Visual Approach for Developers**
-    *   *Rationale*: With the rise of remote work and async-first communication, developers often struggle to manage their schedules, balance team collaboration, and maintain focus on personal goals. This trend demands a structured approach to planning and prioritizing work while staying adaptable to asynchronous workflows.
-    *   *MandaAct Angle*: MandaAct's 9x9 grid helps developers visually organize their tasks, aligning individual goals with team priorities. The grid's structure ensures clarity on what to tackle next, even in a less predictable async environment. Features like Goal Diagnosis help developers break down complex projects into smaller steps, making it easier to stay productive and focused amidst asynchronous demands.
-    *   *Target*: Remote developers, indie hackers, and junior devs adapting to async-first workflows.
-
-*   **The Power of Small Wins: Building Developer Confidence Through Micro-Successes**
-    *   *Rationale*: Many developers, especially juniors and indie hackers, struggle with feeling stuck or overwhelmed by the scale of their goals. This can lead to procrastination and self-doubt. Highlighting the importance of small, achievable wins provides a timely and actionable mindset shift for developers looking to maintain momentum in their projects or careers.
-    *   *MandaAct Angle*: MandaAct's 9x9 grid philosophy is built around breaking down large goals into smaller, actionable tasks. By using MandaAct, developers can visually map out their path to success, focusing on incremental wins that build confidence and drive progress. Features like Goal Diagnosis help identify the next smallest step, while the structure of the grid ensures alignment with bigger objectives.
-    *   *Target*: Junior developers, indie hackers, and any developer struggling with procrastination or confidence issues in tackling their goals.
+*   **The 9x9 Framework for Mastering AI Tools Without Overwhelm** (Drafted ✅ Score: 90)
+    *   *Rationale*: AI tools like ChatGPT, Copilot, and MidJourney are becoming essential for developers, but many struggle to effectively integrate them into their workflows without feeling overwhelmed or distracted. This topic is timely as the adoption of AI tools continues to grow and developers need strategies to stay organized and avoid tool fatigue.
+    *   *MandaAct Angle*: MandaAct's 9x9 grid philosophy helps developers map out their goals for leveraging AI tools effectively, breaking down the learning process into manageable sub-goals. By using MandaAct's visual planning and execution tools, developers can balance learning new AI tools while maintaining focus on their existing projects.
+    *   *Target*: Developers, indie hackers, and junior developers looking to adopt AI tools efficiently without losing productivity or focus.
 
 *   **The Code to Clarity: Using Visual Frameworks to Prevent Developer Burnout** (Drafted & Verified ✅)
     *   *Rationale*: Developer burnout is a pressing issue in today's fast-paced tech industry. With increasing pressures to deliver results, manage side projects, and upskill, many developers feel overwhelmed and lose track of their priorities. This article addresses the urgent need for clear goal-setting and prioritization to help developers stay focused, motivated, and mentally healthy in their careers.

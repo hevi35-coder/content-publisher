@@ -4,6 +4,7 @@ const client = require('./lib/ai-client');
 
 const QUEUE_PATH = config.paths.queue;
 const ARCHIVE_PATH = config.paths.archive;
+const { notifier } = require('./lib/notifier');
 
 async function selectTopic() {
     try {
@@ -41,7 +42,7 @@ Please analyze the current context and:
 {
     "title": "The Title of the Article",
     "rationale": "Why this topic? Why now?",
-    "mandaact_angle": "How does MandaAct (9x9 grid, OCR, Goal Diagnosis) solve this problem?",
+    "mandaact_angle": "How does MandaAct (9x9 grid, AI Suggestion, Goal Diagnosis) solve this problem?",
     "target_audience": "Who is this for?"
 }
 `;
@@ -80,9 +81,18 @@ Please analyze the current context and:
         fs.writeFileSync(QUEUE_PATH, newQueueContent, 'utf8');
         console.log("📝 Topic added to TOPIC_QUEUE.md");
 
+        // Send notification
+        await notifier.stepComplete('topic_selection', {
+            title: result.title,
+            rationale: result.rationale
+        });
+
     } catch (error) {
         console.error("❌ Topic Selection Failed:", error.message);
         if (error.response) console.error(error.response.data);
+
+        // Send failure notification
+        await notifier.stepFailed('topic_selection', error);
     }
 }
 
