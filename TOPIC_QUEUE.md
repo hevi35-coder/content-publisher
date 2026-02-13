@@ -8,15 +8,15 @@
 *This file is automatically updated by the Sunday Topic Committee.*
 
 ## On Deck (Next Up)
-*   **The Future of Full-Stack Development: Micro-Frontends and Modular Architectures**
-    *   *Rationale*: As applications grow in complexity and scale, micro-frontends and modular architectures are becoming essential to building scalable, maintainable systems. This trend aligns with the shift towards microservices in backend development and addresses the challenges of managing large front-end codebases in distributed teams. Developers need to understand the best practices for implementing these patterns to stay ahead in the industry.
-    *   *MandaAct Angle*: Developers can use MandaAct's 9x9 grid to break down the transition to micro-frontends or modular architectures into clear steps. For example, planning the decomposition of monolithic front ends into reusable modules, setting up CI/CD pipelines, and defining team ownership for each module can all be structured within the grid.
-    *   *Target*: Senior developers, system architects, full-stack developers, and engineering teams transitioning to modern development practices.
-
 *   **[KR-Only] How to Break Free from the Never-Ending To-Do List with Mandalart**
     *   *Rationale*: Many productivity enthusiasts in Korea find themselves overwhelmed by endless to-do lists, leading to frustration and burnout. This article addresses the common pitfalls of traditional to-do lists and introduces the Mandalart framework as a superior alternative for setting clear, actionable goals.
     *   *MandaAct Angle*: MandaAct's digital Mandalart framework helps users move beyond static to-do lists by providing a structured way to organize tasks and goals visually. By breaking down each major objective into smaller, actionable items, users can focus on progress rather than feeling stuck in an endless loop of tasks.
     *   *Target*: Korean productivity seekers, students, professionals looking for better ways to manage their time and goals.
+
+*   **The Future of Full-Stack Development: Micro-Frontends and Modular Architectures**
+    *   *Rationale*: As applications grow in complexity and scale, micro-frontends and modular architectures are becoming essential to building scalable, maintainable systems. This trend aligns with the shift towards microservices in backend development and addresses the challenges of managing large front-end codebases in distributed teams. Developers need to understand the best practices for implementing these patterns to stay ahead in the industry.
+    *   *MandaAct Angle*: Developers can use MandaAct's 9x9 grid to break down the transition to micro-frontends or modular architectures into clear steps. For example, planning the decomposition of monolithic front ends into reusable modules, setting up CI/CD pipelines, and defining team ownership for each module can all be structured within the grid.
+    *   *Target*: Senior developers, system architects, full-stack developers, and engineering teams transitioning to modern development practices.
 
 *   **[KR-Only] From Procrastination to Progress: Using the 9x9 Grid to Take Action Today**
     *   *Rationale*: Procrastination is a common struggle faced by Korean students, professionals, and indie hackers alike. This article tackles the psychological barriers to starting tasks and offers actionable strategies for overcoming procrastination using the 9x9 Mandalart framework.
