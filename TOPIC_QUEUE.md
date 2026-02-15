@@ -8,6 +8,11 @@
 *This file is automatically updated by the Sunday Topic Committee.*
 
 ## On Deck (Next Up)
+*   **From Idea to App Store: Streamlining Your App Launch with the 9x9 Grid**
+    *   *Rationale*: With the rise of indie app development and the increasing accessibility of tools like Flutter, React Native, and low-code platforms, more developers are venturing into app creation. However, many struggle with the overwhelming process of launching an app, from ideation to publishing. This article addresses the need for a structured approach to avoid burnout and ensure a successful launch.
+    *   *MandaAct Angle*: MandaAct's 9x9 grid helps developers break down the app launch process into manageable sub-goals, such as ideation, prototyping, development, testing, marketing, and publishing. By visually organizing and tracking these steps, developers can stay focused and execute their app launch efficiently. Features like Goal Diagnosis and AI Suggestions further refine the plan, ensuring no critical aspect is overlooked.
+    *   *Target*: Indie hackers, junior developers, and developers planning to launch their first app.
+
 *   **[KR-Only] How to Break Free from the Never-Ending To-Do List with Mandalart**
     *   *Rationale*: Many productivity enthusiasts in Korea find themselves overwhelmed by endless to-do lists, leading to frustration and burnout. This article addresses the common pitfalls of traditional to-do lists and introduces the Mandalart framework as a superior alternative for setting clear, actionable goals.
     *   *MandaAct Angle*: MandaAct's digital Mandalart framework helps users move beyond static to-do lists by providing a structured way to organize tasks and goals visually. By breaking down each major objective into smaller, actionable items, users can focus on progress rather than feeling stuck in an endless loop of tasks.
