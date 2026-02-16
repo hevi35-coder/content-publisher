@@ -8,7 +8,7 @@
 *This file is automatically updated by the Sunday Topic Committee.*
 
 ## On Deck (Next Up)
-*   **From Idea to App Store: Streamlining Your App Launch with the 9x9 Grid**
+*   **From Idea to App Store: Streamlining Your App Launch with the 9x9 Grid** (Drafted ✅ EN:80 KO:60)
     *   *Rationale*: With the rise of indie app development and the increasing accessibility of tools like Flutter, React Native, and low-code platforms, more developers are venturing into app creation. However, many struggle with the overwhelming process of launching an app, from ideation to publishing. This article addresses the need for a structured approach to avoid burnout and ensure a successful launch.
     *   *MandaAct Angle*: MandaAct's 9x9 grid helps developers break down the app launch process into manageable sub-goals, such as ideation, prototyping, development, testing, marketing, and publishing. By visually organizing and tracking these steps, developers can stay focused and execute their app launch efficiently. Features like Goal Diagnosis and AI Suggestions further refine the plan, ensuring no critical aspect is overlooked.
     *   *Target*: Indie hackers, junior developers, and developers planning to launch their first app.
