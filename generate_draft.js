@@ -18,6 +18,7 @@ const { notifier } = require('./lib/notifier');
 const { getProfile, buildPromptInstructions } = require('./lib/tone-profiles');
 const { validateTrend, buildAvoidanceInstructions, shouldRejectTopic } = require('./lib/trend-validator');
 const { checkQuality } = require('./draft-quality-gate');
+const { enforceDraftQualityThreshold } = require('./lib/draft-quality-threshold');
 const { injectCTAToFile } = require('./lib/cta-injector');
 const { pushCoversToMain } = require('./lib/git-manager');
 
@@ -28,6 +29,10 @@ const DRAFTS_DIR = config.paths.drafts;
 // Configuration
 const MAX_REGENERATION_ATTEMPTS = 3;
 const QUALITY_THRESHOLD = 70;
+
+function allowLowQualityDrafts() {
+    return String(process.env.ALLOW_LOW_QUALITY_DRAFTS || '').toLowerCase() === 'true';
+}
 
 /**
  * Read topic from queue
@@ -277,6 +282,14 @@ async function processDraft(topic, profileId, trendResult, context) {
             }
         }
     }
+
+    enforceDraftQualityThreshold(qualityReport, {
+        profileId,
+        threshold: QUALITY_THRESHOLD,
+        attempts,
+        maxAttempts: MAX_REGENERATION_ATTEMPTS,
+        allowBelowThreshold: allowLowQualityDrafts()
+    });
 
     // Generate cover image
     const slug = topic.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
