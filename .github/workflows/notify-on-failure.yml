@@ -6,6 +6,7 @@ on:
       - "Weekly Content Automation"
       - "Auto Publish (Content Publisher)"
       - "Weekly Schedule Watchdog"
+      - "Weekly Ops Report"
     types:
       - completed
 
