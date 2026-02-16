@@ -62,13 +62,15 @@ content-publisher/
 │   ├── translator.js       # 플랫폼별 포맷 적응
 │   ├── oauth-manager.js    # OAuth 자동 갱신
 │   ├── git-manager.js      # Git 자동 푸시
-│   ├── quality-gate.js     # 품질 검증
+│   ├── publish-quality-gate.js # 발행 직전 품질 검증
+│   ├── quality-gate.js     # (호환 레이어) publish-quality-gate.js
 │   └── sanitizer.js        # AI 패턴 제거
 ├── scripts/
 │   └── export-naver.js     # 📝 네이버 블로그 HTML 생성
 ├── generate_cover.js       # 커버 이미지 생성
 ├── select_topic.js         # 주제 선정
 ├── generate_draft.js       # 초안 작성
+├── quality_gate.js         # 드래프트 품질 점수/SEO 평가
 ├── publish.js              # 자동 라우팅 엔트리포인트
 └── config.js
 ```
