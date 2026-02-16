@@ -3,13 +3,15 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { execFileSync } = require('child_process');
 
 const {
     checkQuality,
     detectContentLanguage,
     countWords,
     calculateReadability
-} = require('../quality_gate');
+} = require('../draft-quality-gate');
+const legacyGate = require('../quality_gate');
 
 function createDraftFile({ filename, title, tags, content, coverImage = true }) {
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'quality-gate-test-'));
@@ -98,5 +100,24 @@ test('checkQuality enforces channel-specific tag limits', () => {
         assert.match(getCheck(devtoReport, 'Tags').message, /devto allows max 4\./i);
     } finally {
         fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+});
+
+test('legacy quality_gate shim keeps API compatibility', () => {
+    assert.equal(legacyGate.checkQuality, checkQuality);
+    assert.equal(legacyGate.detectContentLanguage, detectContentLanguage);
+});
+
+test('legacy quality_gate shim keeps CLI usage output', () => {
+    try {
+        execFileSync(process.execPath, ['quality_gate.js'], {
+            cwd: path.join(__dirname, '..'),
+            encoding: 'utf8'
+        });
+        assert.fail('Expected quality_gate.js to exit with usage');
+    } catch (error) {
+        const output = `${error.stdout || ''}\n${error.stderr || ''}`;
+        assert.match(output, /Usage: node quality_gate\.js/);
+        assert.match(output, /Alias of: node draft-quality-gate\.js/);
     }
 });
