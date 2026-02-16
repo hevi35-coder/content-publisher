@@ -17,7 +17,7 @@ const client = require('./lib/ai-client');
 const { notifier } = require('./lib/notifier');
 const { getProfile, buildPromptInstructions } = require('./lib/tone-profiles');
 const { validateTrend, buildAvoidanceInstructions, shouldRejectTopic } = require('./lib/trend-validator');
-const { checkQuality, printReport } = require('./draft-quality-gate');
+const { checkQuality } = require('./draft-quality-gate');
 const { injectCTAToFile } = require('./lib/cta-injector');
 const { pushCoversToMain } = require('./lib/git-manager');
 
