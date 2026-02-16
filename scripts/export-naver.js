@@ -12,6 +12,7 @@ require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const matter = require('gray-matter');
+const { spawnSync } = require('child_process');
 const { notifier } = require('../lib/notifier');
 
 
@@ -87,6 +88,28 @@ function extractImages(markdown) {
         });
     }
     return images;
+}
+
+function copyToClipboard(text, options = {}) {
+    const platform = options.platform || process.platform;
+    const run = options.run || spawnSync;
+
+    if (platform !== 'darwin') {
+        return false;
+    }
+
+    try {
+        const result = run('pbcopy', {
+            input: String(text || ''),
+            encoding: 'utf8'
+        });
+        if (result.error) {
+            return false;
+        }
+        return result.status === 0;
+    } catch {
+        return false;
+    }
 }
 
 /**
@@ -266,11 +289,9 @@ ${html}
     fs.writeFileSync(titlePath, koTitle);
 
     // Copy title to clipboard (macOS)
-    try {
-        const { execSync } = require('child_process');
-        execSync(`echo "${koTitle}" | pbcopy`);
+    if (copyToClipboard(koTitle)) {
         console.log('📋 제목이 클립보드에 복사되었습니다\n');
-    } catch (e) { }
+    }
 
     // Output summary
     console.log(`📝 제목: ${koTitle}`);
@@ -350,4 +371,4 @@ if (require.main === module) {
         });
 }
 
-module.exports = { exportForNaver, toNaverHtml };
+module.exports = { exportForNaver, toNaverHtml, copyToClipboard };
