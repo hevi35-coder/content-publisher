@@ -126,13 +126,18 @@ function calculateReadability(text, language = 'en') {
     };
 }
 
-function resolveProfile(profileId, language) {
+function resolveProfile(profileId, language, options = {}) {
     const fallbackProfileId = language === 'ko' ? 'blogger_kr' : 'devto';
-    const resolvedProfileId = profileId || fallbackProfileId;
+    if (!profileId) {
+        return getProfile(fallbackProfileId);
+    }
 
     try {
-        return getProfile(resolvedProfileId);
-    } catch (_error) {
+        return getProfile(profileId);
+    } catch (error) {
+        if (options.strict !== false) {
+            throw new Error(`Invalid quality profile "${profileId}": ${error.message}`);
+        }
         return getProfile(fallbackProfileId);
     }
 }
@@ -160,6 +165,7 @@ function getWordCountPolicy(language) {
  * @param {string} filePath - Path to the markdown file
  * @param {object} options
  * @param {string} [options.profileId] - Optional tone profile id (devto, hashnode, blogger_kr)
+ * @param {boolean} [options.strictProfile=true] - Throw on invalid profile id instead of silent fallback
  * @returns {object} Quality report with score and recommendations
  */
 function checkQuality(filePath, options = {}) {
@@ -167,7 +173,10 @@ function checkQuality(filePath, options = {}) {
     const { data: frontmatter, content } = matter(fileContent);
 
     const language = detectContentLanguage(content, filePath);
-    const profile = resolveProfile(options.profileId || frontmatter.profile, language);
+    const requestedProfileId = options.profileId || frontmatter.profile;
+    const profile = resolveProfile(requestedProfileId, language, {
+        strict: options.strictProfile !== false
+    });
     const wordPolicy = getWordCountPolicy(language);
 
     const report = {

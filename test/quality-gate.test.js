@@ -13,13 +13,14 @@ const {
 } = require('../draft-quality-gate');
 const legacyGate = require('../quality_gate');
 
-function createDraftFile({ filename, title, tags, content, coverImage = true }) {
+function createDraftFile({ filename, title, tags, content, coverImage = true, profile }) {
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'quality-gate-test-'));
     const filePath = path.join(tmpDir, filename);
     const lines = [
         '---',
         `title: "${title}"`,
         `tags: [${tags.join(', ')}]`,
+        profile ? `profile: "${profile}"` : '',
         coverImage ? 'cover_image: "../assets/images/covers/test-cover.png"' : '',
         '---',
         '',
@@ -98,6 +99,45 @@ test('checkQuality enforces channel-specific tag limits', () => {
         assert.equal(devtoReport.profileId, 'devto');
         assert.equal(getCheck(devtoReport, 'Tags').status, '⚠️');
         assert.match(getCheck(devtoReport, 'Tags').message, /devto allows max 4\./i);
+    } finally {
+        fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+});
+
+test('checkQuality throws on invalid explicit profile by default', () => {
+    const sentence = 'This article explains how to plan and execute effectively. Download to get started.';
+    const content = Array.from({ length: 120 }, () => sentence).join(' ');
+    const { tmpDir, filePath } = createDraftFile({
+        filename: 'sample.md',
+        title: 'Profile validation should fail fast on invalid override',
+        tags: ['productivity', 'developers', 'career'],
+        content
+    });
+
+    try {
+        assert.throws(
+            () => checkQuality(filePath, { profileId: 'unknown_profile' }),
+            /Invalid quality profile "unknown_profile"/
+        );
+    } finally {
+        fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+});
+
+test('checkQuality can fallback when strictProfile is disabled', () => {
+    const sentence = 'This article explains how to plan and execute effectively. Download to get started.';
+    const content = Array.from({ length: 120 }, () => sentence).join(' ');
+    const { tmpDir, filePath } = createDraftFile({
+        filename: 'sample.md',
+        title: 'Optional fallback path for non-strict profile mode',
+        tags: ['productivity', 'developers', 'career'],
+        profile: 'unknown_profile',
+        content
+    });
+
+    try {
+        const report = checkQuality(filePath, { strictProfile: false });
+        assert.equal(report.profileId, 'devto');
     } finally {
         fs.rmSync(tmpDir, { recursive: true, force: true });
     }
