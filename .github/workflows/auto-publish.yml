@@ -31,12 +31,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Needed to diff full push range reliably
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
 
@@ -70,7 +70,7 @@ jobs:
               echo "files<<EOF"
               echo "$MANUAL_FILES"
               echo "EOF"
-            } >> $GITHUB_OUTPUT
+            } >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -92,7 +92,7 @@ jobs:
 
           if [ -z "$CHANGED_FILES" ]; then
             echo "No draft files changed."
-            echo "has_files=false" >> $GITHUB_OUTPUT
+            echo "has_files=false" >> "$GITHUB_OUTPUT"
           else
             echo "Found changed drafts:"
             echo "$CHANGED_FILES"
@@ -101,7 +101,7 @@ jobs:
               echo "files<<EOF"
               echo "$CHANGED_FILES"
               echo "EOF"
-            } >> $GITHUB_OUTPUT
+            } >> "$GITHUB_OUTPUT"
           fi
 
       - name: Run Publisher
