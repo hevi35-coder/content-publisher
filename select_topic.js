@@ -20,12 +20,28 @@ function normalizeTopicField(value, fieldName, index) {
     return normalized;
 }
 
-function normalizeCategory(rawCategory) {
-    const category = String(rawCategory || '').toLowerCase();
-    if (category.includes('global')) {
+function normalizeCategory(rawCategory, index = null) {
+    const normalized = String(rawCategory || '').replace(/\s+/g, ' ').trim().toLowerCase();
+
+    if (!normalized) {
+        const pointer = index === null ? 'category' : `topics[${index}].category`;
+        throw new Error(`Invalid response format: ${pointer} is required`);
+    }
+
+    if (normalized.includes('global')) {
         return 'Global Dev';
     }
-    return 'Productivity';
+
+    if (
+        normalized.includes('productivity') ||
+        normalized.includes('생산성') ||
+        normalized.includes('mandaact')
+    ) {
+        return 'Productivity';
+    }
+
+    const pointer = index === null ? 'category' : `topics[${index}].category`;
+    throw new Error(`Invalid response format: ${pointer} has unknown value "${rawCategory}"`);
 }
 
 function normalizeGeneratedTopics(result) {
@@ -41,7 +57,7 @@ function normalizeGeneratedTopics(result) {
             throw new Error(`Invalid response format: topics[${index}] must be an object.`);
         }
 
-        const category = normalizeCategory(topic.category);
+        const category = normalizeCategory(topic.category, index);
         const rawTitle = normalizeTopicField(topic.title, 'title', index);
         const title = category === 'Productivity' && !rawTitle.includes(KR_ONLY_TAG)
             ? `${KR_ONLY_TAG} ${rawTitle}`

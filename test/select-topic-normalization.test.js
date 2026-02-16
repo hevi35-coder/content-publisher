@@ -26,6 +26,16 @@ test('normalizeGeneratedTopics rejects missing required topic fields', () => {
 test('normalizeCategory maps global-like categories to Global Dev', () => {
     assert.equal(normalizeCategory('Global Dev'), 'Global Dev');
     assert.equal(normalizeCategory('global developer trends'), 'Global Dev');
+    assert.equal(normalizeCategory('Productivity'), 'Productivity');
+    assert.equal(normalizeCategory('MandaAct habit systems'), 'Productivity');
+    assert.equal(normalizeCategory('생산성'), 'Productivity');
+});
+
+test('normalizeCategory rejects unknown categories', () => {
+    assert.throws(
+        () => normalizeCategory('AI Lifestyle'),
+        /unknown value "AI Lifestyle"/
+    );
 });
 
 test('normalizeGeneratedTopics normalizes fields and KR-only title tags', () => {
@@ -64,6 +74,23 @@ test('normalizeGeneratedTopics normalizes fields and KR-only title tags', () => 
     assert.equal(topics[1].title, '[KR-Only] How to Keep Focus During Context Switches');
 
     assert.equal(topics[2].title, '[KR-Only] 이미 태그가 있는 제목');
+});
+
+test('normalizeGeneratedTopics rejects unknown category values', () => {
+    assert.throws(
+        () => normalizeGeneratedTopics({
+            topics: [
+                {
+                    category: 'AI Lifestyle',
+                    title: 'Modern API Design',
+                    rationale: 'why it matters',
+                    mandaact_angle: 'clear execution',
+                    target_audience: 'backend developers'
+                }
+            ]
+        }),
+        /topics\[0\]\.category has unknown value/
+    );
 });
 
 test('enforceWeeklyTopicMix rejects insufficient category mix', () => {
