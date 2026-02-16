@@ -17,7 +17,7 @@ jobs:
       contents: read
     env:
       TZ: Asia/Seoul
-      WEEKLY_WORKFLOW_ID: '231598865'
+      WEEKLY_WORKFLOW_REF: '.github/workflows/weekly-content.yml'
       SCHEDULE_WATCHDOG_GRACE_MINUTES: '120'
       SCHEDULE_WATCHDOG_EARLY_ALLOWANCE_MINUTES: '15'
     steps:
