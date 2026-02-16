@@ -17,6 +17,14 @@ on:
           - both
           - topic
           - draft
+      dry_run:
+        description: "Draft run only: simulate publish pipeline without push/PR merge"
+        required: true
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
 
 jobs:
   automation:
@@ -64,6 +72,7 @@ jobs:
           GITHUB_MODELS_TOKEN: ${{ secrets.MODELS_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           AUTO_PUBLISH_AFTER_DRAFT: 'false'
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run || 'false' }}
         run: |
           set -euo pipefail
 
@@ -71,7 +80,13 @@ jobs:
           git config --global user.name "MandaAct Bot"
           git config --global user.email "bot@mandaact.com"
 
+          echo "DRY_RUN=${DRY_RUN}"
           node generate_draft.js
+
+          if [ "${DRY_RUN}" = "true" ]; then
+            echo "DRY_RUN enabled: skipping branch push and PR creation."
+            exit 0
+          fi
           
           # Create unique branch per run to avoid force-push/delete flows.
           BRANCH_NAME="draft/weekly-$(date +%Y-%m-%d)-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"

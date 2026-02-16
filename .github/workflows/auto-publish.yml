@@ -7,6 +7,15 @@ on:
     paths:
       - 'drafts/**'
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Run publisher in dry-run mode (no external API writes)"
+        required: true
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
 
 concurrency:
   group: auto-publish-${{ github.ref }}
@@ -75,8 +84,10 @@ jobs:
           BLOGGER_CLIENT_SECRET: ${{ secrets.BLOGGER_CLIENT_SECRET }}
           BLOGGER_REFRESH_TOKEN: ${{ secrets.BLOGGER_REFRESH_TOKEN }}
           BLOGGER_ACCESS_TOKEN: ${{ secrets.BLOGGER_ACCESS_TOKEN }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run || 'false' }}
         run: |
           set -euo pipefail
+          echo "DRY_RUN=${DRY_RUN}"
 
           while IFS= read -r file; do
             [ -z "$file" ] && continue

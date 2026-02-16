@@ -1,12 +1,9 @@
 const fs = require('fs');
 const path = require('path');
-const axios = require('axios');
-const matter = require('gray-matter');
-const puppeteer = require('puppeteer');
-const config = require('./config');
+const { publishToAll } = require('./lib/publisher');
+const { isKoreanDraft } = require('./lib/translator');
 require('dotenv').config();
 
-const API_KEY = process.env.DEVTO_API_KEY;
 // Check for CLI arguments
 const args = process.argv.slice(2);
 let DRAFT_PATH = null;
@@ -15,243 +12,77 @@ if (args.length > 0) {
     DRAFT_PATH = args[0];
 }
 
-// Ensure API Key exists
-if (!API_KEY) {
-    console.error("❌ Error: DEVTO_API_KEY is missing in .env");
-    process.exit(1);
-}
-
 if (!DRAFT_PATH) {
     console.error("❌ Error: Please provide the path to the draft file.");
     process.exit(1);
 }
 
-if (!DRAFT_PATH.startsWith('http') && !fs.existsSync(DRAFT_PATH)) {
+if (!fs.existsSync(DRAFT_PATH)) {
     console.error(`❌ Error: File not found: ${DRAFT_PATH}`);
     process.exit(1);
 }
 
-if (DRAFT_PATH.startsWith('http')) {
-    console.log(`🔍 Manual Verification Mode: ${args[0]}`);
-
-    (async () => {
-        // 1. Static Content Check
-        try {
-            const res = await axios.get(args[0], { headers: { 'User-Agent': 'Mozilla/5.0' } });
-            await verifyImagesFromContent(res.data);
-        } catch (err) {
-            console.error("❌ Failed to fetch URL static content:", err.message);
-        }
-
-        // 2. Browser Check
-        await verifyWithBrowser(args[0]);
-    })();
-    return;
-}
-
-async function publishArticle() {
-    try {
-        const fileContent = fs.readFileSync(DRAFT_PATH, 'utf8');
-        const { data, content } = matter(fileContent);
-
-        let contentBody = fileContent;
-
-        // 1. Replace Local Asset Links with Remote GitHub Links
-        const BASE_ASSET_URL = config.github.assetBaseUrl;
-
-        // Replace relative paths like "../assets/"
-        contentBody = contentBody.replace(/\.\.\/assets\//g, BASE_ASSET_URL);
-
-        // Update frontmatter cover_image if it's local
-        let mainImage = data.cover_image;
-        if (mainImage && mainImage.startsWith('../assets')) {
-            mainImage = mainImage.replace('../assets/', BASE_ASSET_URL);
-        }
-
-        // IMPORTANT: Dev.to API requires a 'article' object
-        const article = {
-            title: data.title,
-            body_markdown: contentBody,
-            published: true, // If we are updating a draft, this keeps it as draft if originally false? No, this publishes it? 
-            // Wait, user said "Draft is published". 
-            // If data.published is false in frontmatter, it might stay draft.
-            series: data.series,
-            tags: data.tags,
-            main_image: mainImage
-        };
-
-        console.log(`🚀 Publishing: ${article.title}...`);
-
-        // 2. Check if article already exists to avoid 422 "Title already used"
-        let articleId = null;
-        try {
-            // Need to fetch user's articles to find if title exists
-            const meArticles = await axios.get('https://dev.to/api/articles/me/all', {
-                headers: { 'api-key': API_KEY }
-            });
-            // Normalize title for comparison
-            const existing = meArticles.data.find(a => a.title.trim() === article.title.trim());
-            if (existing) {
-                articleId = existing.id;
-                console.log(`ℹ️  Found existing article ID: ${articleId} (${existing.url}). Updating...`);
-            }
-        } catch (err) {
-            console.warn("⚠️  Failed to fetch existing articles list. Defaulting to Create mode.", err.message);
-        }
-
-        let response;
-        if (articleId) {
-            // Update existing
-            response = await axios.put(`https://dev.to/api/articles/${articleId}`, { article }, {
-                headers: {
-                    'api-key': API_KEY,
-                    'Content-Type': 'application/json'
-                }
-            });
-            console.log("✅ Success! Article updated.");
-
-        } else {
-            // Create new
-            response = await axios.post('https://dev.to/api/articles', { article }, {
-                headers: {
-                    'api-key': API_KEY,
-                    'Content-Type': 'application/json'
-                }
-            });
-            console.log("✅ Success! Article published (created).");
-        }
-
-        console.log(`🔗 Link: ${response.data.url}`);
-
-        // 3. Update Archive (Auto-track published articles)
-        try {
-            const archivePath = config.paths.archive;
-            const archiveContent = fs.existsSync(archivePath) ? fs.readFileSync(archivePath, 'utf8') : '# Published Articles\n';
-            const date = new Date().toISOString().split('T')[0];
-            const archiveEntry = `- [${date}] [${article.title}](${response.data.url})\n`;
-
-            if (!archiveContent.includes(article.title)) {
-                fs.writeFileSync(archivePath, archiveContent + archiveEntry, 'utf8');
-                console.log(`📚 Added to ARCHIVE.md`);
-            }
-        } catch (archiveError) {
-            console.warn(`⚠️ Failed to update archive: ${archiveError.message}`);
-        }
-
-        // 4. Verify Images (Static Content)
-        console.log("🔍 Verifying images from content...");
-        await verifyImagesFromContent(contentBody);
-
-        // 4. Verify with Browser (Live Rendering)
-        console.log("🌐 Verifying with Puppeteer (Browser)...");
-        await verifyWithBrowser(response.data.url);
-
-    } catch (error) {
-        if (error.response) {
-            console.error(`❌ Publishing failed (${error.response.status}):`, error.response.data);
-        } else {
-            console.error("❌ Publishing failed:", error.message);
-        }
+function requireEnvVars(keys, routeName) {
+    const missing = keys.filter((k) => !process.env[k]);
+    if (missing.length > 0) {
+        throw new Error(`[${routeName}] Missing required env vars: ${missing.join(', ')}`);
     }
 }
 
-async function verifyImagesFromContent(htmlOrMarkdown) {
+function validateRouteSecrets(isKorean) {
+    if (isKorean) {
+        // Blogger route requires blog id and either manual access token or refresh-token trio.
+        requireEnvVars(['BLOGGER_BLOG_ID'], 'blogger');
+        const hasManualToken = !!process.env.BLOGGER_ACCESS_TOKEN;
+        const hasRefreshFlow =
+            !!process.env.BLOGGER_CLIENT_ID &&
+            !!process.env.BLOGGER_CLIENT_SECRET &&
+            !!process.env.BLOGGER_REFRESH_TOKEN;
+        if (!hasManualToken && !hasRefreshFlow) {
+            throw new Error(
+                '[blogger] Set BLOGGER_ACCESS_TOKEN or all of BLOGGER_CLIENT_ID, BLOGGER_CLIENT_SECRET, BLOGGER_REFRESH_TOKEN'
+            );
+        }
+        return;
+    }
+
+    // English route
+    requireEnvVars(['DEVTO_API_KEY', 'HASHNODE_PAT', 'HASHNODE_PUBLICATION_ID'], 'devto+hashnode');
+}
+
+async function runPublisher() {
     try {
-        const imgRegex = /(https:\/\/raw\.githubusercontent\.com\/[^)\"\s]+)/g;
-        let match;
-        const imageUrls = new Set();
+        const filename = path.basename(DRAFT_PATH);
+        const isKO = isKoreanDraft(filename);
+        const isDryRun = process.env.DRY_RUN === 'true';
 
-        while ((match = imgRegex.exec(htmlOrMarkdown)) !== null) {
-            imageUrls.add(match[1]);
-        }
+        // Determine platforms
+        // Korean drafts -> Blogger
+        // English drafts -> Dev.to + Hashnode
+        const platforms = isKO ? ['blogger'] : ['devto', 'hashnode'];
 
-        if (imageUrls.size === 0) {
-            console.log("⚠️ No GitHub raw images found in the content (static check).");
-            return;
-        }
-
-        console.log(`Found ${imageUrls.size} unique images (static check). checking availability...`);
-
-        let allValid = true;
-        for (const url of imageUrls) {
-            try {
-                const res = await axios.head(url);
-                if (res.status === 200) {
-                    console.log(`✅ OK: ...${url.slice(-30)}`);
-                } else {
-                    console.error(`❌ BROKEN (${res.status}): ${url}`);
-                    allValid = false;
-                }
-            } catch (err) {
-                console.error(`❌ BROKEN: ${url} - ${err.message}`);
-                allValid = false;
-            }
-        }
-
-        if (allValid) {
-            console.log("🎉 All images are verified accessible (static check)!");
+        if (!isDryRun) {
+            validateRouteSecrets(isKO);
         } else {
-            console.error("⚠️ Some images are broken. Please check the 'assets' folder in GitHub.");
+            console.log('🧪 DRY_RUN enabled: skipping route secret validation.');
         }
+
+        console.log(`🚀 Routing ${filename} to platforms: ${platforms.join(', ')}`);
+
+        const result = await publishToAll(DRAFT_PATH, platforms);
+
+        if (result.errors.length > 0) {
+            console.error("⚠️ Some platforms failed to publish.");
+            process.exit(1);
+        }
+
+        console.log("🎉 All targeted platforms processed successfully.");
+        process.exit(0);
 
     } catch (error) {
-        console.error("❌ Verification failed:", error.message);
+        console.error("❌ Unified Publisher failed:", error.message);
+        process.exit(1);
     }
 }
 
-async function verifyWithBrowser(articleUrl) {
-    console.log(`🌐 Launching browser to verify: ${articleUrl}`);
-    const browser = await puppeteer.launch({ headless: "new" });
-    const page = await browser.newPage();
-
-    try {
-        // Capture console errors
-        page.on('console', msg => {
-            if (msg.type() === 'error') console.error(`Browser Console Error: ${msg.text()}`);
-        });
-
-        // Navigate to the page
-        const response = await page.goto(articleUrl, { waitUntil: 'networkidle0' });
-
-        // Even if 404, we want to see if we can check anything? 
-        // No, if 404, we can't check images on page.
-        if (!response.ok()) {
-            console.error(`❌ Page Load Failed: ${response.status()} ${response.statusText()}`);
-            await browser.close();
-            return;
-        }
-
-        console.log("✅ Page loaded successfully.");
-
-        // Check for broken images using browser JS execution
-        const imageEvaluation = await page.evaluate(() => {
-            const images = Array.from(document.querySelectorAll('img'));
-            const brokenImages = images.filter(img => {
-                return !img.complete || img.naturalWidth === 0;
-            }).map(img => img.src);
-
-            return {
-                total: images.length,
-                broken: brokenImages
-            };
-        });
-
-        console.log(`🖼️  Found ${imageEvaluation.total} images on page.`);
-
-        if (imageEvaluation.broken.length > 0) {
-            console.error("❌ Broken Images Detected in Browser:");
-            imageEvaluation.broken.forEach(src => console.error(`   - ${src}`));
-        } else {
-            console.log("🎉 All images rendered correctly in browser!");
-        }
-
-    } catch (error) {
-        console.error("❌ Browser Verification Failed:", error.message);
-    } finally {
-        await browser.close();
-    }
-}
-
-if (require.main === module) {
-    publishArticle();
-}
+runPublisher();
