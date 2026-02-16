@@ -77,6 +77,10 @@ jobs:
           BRANCH_NAME="topic/weekly-$(date +%Y-%m-%d)-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           git checkout -b "$BRANCH_NAME"
           git commit -m "chore(topic): weekly topic selection"
+
+          echo "🧪 Running regression tests before posting pr-sanity status..."
+          npm test
+
           HEAD_SHA=$(git rev-parse HEAD)
           git push origin "$BRANCH_NAME"
 
@@ -89,7 +93,7 @@ jobs:
           gh api "repos/${GITHUB_REPOSITORY}/statuses/${HEAD_SHA}" \
             -f state='success' \
             -f context='pr-sanity' \
-            -f description='Sanity passed in Weekly Content Automation' \
+            -f description='Sanity passed (npm test) in Weekly Content Automation' \
             -f target_url="https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
 
           echo "🔄 Enabling Topic Auto-Merge..."
@@ -151,6 +155,10 @@ jobs:
             exit 0
           fi
           git commit -m "chore(content): generate weekly draft"
+
+          echo "🧪 Running regression tests before posting pr-sanity status..."
+          npm test
+
           HEAD_SHA=$(git rev-parse HEAD)
           
           # Push branch (no force; unique branch name prevents conflicts)
@@ -165,7 +173,7 @@ jobs:
           gh api "repos/${GITHUB_REPOSITORY}/statuses/${HEAD_SHA}" \
             -f state='success' \
             -f context='pr-sanity' \
-            -f description='Sanity passed in Weekly Content Automation' \
+            -f description='Sanity passed (npm test) in Weekly Content Automation' \
             -f target_url="https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
           
           # Enable Auto-Merge (requires repo setting: Settings > General > Allow auto-merge)
