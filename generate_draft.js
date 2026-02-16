@@ -265,7 +265,7 @@ async function processDraft(topic, profileId, trendResult, context) {
         const tempPath = saveDraft(draft, tempFilename);
 
         // Quality check
-        qualityReport = checkQuality(tempPath);
+        qualityReport = checkQuality(tempPath, { profileId });
 
         if (qualityReport.score >= QUALITY_THRESHOLD) {
             console.log(`   ✅ Quality passed: ${qualityReport.score}/100`);
