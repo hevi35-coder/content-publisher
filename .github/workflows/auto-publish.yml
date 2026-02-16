@@ -91,6 +91,10 @@ jobs:
 
           while IFS= read -r file; do
             [ -z "$file" ] && continue
+            if [ ! -f "$file" ]; then
+              echo "⏭️ Skipping missing draft (deleted or renamed): $file"
+              continue
+            fi
             echo "🚀 Publishing $file..."
             node publish.js "$file"
           done <<< "${{ steps.files.outputs.files }}"
