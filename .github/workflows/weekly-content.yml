@@ -32,6 +32,7 @@ jobs:
     env:
       TZ: Asia/Seoul
     permissions:
+      actions: write # Needed to dispatch PR Sanity checks for bot-created branches
       contents: write # Needed to push changes (QUEUE updates, new Drafts)
       pull-requests: write # Needed if we want to make a PR (future)
 
@@ -81,6 +82,9 @@ jobs:
           PR_URL=$(gh pr create --title "🧭 Weekly Topic Queue: $(date +%Y-%m-%d)" --body "Automated topic queue update. **Auto-merge enabled**." --base main --head "$BRANCH_NAME")
           echo "📝 Topic PR Created: $PR_URL"
 
+          echo "🧪 Triggering PR Sanity for Topic branch..."
+          gh workflow run ".github/workflows/pr-sanity.yml" --ref "$BRANCH_NAME"
+
           echo "🔄 Enabling Topic Auto-Merge..."
           gh pr merge --auto --squash "$BRANCH_NAME"
 
@@ -129,6 +133,9 @@ jobs:
           echo "🚀 Creating Pull Request..."
           PR_URL=$(gh pr create --title "📝 Weekly Draft: $(date +%Y-%m-%d)" --body "This week's draft is ready. **Auto-merge enabled** - will merge immediately after creation." --base main --head "$BRANCH_NAME")
           echo "📝 PR Created: $PR_URL"
+
+          echo "🧪 Triggering PR Sanity for Draft branch..."
+          gh workflow run ".github/workflows/pr-sanity.yml" --ref "$BRANCH_NAME"
           
           # Enable Auto-Merge (requires repo setting: Settings > General > Allow auto-merge)
           echo "🔄 Enabling Auto-Merge..."

@@ -8,6 +8,7 @@ on:
     branches:
       - 'draft/**'
       - 'topic/**'
+  workflow_dispatch:
 
 jobs:
   pr-sanity:
