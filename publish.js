@@ -10,9 +10,13 @@
  * - node publish.js <draft-path> devto,hashnode,blogger
  */
 const fs = require('fs');
-const path = require('path');
 const { publishToAll } = require('./lib/publisher');
-const { isKoreanDraft } = require('./lib/translator');
+const {
+    SUPPORTED_PLATFORMS,
+    getDefaultPlatformsFromDraftPath,
+    parsePlatformArg,
+    assertSupportedPlatforms
+} = require('./lib/platform-routing');
 require('dotenv').config();
 
 function isDryRun() {
@@ -20,17 +24,7 @@ function isDryRun() {
 }
 
 function detectDefaultPlatforms(draftPath) {
-    const filename = path.basename(draftPath);
-    return isKoreanDraft(filename) ? ['blogger'] : ['devto', 'hashnode'];
-}
-
-function parsePlatformArg(platformArg) {
-    if (!platformArg) return null;
-    const platforms = platformArg
-        .split(',')
-        .map((p) => p.trim().toLowerCase())
-        .filter(Boolean);
-    return platforms.length > 0 ? platforms : null;
+    return getDefaultPlatformsFromDraftPath(draftPath);
 }
 
 function requireEnvVars(keys, routeName) {
@@ -71,7 +65,7 @@ async function main() {
 
     if (!draftPath) {
         console.error('Usage: node publish.js <draft-path> [platforms]');
-        console.error('  platforms (optional): comma-separated (devto,hashnode,blogger)');
+        console.error(`  platforms (optional): comma-separated (${SUPPORTED_PLATFORMS.join(',')})`);
         console.error('  default routing: *-ko.md -> blogger, *.md -> devto,hashnode');
         process.exit(1);
     }
@@ -88,6 +82,7 @@ async function main() {
         console.error('❌ No target platforms resolved.');
         process.exit(1);
     }
+    assertSupportedPlatforms(platforms);
 
     const dryRun = isDryRun();
     if (!dryRun) {
