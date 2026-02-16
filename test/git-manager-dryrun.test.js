@@ -1,13 +1,15 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { pushToMain, shouldRequireGitSyncSuccess } = require('../lib/git-manager');
+const { pushToMain, shouldRequireGitSyncSuccess, isMainPushContext } = require('../lib/git-manager');
 
 function withEnv(overrides, fn) {
     const previous = {
         DRY_RUN: process.env.DRY_RUN,
         CI: process.env.CI,
-        STRICT_GIT_SYNC: process.env.STRICT_GIT_SYNC
+        STRICT_GIT_SYNC: process.env.STRICT_GIT_SYNC,
+        GITHUB_REF: process.env.GITHUB_REF,
+        GITHUB_REF_NAME: process.env.GITHUB_REF_NAME
     };
 
     Object.assign(process.env, overrides);
@@ -53,5 +55,35 @@ test('shouldRequireGitSyncSuccess is true in CI mode', () => {
 test('shouldRequireGitSyncSuccess is true with STRICT_GIT_SYNC override', () => {
     withEnv({ DRY_RUN: 'false', CI: '', STRICT_GIT_SYNC: 'true' }, () => {
         assert.equal(shouldRequireGitSyncSuccess(), true);
+    });
+});
+
+test('isMainPushContext allows direct main branch pushes', () => {
+    withEnv({ CI: '', GITHUB_REF: '', GITHUB_REF_NAME: '' }, () => {
+        assert.equal(isMainPushContext('main'), true);
+    });
+});
+
+test('isMainPushContext blocks non-main local branches', () => {
+    withEnv({ CI: '', GITHUB_REF: '', GITHUB_REF_NAME: '' }, () => {
+        assert.equal(isMainPushContext('codex/topic-branch'), false);
+    });
+});
+
+test('isMainPushContext allows detached CI runs targeting main via GITHUB_REF', () => {
+    withEnv({ CI: 'true', GITHUB_REF: 'refs/heads/main', GITHUB_REF_NAME: '' }, () => {
+        assert.equal(isMainPushContext('HEAD'), true);
+    });
+});
+
+test('isMainPushContext allows detached CI runs targeting main via GITHUB_REF_NAME', () => {
+    withEnv({ CI: 'true', GITHUB_REF: '', GITHUB_REF_NAME: 'main' }, () => {
+        assert.equal(isMainPushContext('HEAD'), true);
+    });
+});
+
+test('isMainPushContext blocks detached CI runs for pull requests', () => {
+    withEnv({ CI: 'true', GITHUB_REF: 'refs/pull/123/merge', GITHUB_REF_NAME: '' }, () => {
+        assert.equal(isMainPushContext('HEAD'), false);
     });
 });
