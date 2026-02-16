@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 
 const { detectDefaultPlatforms, parsePlatformArg } = require('../publish');
 const { getDefaultPlatformsFromDraftPath } = require('../lib/publisher');
+const { assertSupportedPlatforms } = require('../lib/platform-routing');
 
 test('detectDefaultPlatforms routes Korean drafts to blogger', () => {
     assert.deepEqual(detectDefaultPlatforms('/tmp/sample-ko.md'), ['blogger']);
@@ -19,7 +20,15 @@ test('getDefaultPlatformsFromDraftPath applies the same routing rule', () => {
 
 test('parsePlatformArg normalizes and trims values', () => {
     assert.deepEqual(parsePlatformArg(' DEVTO, hashnode ,BLOGGER '), ['devto', 'hashnode', 'blogger']);
+    assert.deepEqual(parsePlatformArg('devto, DEVTO, hashnode'), ['devto', 'hashnode']);
     assert.equal(parsePlatformArg('  ,  '), null);
     assert.equal(parsePlatformArg(''), null);
     assert.equal(parsePlatformArg(null), null);
+});
+
+test('assertSupportedPlatforms rejects unknown platforms', () => {
+    assert.throws(
+        () => assertSupportedPlatforms(['devto', 'naver']),
+        /Unsupported platforms: naver/
+    );
 });
