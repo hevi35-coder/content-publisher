@@ -2,15 +2,17 @@ name: Weekly Content Automation
 
 on:
   schedule:
-    # 1. Topic Committee: Sunday at 00:00 UTC (9:00 AM KST)
-    - cron: '0 0 * * 0'
-    # 2. Draft Writer: Mon, Wed, Fri at 00:00 UTC (9:00 AM KST)
-    - cron: '0 0 * * 1,3,5'
+    # 1. Topic Committee: Sunday at 01:00 KST (Saturday 16:00 UTC)
+    - cron: '0 16 * * 6'
+    # 2. Draft Writer: Mon, Wed, Fri at 01:00 KST (Sun/Tue/Thu 16:00 UTC)
+    - cron: '0 16 * * 0,2,4'
   workflow_dispatch: # Allow manual trigger
 
 jobs:
   automation:
     runs-on: ubuntu-latest
+    env:
+      TZ: Asia/Seoul
     permissions:
       contents: write # Needed to push changes (QUEUE updates, new Drafts)
       pull-requests: write # Needed if we want to make a PR (future)
@@ -28,7 +30,7 @@ jobs:
         run: npm ci
 
       - name: Run Topic Committee (Sunday)
-        if: github.event.schedule == '0 0 * * 0' || github.event_name == 'workflow_dispatch'
+        if: github.event.schedule == '0 16 * * 6' || github.event_name == 'workflow_dispatch'
         env:
           GITHUB_MODELS_TOKEN: ${{ secrets.MODELS_TOKEN }}
         run: |
@@ -40,7 +42,7 @@ jobs:
           git push
 
       - name: Run Draft Writer (Mon, Wed, Fri)
-        if: github.event.schedule == '0 0 * * 1,3,5' || github.event_name == 'workflow_dispatch'
+        if: github.event.schedule == '0 16 * * 0,2,4' || github.event_name == 'workflow_dispatch'
         env:
           GITHUB_MODELS_TOKEN: ${{ secrets.MODELS_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -73,7 +75,7 @@ jobs:
           
           # Enable Auto-Merge (requires repo setting: Settings > General > Allow auto-merge)
           echo "🔄 Enabling Auto-Merge..."
-          gh pr merge --auto --squash $BRANCH_NAME || echo "⚠️ Auto-merge not enabled on this repo. Please enable in Settings."
+          gh pr merge --auto --squash $BRANCH_NAME
 
       - name: Notify on Failure
         if: failure()
@@ -95,4 +97,3 @@ jobs:
             Time: (check logs for details)
             
             🔗 View Logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
-
