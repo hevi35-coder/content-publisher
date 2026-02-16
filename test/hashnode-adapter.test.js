@@ -75,12 +75,14 @@ test('Hashnode checkExists returns null when no post matches', async () => {
     assert.equal(found, null);
 });
 
-test('Hashnode checkExists returns null on query failure', async () => {
+test('Hashnode checkExists throws on query failure (fail-safe)', async () => {
     const adapter = createAdapter();
     adapter._graphqlRequest = async () => {
         throw new Error('network error');
     };
 
-    const found = await adapter.checkExists('any title');
-    assert.equal(found, null);
+    await assert.rejects(
+        () => adapter.checkExists('any title'),
+        /network error/
+    );
 });
