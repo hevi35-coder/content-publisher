@@ -1,25 +1,36 @@
+#!/usr/bin/env node
+/**
+ * Unified publish entrypoint for automation.
+ *
+ * Default routing:
+ * - Korean drafts (*-ko.md) -> blogger
+ * - English drafts (*.md)   -> devto,hashnode
+ *
+ * Optional override:
+ * - node publish.js <draft-path> devto,hashnode,blogger
+ */
 const fs = require('fs');
 const path = require('path');
 const { publishToAll } = require('./lib/publisher');
 const { isKoreanDraft } = require('./lib/translator');
 require('dotenv').config();
 
-// Check for CLI arguments
-const args = process.argv.slice(2);
-let DRAFT_PATH = null;
-
-if (args.length > 0) {
-    DRAFT_PATH = args[0];
+function isDryRun() {
+    return String(process.env.DRY_RUN || '').toLowerCase() === 'true';
 }
 
-if (!DRAFT_PATH) {
-    console.error("❌ Error: Please provide the path to the draft file.");
-    process.exit(1);
+function detectDefaultPlatforms(draftPath) {
+    const filename = path.basename(draftPath);
+    return isKoreanDraft(filename) ? ['blogger'] : ['devto', 'hashnode'];
 }
 
-if (!fs.existsSync(DRAFT_PATH)) {
-    console.error(`❌ Error: File not found: ${DRAFT_PATH}`);
-    process.exit(1);
+function parsePlatformArg(platformArg) {
+    if (!platformArg) return null;
+    const platforms = platformArg
+        .split(',')
+        .map((p) => p.trim().toLowerCase())
+        .filter(Boolean);
+    return platforms.length > 0 ? platforms : null;
 }
 
 function requireEnvVars(keys, routeName) {
@@ -29,60 +40,73 @@ function requireEnvVars(keys, routeName) {
     }
 }
 
-function validateRouteSecrets(isKorean) {
-    if (isKorean) {
-        // Blogger route requires blog id and either manual access token or refresh-token trio.
+function validateRouteSecrets(platforms) {
+    if (platforms.includes('devto')) {
+        requireEnvVars(['DEVTO_API_KEY'], 'devto');
+    }
+
+    if (platforms.includes('hashnode')) {
+        requireEnvVars(['HASHNODE_PAT', 'HASHNODE_PUBLICATION_ID'], 'hashnode');
+    }
+
+    if (platforms.includes('blogger')) {
         requireEnvVars(['BLOGGER_BLOG_ID'], 'blogger');
         const hasManualToken = !!process.env.BLOGGER_ACCESS_TOKEN;
         const hasRefreshFlow =
             !!process.env.BLOGGER_CLIENT_ID &&
             !!process.env.BLOGGER_CLIENT_SECRET &&
             !!process.env.BLOGGER_REFRESH_TOKEN;
+
         if (!hasManualToken && !hasRefreshFlow) {
             throw new Error(
                 '[blogger] Set BLOGGER_ACCESS_TOKEN or all of BLOGGER_CLIENT_ID, BLOGGER_CLIENT_SECRET, BLOGGER_REFRESH_TOKEN'
             );
         }
-        return;
     }
-
-    // English route
-    requireEnvVars(['DEVTO_API_KEY', 'HASHNODE_PAT', 'HASHNODE_PUBLICATION_ID'], 'devto+hashnode');
 }
 
-async function runPublisher() {
-    try {
-        const filename = path.basename(DRAFT_PATH);
-        const isKO = isKoreanDraft(filename);
-        const isDryRun = process.env.DRY_RUN === 'true';
+async function main() {
+    const args = process.argv.slice(2);
+    const draftPath = args[0];
 
-        // Determine platforms
-        // Korean drafts -> Blogger
-        // English drafts -> Dev.to + Hashnode
-        const platforms = isKO ? ['blogger'] : ['devto', 'hashnode'];
+    if (!draftPath) {
+        console.error('Usage: node publish.js <draft-path> [platforms]');
+        console.error('  platforms (optional): comma-separated (devto,hashnode,blogger)');
+        console.error('  default routing: *-ko.md -> blogger, *.md -> devto,hashnode');
+        process.exit(1);
+    }
 
-        if (!isDryRun) {
-            validateRouteSecrets(isKO);
-        } else {
-            console.log('🧪 DRY_RUN enabled: skipping route secret validation.');
-        }
+    if (!fs.existsSync(draftPath)) {
+        console.error(`❌ Draft file not found: ${draftPath}`);
+        process.exit(1);
+    }
 
-        console.log(`🚀 Routing ${filename} to platforms: ${platforms.join(', ')}`);
+    const overridePlatforms = parsePlatformArg(args[1]);
+    const platforms = overridePlatforms || detectDefaultPlatforms(draftPath);
 
-        const result = await publishToAll(DRAFT_PATH, platforms);
+    if (platforms.length === 0) {
+        console.error('❌ No target platforms resolved.');
+        process.exit(1);
+    }
 
-        if (result.errors.length > 0) {
-            console.error("⚠️ Some platforms failed to publish.");
-            process.exit(1);
-        }
+    const dryRun = isDryRun();
+    if (!dryRun) {
+        validateRouteSecrets(platforms);
+    } else {
+        console.log('🧪 DRY_RUN enabled: skipping secret validation.');
+    }
 
-        console.log("🎉 All targeted platforms processed successfully.");
-        process.exit(0);
+    console.log(`📄 Draft: ${draftPath}`);
+    console.log(`📡 Platforms: ${platforms.join(', ')}`);
+    console.log(`🧪 DRY_RUN: ${dryRun}\n`);
 
-    } catch (error) {
-        console.error("❌ Unified Publisher failed:", error.message);
+    const { errors } = await publishToAll(draftPath, platforms, { dryRun });
+    if (errors.length > 0) {
         process.exit(1);
     }
 }
 
-runPublisher();
+main().catch((err) => {
+    console.error('❌ Unified Publisher failed:', err.message);
+    process.exit(1);
+});

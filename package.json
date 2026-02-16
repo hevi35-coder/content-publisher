@@ -1,5 +1,5 @@
 {
-  "name": "devto-publisher",
+  "name": "content-publisher",
   "version": "1.0.0",
   "description": "",
   "main": "publish.js",

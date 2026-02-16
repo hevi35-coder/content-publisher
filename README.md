@@ -7,7 +7,7 @@
 | Feature | Description |
 |---------|-------------|
 | 📤 Multi-Platform | Dev.to, Hashnode, Blogger 동시 발행 |
-| 🌐 Auto-Translation | GPT-4o 영→한 번역 (Blogger) |
+| 🌐 Dual-Language Drafting | EN/KO 초안 병렬 생성 후 채널별 라우팅 |
 | 🖼️ Cover Generation | 언어별 자동 커버 이미지 생성 |
 | 🔐 OAuth Auto-Refresh | Blogger 토큰 자동 갱신 |
 | 📦 Git Auto-Push | 커버 이미지 main 자동 푸시 |
@@ -26,6 +26,11 @@
 ## 🚀 Quick Start
 
 ```bash
+# 자동 라우팅 (권장)
+# *-ko.md -> blogger
+# *.md    -> devto,hashnode
+node publish.js drafts/my-article.md
+
 # 단일 플랫폼
 node lib/publisher.js drafts/my-article.md devto
 
@@ -39,7 +44,7 @@ node scripts/export-naver.js drafts/my-article.md
 ## 🧪 Safe Validation (Workflow Dispatch)
 
 - `Weekly Content Automation` 수동 실행 시 `dry_run=true`로 실행하면 draft 단계에서 브랜치 푸시/PR 생성을 생략합니다.
-- `Auto Publish (Content Publisher)` 수동 실행 시 `dry_run=true`로 실행하면 외부 플랫폼 API 호출을 시뮬레이션합니다.
+- `Auto Publish (Content Publisher)` 수동 실행 시 `dry_run=true`로 실행하면 외부 플랫폼 API 호출과 커버 이미지 푸시를 시뮬레이션합니다.
 - 두 workflow 모두 `workflow_dispatch` 기본값은 `dry_run=true`입니다.
 
 ## 📁 Architecture
@@ -54,7 +59,7 @@ content-publisher/
 │   ├── publisher.js        # Main router + Retry + Notify
 │   ├── notifier.js         # 📧 Email notifications (Gmail)
 │   ├── retry-manager.js    # 🔄 Retry with verification
-│   ├── translator.js       # EN→KO + 플랫폼 적응
+│   ├── translator.js       # 플랫폼별 포맷 적응
 │   ├── oauth-manager.js    # OAuth 자동 갱신
 │   ├── git-manager.js      # Git 자동 푸시
 │   ├── quality-gate.js     # 품질 검증
@@ -64,6 +69,7 @@ content-publisher/
 ├── generate_cover.js       # 커버 이미지 생성
 ├── select_topic.js         # 주제 선정
 ├── generate_draft.js       # 초안 작성
+├── publish.js              # 자동 라우팅 엔트리포인트
 └── config.js
 ```
 
