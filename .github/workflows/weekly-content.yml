@@ -18,7 +18,7 @@ on:
           - topic
           - draft
       dry_run:
-        description: "Draft run only: simulate publish pipeline without push/PR merge"
+        description: "Simulate workflow without push/PR merge side effects"
         required: true
         default: 'false'
         type: choice
@@ -52,9 +52,11 @@ jobs:
         env:
           GITHUB_MODELS_TOKEN: ${{ secrets.MODELS_TOKEN }}
           AUTO_SYNC_QUEUE: 'false'
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run || 'false' }}
         run: |
           set -euo pipefail
 
+          echo "DRY_RUN=${DRY_RUN}"
           node select_topic.js
           git config --global user.name "MandaAct Bot"
           git config --global user.email "bot@mandaact.com"
@@ -63,8 +65,26 @@ jobs:
             echo "No topic queue changes."
             exit 0
           fi
+
+          if [ "${DRY_RUN}" = "true" ]; then
+            echo "DRY_RUN enabled: skipping topic push and PR creation."
+            exit 0
+          fi
+
+          BRANCH_NAME="topic/weekly-$(date +%Y-%m-%d)-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          git checkout -b "$BRANCH_NAME"
           git commit -m "chore(topic): weekly topic selection"
-          git push
+          git push origin "$BRANCH_NAME"
+
+          echo "🚀 Creating Topic Pull Request..."
+          PR_URL=$(gh pr create --title "🧭 Weekly Topic Queue: $(date +%Y-%m-%d)" --body "Automated topic queue update. **Auto-merge enabled**." --base main --head "$BRANCH_NAME")
+          echo "📝 Topic PR Created: $PR_URL"
+
+          echo "🔄 Enabling Topic Auto-Merge..."
+          gh pr merge --auto --squash "$BRANCH_NAME"
+
+          # Keep workspace on main for subsequent steps (run_target=both).
+          git checkout main
 
       - name: Run Draft Writer (Mon, Wed, Fri)
         if: github.event.schedule == '0 16 * * 0,2,4' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_target == 'both' || github.event.inputs.run_target == 'draft'))
