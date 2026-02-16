@@ -21,7 +21,7 @@ const { validateTrend, buildAvoidanceInstructions, shouldRejectTopic } = require
 const { checkQuality } = require('./draft-quality-gate');
 const { enforceDraftQualityThreshold } = require('./lib/draft-quality-threshold');
 const { injectCTAToFile } = require('./lib/cta-injector');
-const { pushCoversToMain } = require('./lib/git-manager');
+const { pushCoversToMain, shouldRequireGitSyncSuccess } = require('./lib/git-manager');
 
 const QUEUE_PATH = config.paths.queue;
 const CONTEXT_PATH = config.paths.context;
@@ -475,7 +475,13 @@ async function generateDraft() {
 
         // 7. Auto-push cover images to main
         console.log('🔄 Syncing cover images to GitHub...');
-        pushCoversToMain(`Add cover images for: ${topic.title}`);
+        const coverSyncSuccess = pushCoversToMain(`Add cover images for: ${topic.title}`);
+        if (!coverSyncSuccess) {
+            if (shouldRequireGitSyncSuccess()) {
+                throw new Error('Cover image sync failed. Aborting to avoid broken cover URLs.');
+            }
+            console.warn('⚠️ Cover image sync failed. Continuing because STRICT_GIT_SYNC is disabled.');
+        }
 
         // 8. Send notification
         const files = [];
