@@ -6,9 +6,55 @@ const client = require('./lib/ai-client');
 const QUEUE_PATH = config.paths.queue;
 const ARCHIVE_PATH = config.paths.archive;
 const { notifier } = require('./lib/notifier');
+const KR_ONLY_TAG = '[KR-Only]';
 
 function shouldAutoSyncQueue(env = process.env) {
     return String(env.AUTO_SYNC_QUEUE || '').toLowerCase() === 'true';
+}
+
+function normalizeTopicField(value, fieldName, index) {
+    const normalized = String(value || '').replace(/\s+/g, ' ').trim();
+    if (!normalized) {
+        throw new Error(`Invalid response format: topics[${index}].${fieldName} is required`);
+    }
+    return normalized;
+}
+
+function normalizeCategory(rawCategory) {
+    const category = String(rawCategory || '').toLowerCase();
+    if (category.includes('global')) {
+        return 'Global Dev';
+    }
+    return 'Productivity';
+}
+
+function normalizeGeneratedTopics(result) {
+    if (!result || !Array.isArray(result.topics)) {
+        throw new Error("Invalid response format: 'topics' array missing.");
+    }
+    if (result.topics.length === 0) {
+        throw new Error("Invalid response format: 'topics' array is empty.");
+    }
+
+    return result.topics.map((topic, index) => {
+        if (!topic || typeof topic !== 'object') {
+            throw new Error(`Invalid response format: topics[${index}] must be an object.`);
+        }
+
+        const category = normalizeCategory(topic.category);
+        const rawTitle = normalizeTopicField(topic.title, 'title', index);
+        const title = category === 'Productivity' && !rawTitle.includes(KR_ONLY_TAG)
+            ? `${KR_ONLY_TAG} ${rawTitle}`
+            : rawTitle;
+
+        return {
+            category,
+            title,
+            rationale: normalizeTopicField(topic.rationale, 'rationale', index),
+            mandaact_angle: normalizeTopicField(topic.mandaact_angle, 'mandaact_angle', index),
+            target_audience: normalizeTopicField(topic.target_audience, 'target_audience', index)
+        };
+    });
 }
 
 async function selectTopic() {
@@ -96,12 +142,9 @@ Return a JSON object with a "topics" array containing all 3 topics (1 Global, 2 
         });
 
         const result = JSON.parse(response.choices[0].message.content);
+        const topics = normalizeGeneratedTopics(result);
 
-        if (!result.topics || !Array.isArray(result.topics)) {
-            throw new Error("Invalid response format: 'topics' array missing.");
-        }
-
-        console.log(`\n✅ Committee Decision: Generated ${result.topics.length} topics.`);
+        console.log(`\n✅ Committee Decision: Generated ${topics.length} topics.`);
 
         // 4. Update Queue with Strict Ordering
         // Order: 1. Global Dev (Mon), 2. Productivity (Wed), 3. Productivity (Fri)
@@ -111,15 +154,15 @@ Return a JSON object with a "topics" array containing all 3 topics (1 Global, 2 
         const formatTopic = (t) => `*   **${t.title}**\n    *   *Rationale*: ${t.rationale}\n    *   *MandaAct Angle*: ${t.mandaact_angle}\n    *   *Target*: ${t.target_audience}\n\n`;
 
         // Find topics by category
-        const devTopic = result.topics.find(t => t.category === "Global Dev");
-        const prodTopics = result.topics.filter(t => t.category === "Productivity");
+        const devTopic = topics.find(t => t.category === "Global Dev");
+        const prodTopics = topics.filter(t => t.category === "Productivity");
 
         // Sequence: [Dev, Prod, Prod]
         if (devTopic) newEntries += formatTopic(devTopic);
         prodTopics.forEach(t => newEntries += formatTopic(t));
 
         // Fallback if AI didn't respect categories strictly
-        const remaining = result.topics.filter(t => t !== devTopic && !prodTopics.includes(t));
+        const remaining = topics.filter(t => t !== devTopic && !prodTopics.includes(t));
         remaining.forEach(t => newEntries += formatTopic(t));
 
         let newQueueContent = queueContent;
@@ -153,8 +196,8 @@ Return a JSON object with a "topics" array containing all 3 topics (1 Global, 2 
 
         // Send notification
         await notifier.stepComplete('topic_selection', {
-            count: result.topics.length,
-            topics: result.topics.map(t => t.title).join(', ')
+            count: topics.length,
+            topics: topics.map(t => t.title).join(', ')
         });
 
     } catch (error) {
@@ -173,4 +216,10 @@ if (require.main === module) {
     });
 }
 
-module.exports = { selectTopic, shouldAutoSyncQueue };
+module.exports = {
+    selectTopic,
+    shouldAutoSyncQueue,
+    normalizeGeneratedTopics,
+    normalizeTopicField,
+    normalizeCategory
+};
