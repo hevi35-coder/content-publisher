@@ -8,6 +8,22 @@
 *This file is automatically updated by the Sunday Topic Committee.*
 
 ## On Deck (Next Up)
+*   **Optimizing Developer Onboarding: A Blueprint for Scalable Teams**
+    *   *Rationale*: As tech teams scale, efficient onboarding is critical to ensure productivity and maintain team cohesion. Poor onboarding processes lead to prolonged ramp-up times and decreased team performance. This article provides actionable insights on how to design and implement an effective developer onboarding framework.
+    *   *MandaAct Angle*: MandaAct's 9x9 framework can help engineering teams design structured onboarding processes by breaking them down into key phases: pre-joining preparation, first-week tasks, mentorship matching, tools training, project familiarization, and feedback loops. By visualizing onboarding milestones, teams can ensure new hires are set up for success.
+    *   *Target*: Senior developers, team leads, engineering managers, HR professionals in tech companies.
+
+*   **[KR-Only] How to Build Momentum on Your Goals with the 9x9 Mandalart Framework**
+    *   *Rationale*: Many Korean professionals and students struggle with maintaining motivation and momentum in their personal and professional goals. This is especially relevant during periods of high stress or when tackling long-term projects. This article will provide a step-by-step guide to building and sustaining momentum using the Mandalart framework.
+    *   *MandaAct Angle*: MandaAct's digital Mandalart tool helps users break down their goals into smaller, actionable tasks and design a structured plan to achieve them. By utilizing features like reminders and progress tracking, users can maintain consistent progress and avoid feeling stuck.
+    *   *Target*: Korean professionals, students, and self-improvement enthusiasts who struggle with maintaining motivation and progress on their goals.
+
+*   **[KR-Only] How to Turn Daily Chaos into Clarity with the 9x9 Grid**
+    *   *Rationale*: Korean professionals and students often face overwhelming daily schedules and struggle to prioritize tasks effectively. This article addresses the need to bring clarity and structure to daily routines, helping readers regain a sense of control and focus.
+    *   *MandaAct Angle*: MandaAct's 9x9 grid allows users to visually organize their daily tasks by priority, categorize them by context (e.g., work, study, and personal time), and align smaller daily tasks with larger goals. This approach ensures that users can stay productive without losing sight of the bigger picture.
+    *   *Target*: Korean professionals, students, and indie hackers looking for practical ways to organize daily tasks and maintain clarity in their routines.
+
+
 *   **Scaling Beyond the Monolith: A Practical Guide to Transitioning to Microservices**
     *   *Rationale*: As companies grow, monolithic architectures often become bottlenecks for scalability, reliability, and development velocity. Microservices have emerged as a leading solution, but the transition from monolith to microservices is complex and fraught with potential pitfalls. This article provides a structured, actionable guide for developers looking to make the shift while minimizing technical debt.
     *   *MandaAct Angle*: MandaAct's 9x9 grid offers a systematic approach to simplifying the transition process. Developers can break down the migration into clear steps, such as identifying service boundaries, setting up CI/CD for individual services, and creating a roadmap for data migration. By visualizing the process in the grid, teams can ensure a smooth and efficient shift.
