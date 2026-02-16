@@ -24,3 +24,6 @@ jobs:
 
       - name: Install Dependencies
         run: npm ci
+
+      - name: Run Regression Tests
+        run: npm test
