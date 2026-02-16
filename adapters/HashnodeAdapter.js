@@ -42,9 +42,69 @@ class HashnodeAdapter extends BaseAdapter {
         return result.data;
     }
 
+    _normalizeTitle(title) {
+        return String(title || '').trim().toLowerCase();
+    }
+
     async checkExists(title) {
-        // Hashnode doesn't have a simple title-based lookup
-        // Would need to fetch all posts and filter - skipping for now
+        await this.authenticate();
+
+        const targetTitle = this._normalizeTitle(title);
+        if (!targetTitle) return null;
+
+        const query = `
+            query GetPublicationPosts($id: ObjectId!, $first: Int!, $after: String) {
+                publication(id: $id) {
+                    posts(first: $first, after: $after) {
+                        edges {
+                            node {
+                                id
+                                title
+                                slug
+                                url
+                            }
+                        }
+                        pageInfo {
+                            hasNextPage
+                            endCursor
+                        }
+                    }
+                }
+            }
+        `;
+
+        const MAX_PAGES = 5;
+        const PAGE_SIZE = 20;
+        let after = null;
+
+        try {
+            for (let i = 0; i < MAX_PAGES; i++) {
+                const data = await this._graphqlRequest(query, {
+                    id: this.publicationId,
+                    first: PAGE_SIZE,
+                    after
+                });
+
+                const edges = data?.publication?.posts?.edges || [];
+                for (const edge of edges) {
+                    const post = edge?.node;
+                    if (!post) continue;
+                    if (this._normalizeTitle(post.title) === targetTitle) {
+                        return post;
+                    }
+                }
+
+                const pageInfo = data?.publication?.posts?.pageInfo;
+                if (!pageInfo?.hasNextPage || !pageInfo?.endCursor) {
+                    break;
+                }
+                after = pageInfo.endCursor;
+            }
+        } catch (err) {
+            console.warn('⚠️ [Hashnode] Failed to check existing posts:', err.message);
+            return null;
+        }
+
         return null;
     }
 
