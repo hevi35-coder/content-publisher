@@ -57,6 +57,31 @@ function normalizeGeneratedTopics(result) {
     });
 }
 
+function enforceWeeklyTopicMix(topics) {
+    const normalizedTopics = Array.isArray(topics) ? topics : [];
+    if (normalizedTopics.length < 3) {
+        throw new Error('Invalid response format: need at least 3 topics.');
+    }
+
+    const uniqueTopics = [];
+    const seenTitles = new Set();
+    for (const topic of normalizedTopics) {
+        const key = topic.title.toLowerCase();
+        if (seenTitles.has(key)) continue;
+        seenTitles.add(key);
+        uniqueTopics.push(topic);
+    }
+
+    const globalTopics = uniqueTopics.filter((topic) => topic.category === 'Global Dev');
+    const productivityTopics = uniqueTopics.filter((topic) => topic.category === 'Productivity');
+
+    if (globalTopics.length < 1 || productivityTopics.length < 2) {
+        throw new Error('Invalid response format: require at least 1 Global Dev and 2 Productivity topics.');
+    }
+
+    return [globalTopics[0], productivityTopics[0], productivityTopics[1]];
+}
+
 async function selectTopic() {
     try {
         console.log("🕵️‍♂️  Topic Committee in Session...");
@@ -142,7 +167,7 @@ Return a JSON object with a "topics" array containing all 3 topics (1 Global, 2 
         });
 
         const result = JSON.parse(response.choices[0].message.content);
-        const topics = normalizeGeneratedTopics(result);
+        const topics = enforceWeeklyTopicMix(normalizeGeneratedTopics(result));
 
         console.log(`\n✅ Committee Decision: Generated ${topics.length} topics.`);
 
@@ -153,17 +178,10 @@ Return a JSON object with a "topics" array containing all 3 topics (1 Global, 2 
         // Helper to formatting
         const formatTopic = (t) => `*   **${t.title}**\n    *   *Rationale*: ${t.rationale}\n    *   *MandaAct Angle*: ${t.mandaact_angle}\n    *   *Target*: ${t.target_audience}\n\n`;
 
-        // Find topics by category
-        const devTopic = topics.find(t => t.category === "Global Dev");
-        const prodTopics = topics.filter(t => t.category === "Productivity");
-
-        // Sequence: [Dev, Prod, Prod]
-        if (devTopic) newEntries += formatTopic(devTopic);
-        prodTopics.forEach(t => newEntries += formatTopic(t));
-
-        // Fallback if AI didn't respect categories strictly
-        const remaining = topics.filter(t => t !== devTopic && !prodTopics.includes(t));
-        remaining.forEach(t => newEntries += formatTopic(t));
+        // Sequence: [Global Dev, Productivity, Productivity]
+        topics.forEach((topic) => {
+            newEntries += formatTopic(topic);
+        });
 
         let newQueueContent = queueContent;
         // Prepend to "On Deck"
@@ -220,6 +238,7 @@ module.exports = {
     selectTopic,
     shouldAutoSyncQueue,
     normalizeGeneratedTopics,
+    enforceWeeklyTopicMix,
     normalizeTopicField,
     normalizeCategory
 };
