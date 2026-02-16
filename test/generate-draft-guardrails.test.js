@@ -1,6 +1,10 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { createTopicSlug, resolveTargetProfilesFromTitle } = require('../generate_draft');
+const {
+    createTopicSlug,
+    resolveTargetProfilesFromTitle,
+    buildDraftedQueueContent
+} = require('../generate_draft');
 
 test('createTopicSlug keeps Korean titles usable for filenames', () => {
     const slug = createTopicSlug('만다라트의 완벽 가이드');
@@ -52,5 +56,44 @@ test('resolveTargetProfilesFromTitle rejects conflicting tags', () => {
     assert.throws(
         () => resolveTargetProfilesFromTitle('[KR-Only] [EN-Only] invalid topic'),
         /cannot be combined/
+    );
+});
+
+test('buildDraftedQueueContent updates the exact topic line once', () => {
+    const queue = [
+        '## On Deck (Next Up)',
+        '*   **[KR-Only] Focus Tactics**',
+        '    *   *Rationale*: test',
+        ''
+    ].join('\n');
+
+    const updated = buildDraftedQueueContent(queue, '[KR-Only] Focus Tactics', '✅ EN:80 KO:82');
+    assert.match(updated, /\*   \*\*\[KR-Only\] Focus Tactics\*\* \(Drafted ✅ EN:80 KO:82\)/);
+});
+
+test('buildDraftedQueueContent rejects when topic line is missing', () => {
+    const queue = [
+        '## On Deck (Next Up)',
+        '*   **[KR-Only] Another Topic**',
+        ''
+    ].join('\n');
+
+    assert.throws(
+        () => buildDraftedQueueContent(queue, '[KR-Only] Focus Tactics', '✅ EN:80 KO:82'),
+        /topic line not found/
+    );
+});
+
+test('buildDraftedQueueContent rejects duplicate topic lines', () => {
+    const queue = [
+        '## On Deck (Next Up)',
+        '*   **[KR-Only] Focus Tactics**',
+        '*   **[KR-Only] Focus Tactics**',
+        ''
+    ].join('\n');
+
+    assert.throws(
+        () => buildDraftedQueueContent(queue, '[KR-Only] Focus Tactics', '✅ EN:80 KO:82'),
+        /duplicate topic lines/
     );
 });

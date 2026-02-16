@@ -77,6 +77,40 @@ function resolveTargetProfilesFromTitle(title) {
     return { profiles, isKROnly, isENOnly };
 }
 
+function escapeRegExp(string) {
+    return String(string || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function buildDraftedQueueContent(queueContent, originalTitle, qualityBadge) {
+    const safeQueueContent = String(queueContent || '');
+    const safeTitle = String(originalTitle || '').trim();
+    const safeBadge = String(qualityBadge || '').trim();
+
+    if (!safeTitle) {
+        throw new Error('Cannot update queue: original title is empty.');
+    }
+    if (!safeBadge) {
+        throw new Error('Cannot update queue: quality badge is empty.');
+    }
+
+    const titleLinePattern = `^\\*\\s+\\*\\*${escapeRegExp(safeTitle)}\\*\\*\\s*$`;
+    const exactLineRegexGlobal = new RegExp(titleLinePattern, 'gm');
+    const matches = safeQueueContent.match(exactLineRegexGlobal) || [];
+
+    if (matches.length === 0) {
+        throw new Error(`Cannot update queue: topic line not found for "${safeTitle}".`);
+    }
+    if (matches.length > 1) {
+        throw new Error(`Cannot update queue: duplicate topic lines found for "${safeTitle}".`);
+    }
+
+    const exactLineRegexSingle = new RegExp(titleLinePattern, 'm');
+    return safeQueueContent.replace(
+        exactLineRegexSingle,
+        `*   **${safeTitle}** (Drafted ${safeBadge})`
+    );
+}
+
 /**
  * Read topic from queue
  */
@@ -436,15 +470,7 @@ async function generateDraft() {
         const koScore = resultKO ? `KO:${resultKO.qualityReport.score}` : 'KO:Skip';
         const qualityBadge = `✅ ${enScore} ${koScore}`;
 
-        // Regex to match the original line with tags in the queue
-        // We use the originalTitle because readTopic reads it with tags
-        const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const titleRegex = new RegExp(`\\*   \\*\\*${escapeRegExp(originalTitle)}\\*\\*`);
-
-        const updatedQueue = queueContent.replace(
-            titleRegex,
-            `*   **${originalTitle}** (Drafted ${qualityBadge})`
-        );
+        const updatedQueue = buildDraftedQueueContent(queueContent, originalTitle, qualityBadge);
         fs.writeFileSync(QUEUE_PATH, updatedQueue, 'utf8');
 
         // 7. Auto-push cover images to main
@@ -482,5 +508,6 @@ module.exports = {
     generateWithProfile,
     processDraft,
     createTopicSlug,
-    resolveTargetProfilesFromTitle
+    resolveTargetProfilesFromTitle,
+    buildDraftedQueueContent
 };
