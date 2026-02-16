@@ -45,7 +45,13 @@ node scripts/export-naver.js drafts/my-article.md
 
 - `Weekly Content Automation` 수동 실행 시 `dry_run=true`로 실행하면 draft 단계에서 브랜치 푸시/PR 생성을 생략합니다.
 - `Auto Publish (Content Publisher)` 수동 실행 시 `dry_run=true`로 실행하면 외부 플랫폼 API 호출과 커버 이미지 푸시를 시뮬레이션합니다.
+- `Auto Publish (Content Publisher)` 수동 실행에서 `draft_files`가 비어 있거나 형식이 잘못되면 즉시 실패하여 원인과 조치 방법을 로그에 출력합니다.
 - 두 workflow 모두 `workflow_dispatch` 기본값은 `dry_run=true`입니다.
+
+## 🚨 Failure Diagnosis
+
+- `Notify on Workflow Failure`는 `Weekly Content Automation` 및 `Auto Publish (Content Publisher)`의 main 브랜치 실패를 감지합니다.
+- 실패 시 원인 분류(`output/failure-diagnosis.json`, `output/failure-diagnosis.md`)를 생성하고 메일 본문에 조치 가이드를 포함합니다.
 
 ## 📁 Architecture
 
