@@ -51,6 +51,7 @@ jobs:
         if: github.event.schedule == '0 16 * * 6' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_target == 'both' || github.event.inputs.run_target == 'topic'))
         env:
           GITHUB_MODELS_TOKEN: ${{ secrets.MODELS_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           AUTO_SYNC_QUEUE: 'false'
           DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run || 'false' }}
         run: |
@@ -91,6 +92,7 @@ jobs:
         env:
           GITHUB_MODELS_TOKEN: ${{ secrets.MODELS_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           AUTO_PUBLISH_AFTER_DRAFT: 'false'
           DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run || 'false' }}
         run: |
