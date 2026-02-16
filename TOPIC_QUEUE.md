@@ -8,6 +8,22 @@
 *This file is automatically updated by the Sunday Topic Committee.*
 
 ## On Deck (Next Up)
+*   **Optimizing Developer Workflows with Infrastructure as Code (IaC) and CI/CD**
+    *   *Rationale*: Infrastructure as Code (IaC) combined with CI/CD pipelines is becoming a cornerstone of modern software development, enabling teams to automate deployments, ensure consistency, and reduce manual errors. Developers need to understand best practices for implementing IaC and integrating it into their CI/CD workflows to improve deployment speed and reliability, especially in cloud-native environments.
+    *   *MandaAct Angle*: MandaAct's 9x9 grid can help developers and teams plan and implement an IaC + CI/CD strategy step-by-step. By breaking the process into sub-goals (e.g., defining infrastructure, writing templates, setting up pipelines, testing, and monitoring), developers can execute complex workflows systematically and avoid common pitfalls.
+    *   *Target*: Mid to senior developers, DevOps engineers, and teams adopting modern deployment practices.
+
+*   **[KR-Only] Reclaim Your Mornings: How to Build a Morning Routine with the 9x9 Framework**
+    *   *Rationale*: With the fast-paced lifestyle in Korea, many professionals and students struggle to establish a productive morning routine. Starting the day with clear goals and intentions can set the tone for success, but finding a method to create and sustain this habit can be challenging.
+    *   *MandaAct Angle*: MandaAct's 9x9 grid provides a visual framework to design an effective morning routine. Users can break their mornings into key focus areas like mindfulness, planning, learning, exercise, and self-care, and create actionable steps within each area to build a sustainable habit.
+    *   *Target*: Korean students, professionals, and productivity enthusiasts looking to start their days with energy and focus.
+
+*   **[KR-Only] The 9x9 Strategy for Conquering Overwhelm During Exam Season**
+    *   *Rationale*: Exam season is a stressful time for students in Korea, often leading to burnout and reduced productivity. Many students struggle to manage their time effectively and to break down their study goals into manageable tasks. This article provides a practical solution to help students stay organized and focused.
+    *   *MandaAct Angle*: MandaAct’s digital Mandalart framework allows students to visually map out their study plan using the 9x9 grid. By breaking down subjects into chapters, topics, and practice sessions, students can avoid overwhelm and track their progress systematically, staying on top of their studies.
+    *   *Target*: Korean students preparing for exams, particularly high school and university students.
+
+
 *   **Scaling Beyond the Monolith: A Practical Guide to Transitioning to Microservices**
     *   *Rationale*: As companies grow, monolithic architectures often become bottlenecks for scalability, reliability, and development velocity. Microservices have emerged as a leading solution, but the transition from monolith to microservices is complex and fraught with potential pitfalls. This article provides a structured, actionable guide for developers looking to make the shift while minimizing technical debt.
     *   *MandaAct Angle*: MandaAct's 9x9 grid offers a systematic approach to simplifying the transition process. Developers can break down the migration into clear steps, such as identifying service boundaries, setting up CI/CD for individual services, and creating a roadmap for data migration. By visualizing the process in the grid, teams can ensure a smooth and efficient shift.
