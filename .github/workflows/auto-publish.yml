@@ -45,11 +45,22 @@ jobs:
 
       - name: Identify Changed Draft Files
         id: files
+        env:
+          MANUAL_FILES_RAW: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.draft_files || '' }}
         run: |
           set -euo pipefail
 
-          MANUAL_FILES_RAW='${{ github.event_name == '"'"'workflow_dispatch'"'"' && github.event.inputs.draft_files || '"'"''"'"' }}'
-          MANUAL_FILES=$(printf "%s" "$MANUAL_FILES_RAW" | tr ',' '\n' | sed 's/^ *//;s/ *$//' | grep '^drafts/.*\.md$' || true)
+          MANUAL_FILES=$(printf "%s\n" "$MANUAL_FILES_RAW" \
+            | tr ',\r' '\n' \
+            | sed 's/^ *//;s/ *$//' \
+            | grep '^drafts/.*\.md$' || true)
+
+          # Fail fast when manual override is provided but malformed.
+          MANUAL_FILES_RAW_STRIPPED=$(printf "%s" "$MANUAL_FILES_RAW" | tr -d '[:space:],')
+          if [ -n "$MANUAL_FILES_RAW_STRIPPED" ] && [ -z "$MANUAL_FILES" ]; then
+            echo "::error::workflow_dispatch draft_files was provided but no valid drafts/*.md entries were found."
+            exit 1
+          fi
 
           if [ -n "$MANUAL_FILES" ]; then
             echo "Using workflow_dispatch draft_files override:"
