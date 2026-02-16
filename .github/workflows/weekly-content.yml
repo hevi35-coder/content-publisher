@@ -55,6 +55,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           AUTO_SYNC_QUEUE: 'false'
           DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run || 'false' }}
+          RUN_TARGET: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.run_target || '' }}
         run: |
           set -euo pipefail
 
@@ -81,6 +82,7 @@ jobs:
 
           echo "🚀 Creating Topic Pull Request..."
           PR_URL=$(gh pr create --title "🧭 Weekly Topic Queue: $(date +%Y-%m-%d)" --body "Automated topic queue update. **Auto-merge enabled**." --base main --head "$BRANCH_NAME")
+          PR_NUMBER=$(gh pr view "$PR_URL" --json number --jq '.number')
           echo "📝 Topic PR Created: $PR_URL"
 
           echo "✅ Posting required status context (pr-sanity) for Topic PR..."
@@ -91,10 +93,29 @@ jobs:
             -f target_url="https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
 
           echo "🔄 Enabling Topic Auto-Merge..."
-          gh pr merge --auto --squash --delete-branch "$BRANCH_NAME"
+          gh pr merge --auto --squash --delete-branch "$PR_NUMBER"
 
-          # Keep workspace on main for subsequent steps (run_target=both).
+          if [ "${RUN_TARGET}" = "both" ]; then
+            echo "⏳ Waiting for Topic PR #${PR_NUMBER} merge before Draft Writer..."
+            for _ in $(seq 1 30); do
+              MERGED_AT=$(gh pr view "${PR_NUMBER}" --json mergedAt --jq '.mergedAt')
+              if [ "${MERGED_AT}" != "null" ] && [ -n "${MERGED_AT}" ]; then
+                echo "✅ Topic PR merged at ${MERGED_AT}"
+                break
+              fi
+              sleep 2
+            done
+
+            MERGED_AT=$(gh pr view "${PR_NUMBER}" --json mergedAt --jq '.mergedAt')
+            if [ "${MERGED_AT}" = "null" ] || [ -z "${MERGED_AT}" ]; then
+              echo "❌ Topic PR merge timeout. Stopping before Draft Writer."
+              exit 1
+            fi
+          fi
+
+          # Keep workspace in sync with remote main for subsequent steps.
           git checkout main
+          git pull --ff-only origin main
 
       - name: Run Draft Writer (Mon, Wed, Fri)
         if: github.event.schedule == '0 16 * * 0,2,4' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_target == 'both' || github.event.inputs.run_target == 'draft'))
