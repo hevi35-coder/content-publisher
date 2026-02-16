@@ -92,6 +92,10 @@ jobs:
 
           if [ -z "$CHANGED_FILES" ]; then
             echo "No draft files changed."
+            if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+              echo "::error::No publish target resolved. Provide workflow_dispatch draft_files (drafts/*.md), or trigger via main push with changed drafts."
+              exit 1
+            fi
             echo "has_files=false" >> "$GITHUB_OUTPUT"
           else
             echo "Found changed drafts:"
