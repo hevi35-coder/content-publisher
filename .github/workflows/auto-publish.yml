@@ -16,6 +16,11 @@ on:
         options:
           - 'false'
           - 'true'
+      draft_files:
+        description: "Optional newline/comma-separated drafts/*.md list for manual backfill"
+        required: false
+        default: ''
+        type: string
 
 concurrency:
   group: auto-publish-${{ github.ref }}
@@ -42,6 +47,21 @@ jobs:
         id: files
         run: |
           set -euo pipefail
+
+          MANUAL_FILES_RAW='${{ github.event_name == '"'"'workflow_dispatch'"'"' && github.event.inputs.draft_files || '"'"''"'"' }}'
+          MANUAL_FILES=$(printf "%s" "$MANUAL_FILES_RAW" | tr ',' '\n' | sed 's/^ *//;s/ *$//' | grep '^drafts/.*\.md$' || true)
+
+          if [ -n "$MANUAL_FILES" ]; then
+            echo "Using workflow_dispatch draft_files override:"
+            echo "$MANUAL_FILES"
+            {
+              echo "has_files=true"
+              echo "files<<EOF"
+              echo "$MANUAL_FILES"
+              echo "EOF"
+            } >> $GITHUB_OUTPUT
+            exit 0
+          fi
 
           # Get all changed markdown files under drafts/ for push range.
           # Fallback for manual dispatch: latest commit changes.
