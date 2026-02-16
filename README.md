@@ -21,6 +21,7 @@
 |------|------|------|
 | 일요일 | 01:00 KST | Topic Selection |
 | 월/수/금 | 01:00 KST | Draft + PR + Auto-Merge |
+| 일/월/수/금 | 03:30 KST | Weekly Schedule Watchdog (스케줄 미발화 감시) |
 | main push | 이벤트 기반 | Auto Publish (KO→Blogger, EN→Dev.to+Hashnode) |
 
 ## 🚀 Quick Start
@@ -50,7 +51,7 @@ node scripts/export-naver.js drafts/my-article.md
 
 ## 🚨 Failure Diagnosis
 
-- `Notify on Workflow Failure`는 `Weekly Content Automation` 및 `Auto Publish (Content Publisher)`의 main 브랜치 실패를 감지합니다.
+- `Notify on Workflow Failure`는 `Weekly Content Automation`, `Auto Publish (Content Publisher)`, `Weekly Schedule Watchdog`의 main 브랜치 실패를 감지합니다.
 - 실패 시 원인 분류(`output/failure-diagnosis.json`, `output/failure-diagnosis.md`)를 생성하고 메일 본문에 조치 가이드를 포함합니다.
 
 ## 📁 Architecture

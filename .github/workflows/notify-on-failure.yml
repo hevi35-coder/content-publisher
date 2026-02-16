@@ -5,6 +5,7 @@ on:
     workflows:
       - "Weekly Content Automation"
       - "Auto Publish (Content Publisher)"
+      - "Weekly Schedule Watchdog"
     types:
       - completed
 

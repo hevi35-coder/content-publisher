@@ -54,6 +54,24 @@ test('summarizeWorkflowFailure falls back to unknown signature', () => {
     assert.ok(diagnosis.suggestedActions.length > 0);
 });
 
+test('summarizeWorkflowFailure classifies watchdog missed schedule signature', () => {
+    const diagnosis = summarizeWorkflowFailure({
+        workflowName: 'Weekly Schedule Watchdog',
+        eventName: 'schedule',
+        failedJobs: [
+            {
+                name: 'watchdog',
+                failedSteps: ['Check Weekly Schedule Run Health']
+            }
+        ],
+        failedLogExcerpt:
+            '::error::SCHEDULE_SLOT_MISSED No scheduled Weekly Content Automation run detected'
+    });
+
+    assert.equal(diagnosis.rootCauseCode, 'WEEKLY_SCHEDULE_NOT_TRIGGERED');
+    assert.match(diagnosis.summary, /schedule window/i);
+});
+
 test('toDiagnosisMarkdown renders key diagnosis fields', () => {
     const markdown = toDiagnosisMarkdown({
         workflowName: 'Auto Publish (Content Publisher)',
