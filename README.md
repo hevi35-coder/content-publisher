@@ -19,9 +19,9 @@
 
 | 요일 | 시간 | 작업 |
 |------|------|------|
-| 일요일 | 09:00 KST | Topic Selection |
-| 월요일 | 09:00 KST | Draft + PR |
-| 화요일 | - | Auto-Merge → Publish |
+| 일요일 | 01:00 KST | Topic Selection |
+| 월/수/금 | 01:00 KST | Draft + PR + Auto-Merge |
+| main push | 이벤트 기반 | Auto Publish (KO→Blogger, EN→Dev.to+Hashnode) |
 
 ## 🚀 Quick Start
 
@@ -105,5 +105,4 @@ NOTIFY_EMAIL_TO=xxx@email.com
 ## 📚 Documentation
 
 - [네이버 수동 발행 가이드](docs/NAVER_MANUAL_GUIDE.md)
-- [Obsidian Docs](../MyObsidianVault/10_Projects/01_Active/DevTo%20Publisher/00_Overview.md)
-
+- [Obsidian Docs](../MyObsidianVault/10_Projects/01_Active/Content%20Publisher/00_Overview.md)
