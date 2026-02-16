@@ -11,6 +11,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const matter = require('gray-matter');
 const config = require('./config');
 const client = require('./lib/ai-client');
@@ -29,9 +30,51 @@ const DRAFTS_DIR = config.paths.drafts;
 // Configuration
 const MAX_REGENERATION_ATTEMPTS = 3;
 const QUALITY_THRESHOLD = 70;
+const KR_ONLY_TAG = '[KR-Only]';
+const EN_ONLY_TAG = '[EN-Only]';
 
 function allowLowQualityDrafts() {
     return String(process.env.ALLOW_LOW_QUALITY_DRAFTS || '').toLowerCase() === 'true';
+}
+
+function createTopicSlug(title) {
+    const normalizedTitle = String(title || '')
+        .toLowerCase()
+        .normalize('NFC')
+        .replace(/[^\p{L}\p{N}]+/gu, '-')
+        .replace(/(^-|-$)+/g, '');
+
+    if (normalizedTitle) {
+        return normalizedTitle;
+    }
+
+    const hash = crypto
+        .createHash('sha1')
+        .update(String(title || 'untitled-topic'))
+        .digest('hex')
+        .slice(0, 10);
+
+    return `topic-${hash}`;
+}
+
+function resolveTargetProfilesFromTitle(title) {
+    const rawTitle = String(title || '');
+    const isKROnly = rawTitle.includes(KR_ONLY_TAG);
+    const isENOnly = rawTitle.includes(EN_ONLY_TAG);
+
+    if (isKROnly && isENOnly) {
+        throw new Error(`Invalid topic tags: ${KR_ONLY_TAG} and ${EN_ONLY_TAG} cannot be combined.`);
+    }
+
+    const profiles = [];
+    if (!isKROnly) profiles.push('devto');
+    if (!isENOnly) profiles.push('blogger_kr');
+
+    if (profiles.length === 0) {
+        throw new Error('No generation targets resolved from topic tags.');
+    }
+
+    return { profiles, isKROnly, isENOnly };
 }
 
 /**
@@ -264,7 +307,7 @@ async function processDraft(topic, profileId, trendResult, context) {
         draft = await verifyDraft(draft, context);
 
         // Save temporarily for quality check
-        const slug = topic.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+        const slug = createTopicSlug(topic.title);
         const date = new Date().toISOString().split('T')[0];
         const tempFilename = `${date}-${slug}${suffix}.md`;
         const tempPath = saveDraft(draft, tempFilename);
@@ -292,7 +335,7 @@ async function processDraft(topic, profileId, trendResult, context) {
     });
 
     // Generate cover image
-    const slug = topic.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+    const slug = createTopicSlug(topic.title);
     const coverInfo = await generateCoverImage(topic.title, slug, lang);
 
     // Update draft with cover URL
@@ -351,18 +394,18 @@ async function generateDraft() {
         // 4. Determine target platforms based on tags
         console.log('\n🚀 Phase 2: Parallel Draft Generation');
 
-        const isKROnly = topic.title.includes('[KR-Only]');
-        const isENOnly = topic.title.includes('[EN-Only]');
+        const { profiles, isKROnly, isENOnly } = resolveTargetProfilesFromTitle(topic.title);
 
         // Clean title for AI generation (remove tags like [KR-Only], [SEO], etc)
         const originalTitle = topic.title;
         topic.title = topic.title.replace(/\[.*?\]\s*/g, '').trim();
+        if (!topic.title) {
+            throw new Error('Invalid topic title after tag normalization.');
+        }
         console.log(`   Targeting: ${isKROnly ? 'KR Only' : isENOnly ? 'EN Only' : 'All Channels'}`);
         console.log(`   Clean Title: "${topic.title}"`);
 
-        const tasks = [];
-        if (!isKROnly) tasks.push(processDraft(topic, 'devto', trendResult, context));
-        if (!isENOnly) tasks.push(processDraft(topic, 'blogger_kr', trendResult, context));
+        const tasks = profiles.map((profileId) => processDraft(topic, profileId, trendResult, context));
 
         const results = await Promise.all(tasks);
         const resultEN = results.find(r => r.language === 'en');
@@ -434,4 +477,10 @@ if (require.main === module) {
     generateDraft();
 }
 
-module.exports = { generateDraft, generateWithProfile, processDraft };
+module.exports = {
+    generateDraft,
+    generateWithProfile,
+    processDraft,
+    createTopicSlug,
+    resolveTargetProfilesFromTitle
+};
