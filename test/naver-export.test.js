@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { toNaverHtml } = require('../scripts/export-naver');
+const { toNaverHtml, copyToClipboard } = require('../scripts/export-naver');
 
 test('toNaverHtml converts markdown headers and paragraphs', () => {
     const markdown = [
@@ -44,4 +44,44 @@ test('toNaverHtml converts horizontal rules', () => {
     const html = toNaverHtml(markdown);
 
     assert.match(html, /<hr style="margin:30px 0;border:none;border-top:1px solid #e0e0e0;">/);
+});
+
+test('copyToClipboard skips non-darwin platforms', () => {
+    let called = false;
+    const result = copyToClipboard('hello', {
+        platform: 'linux',
+        run: () => {
+            called = true;
+            return { status: 0 };
+        }
+    });
+
+    assert.equal(result, false);
+    assert.equal(called, false);
+});
+
+test('copyToClipboard sends raw text to pbcopy on macOS', () => {
+    let captured = null;
+    const payload = 'dangerous "$(touch /tmp/x)" text';
+
+    const result = copyToClipboard(payload, {
+        platform: 'darwin',
+        run: (cmd, options) => {
+            captured = { cmd, options };
+            return { status: 0 };
+        }
+    });
+
+    assert.equal(result, true);
+    assert.equal(captured.cmd, 'pbcopy');
+    assert.equal(captured.options.input, payload);
+    assert.equal(captured.options.encoding, 'utf8');
+});
+
+test('copyToClipboard returns false when pbcopy fails', () => {
+    const result = copyToClipboard('hello', {
+        platform: 'darwin',
+        run: () => ({ status: 1 })
+    });
+    assert.equal(result, false);
 });
