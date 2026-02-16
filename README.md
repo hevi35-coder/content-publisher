@@ -104,6 +104,11 @@ NOTIFY_EMAIL_TO=xxx@email.com
 # default(false): quality score below threshold blocks draft pipeline
 # true: continue draft pipeline even when quality is below threshold
 ALLOW_LOW_QUALITY_DRAFTS=false
+
+# Topic Committee Auto Sync (Optional)
+# default(false): select_topic.js does not push directly to main
+# true: allow direct git push from select_topic.js
+AUTO_SYNC_QUEUE=false
 ```
 
 ## 🌍 Platform Support

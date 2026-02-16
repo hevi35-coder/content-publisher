@@ -7,6 +7,10 @@ const QUEUE_PATH = config.paths.queue;
 const ARCHIVE_PATH = config.paths.archive;
 const { notifier } = require('./lib/notifier');
 
+function shouldAutoSyncQueue(env = process.env) {
+    return String(env.AUTO_SYNC_QUEUE || '').toLowerCase() === 'true';
+}
+
 async function selectTopic() {
     try {
         console.log("🕵️‍♂️  Topic Committee in Session...");
@@ -130,9 +134,9 @@ Return a JSON object with a "topics" array containing all 3 topics (1 Global, 2 
         console.log("📝 3 Topics added to TOPIC_QUEUE.md");
 
         // 5. Automated Sync (Git Push)
+        // Safe default: disabled unless AUTO_SYNC_QUEUE=true.
         // CI workflow handles commit/push in a dedicated step.
-        const shouldAutoSyncQueue = process.env.AUTO_SYNC_QUEUE !== 'false';
-        if (shouldAutoSyncQueue) {
+        if (shouldAutoSyncQueue()) {
             console.log("🔄 Auto-syncing to GitHub...");
             try {
                 execSync(`git add ${QUEUE_PATH}`);
@@ -144,7 +148,7 @@ Return a JSON object with a "topics" array containing all 3 topics (1 Global, 2 
                 // Don't throw error here, just warn, as prompt generation was successful
             }
         } else {
-            console.log("⏭️ Auto-sync skipped (AUTO_SYNC_QUEUE=false).");
+            console.log("⏭️ Auto-sync skipped (set AUTO_SYNC_QUEUE=true to enable direct push).");
         }
 
         // Send notification
@@ -169,4 +173,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { selectTopic };
+module.exports = { selectTopic, shouldAutoSyncQueue };
