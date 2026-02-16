@@ -161,7 +161,7 @@ The system is ready for its first fully autonomous run next Sunday.
     *   Single OpenAI initialization for all scripts.
     *   Reduced code duplication by ~20 lines.
 
-3.  **Quality Gate (`quality_gate.js`)**:
+3.  **Quality Gate (`draft-quality-gate.js`, legacy alias: `quality_gate.js`)**:
     *   SEO checks: Title length (50-60 chars), tag count.
     *   Readability: Flesch-Kincaid Grade Level (target: 8-12).
     *   Content: Word count (1500-3000 optimal), images, CTA.
@@ -186,4 +186,3 @@ The codebase is now:
 *   **Modular**: Shared config and AI client.
 *   **Quality-Controlled**: Automated SEO and readability scoring.
 *   **Hands-Off**: Auto-merge removes the need for manual PR review.
-

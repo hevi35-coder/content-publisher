@@ -70,7 +70,8 @@ content-publisher/
 ├── generate_cover.js       # 커버 이미지 생성
 ├── select_topic.js         # 주제 선정
 ├── generate_draft.js       # 초안 작성
-├── quality_gate.js         # 드래프트 품질 점수/SEO 평가
+├── draft-quality-gate.js   # 드래프트 품질 점수/SEO 평가
+├── quality_gate.js         # (호환 레이어) draft-quality-gate.js
 ├── publish.js              # 자동 라우팅 엔트리포인트
 └── config.js
 ```
