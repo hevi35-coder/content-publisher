@@ -8,6 +8,22 @@
 *This file is automatically updated by the Sunday Topic Committee.*
 
 ## On Deck (Next Up)
+*   **Scaling Beyond the Monolith: A Practical Guide to Transitioning to Microservices**
+    *   *Rationale*: As companies grow, monolithic architectures often become bottlenecks for scalability, reliability, and development velocity. Microservices have emerged as a leading solution, but the transition from monolith to microservices is complex and fraught with potential pitfalls. This article provides a structured, actionable guide for developers looking to make the shift while minimizing technical debt.
+    *   *MandaAct Angle*: MandaAct's 9x9 grid offers a systematic approach to simplifying the transition process. Developers can break down the migration into clear steps, such as identifying service boundaries, setting up CI/CD for individual services, and creating a roadmap for data migration. By visualizing the process in the grid, teams can ensure a smooth and efficient shift.
+    *   *Target*: Mid to senior developers, architects, and tech leads considering or undergoing a transition to microservices.
+
+*   **[KR-Only] How to Achieve Work-Life Balance with the 9x9 Mandalart Framework**
+    *   *Rationale*: Work-life balance is a growing concern among Korean professionals and developers, who often face long work hours and high pressure to perform. This article provides actionable steps to help readers prioritize their goals and allocate time effectively to achieve balance between their personal and professional lives.
+    *   *MandaAct Angle*: MandaAct's 9x9 grid can help users visually map out their work and personal priorities, ensuring that neither is neglected. By breaking down each aspect of life into actionable goals, users can maintain alignment and create healthy boundaries for a more balanced lifestyle.
+    *   *Target*: Korean professionals, junior developers, and productivity enthusiasts looking to improve their work-life balance.
+
+*   **[KR-Only] Breaking Big Dreams into Daily Actions: A Beginner’s Guide to Mandalart**
+    *   *Rationale*: Many individuals in Korea have big dreams but struggle to take the first steps or stay consistent. This article introduces beginner-friendly ways to use the Mandalart framework to deconstruct ambitious goals into smaller, actionable tasks, empowering readers to make daily progress.
+    *   *MandaAct Angle*: MandaAct simplifies the process of using the Mandalart framework by digitizing the workflow. Users can easily create their own 9x9 grid, set reminders, and track their progress, making it easier to stay on top of their goals.
+    *   *Target*: Korean students, young professionals, and indie hackers who are new to goal-setting and need guidance on starting and maintaining progress.
+
+
 *   **From Idea to App Store: Streamlining Your App Launch with the 9x9 Grid** (Drafted ✅ EN:80 KO:60)
     *   *Rationale*: With the rise of indie app development and the increasing accessibility of tools like Flutter, React Native, and low-code platforms, more developers are venturing into app creation. However, many struggle with the overwhelming process of launching an app, from ideation to publishing. This article addresses the need for a structured approach to avoid burnout and ensure a successful launch.
     *   *MandaAct Angle*: MandaAct's 9x9 grid helps developers break down the app launch process into manageable sub-goals, such as ideation, prototyping, development, testing, marketing, and publishing. By visually organizing and tracking these steps, developers can stay focused and execute their app launch efficiently. Features like Goal Diagnosis and AI Suggestions further refine the plan, ensuring no critical aspect is overlooked.
