@@ -106,7 +106,18 @@ async function main() {
     }
 }
 
-main().catch((err) => {
-    console.error('❌ Unified Publisher failed:', err.message);
-    process.exit(1);
-});
+if (require.main === module) {
+    main().catch((err) => {
+        console.error('❌ Unified Publisher failed:', err.message);
+        process.exit(1);
+    });
+}
+
+module.exports = {
+    isDryRun,
+    detectDefaultPlatforms,
+    parsePlatformArg,
+    requireEnvVars,
+    validateRouteSecrets,
+    main
+};
