@@ -42,3 +42,12 @@ jobs:
             output/weekly-ops-report.json
             output/weekly-ops-report.md
           if-no-files-found: error
+
+      - name: Send Weekly Ops Report Notification
+        continue-on-error: true
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          NOTIFY_EMAIL_TO: ${{ secrets.NOTIFY_EMAIL_TO }}
+          WEEKLY_OPS_REPORT_RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node scripts/send-weekly-ops-report-notification.js
