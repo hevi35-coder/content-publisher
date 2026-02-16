@@ -8,6 +8,22 @@
 *This file is automatically updated by the Sunday Topic Committee.*
 
 ## On Deck (Next Up)
+*   **The Silent Revolution: How Edge Computing is Redefining System Architecture**
+    *   *Rationale*: Edge computing is rapidly changing how developers design systems by bringing computation and data storage closer to the data sources. This trend is crucial for improving latency, reducing bandwidth costs, and enabling applications like IoT and real-time analytics. With the rise of 5G and distributed systems, it's essential for developers to understand the principles and best practices of edge computing.
+    *   *MandaAct Angle*: MandaAct's 9x9 grid can help developers plan the transition to edge computing by breaking down the complex architecture into manageable steps such as edge node placement, data flow optimization, security protocols, and monitoring strategies. This structured approach ensures a smooth implementation of edge computing in modern applications.
+    *   *Target*: Senior developers, system architects, full-stack developers interested in staying ahead of architectural trends.
+
+*   **[KR-Only] How to Start the Perfect Morning Routine with the 9x9 Grid**
+    *   *Rationale*: Many Korean professionals and students struggle to establish a consistent morning routine that sets the tone for a productive day. This article addresses the need for a structured method to create a personalized routine focused on achieving daily goals and maintaining mental clarity.
+    *   *MandaAct Angle*: MandaAct's 9x9 grid can be used to design an ideal morning routine by categorizing activities into focus areas such as health, learning, and planning. By visually organizing the routine and tracking progress, users can build habits that align with their broader goals.
+    *   *Target*: Korean professionals, students, and indie hackers seeking to improve their daily habits and productivity.
+
+*   **[KR-Only] Overcoming Overwhelm: Breaking Down Stressful Projects with Mandalart**
+    *   *Rationale*: Stress and overwhelm are common when tackling large, ambiguous projects, especially for Korean professionals and students juggling multiple responsibilities. This article will offer actionable strategies to manage and simplify overwhelming tasks using the Mandalart framework.
+    *   *MandaAct Angle*: MandaAct's 9x9 grid helps users break down complex projects into smaller, actionable tasks, providing clarity and a sense of control. By visualizing progress and focusing on one step at a time, users can reduce stress and maintain momentum.
+    *   *Target*: Korean students, junior developers, and professionals dealing with high-pressure projects and seeking a practical way to stay organized.
+
+
 *   **Optimizing Developer Onboarding: A Blueprint for Scalable Teams**
     *   *Rationale*: As tech teams scale, efficient onboarding is critical to ensure productivity and maintain team cohesion. Poor onboarding processes lead to prolonged ramp-up times and decreased team performance. This article provides actionable insights on how to design and implement an effective developer onboarding framework.
     *   *MandaAct Angle*: MandaAct's 9x9 framework can help engineering teams design structured onboarding processes by breaking them down into key phases: pre-joining preparation, first-week tasks, mentorship matching, tools training, project familiarization, and feedback loops. By visualizing onboarding milestones, teams can ensure new hires are set up for success.
