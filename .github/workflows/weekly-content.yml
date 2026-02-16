@@ -82,7 +82,7 @@ jobs:
           echo "📝 Topic PR Created: $PR_URL"
 
           echo "🔄 Enabling Topic Auto-Merge..."
-          gh pr merge --auto --squash "$BRANCH_NAME"
+          gh pr merge --auto --squash --delete-branch "$BRANCH_NAME"
 
           # Keep workspace on main for subsequent steps (run_target=both).
           git checkout main
@@ -132,7 +132,7 @@ jobs:
           
           # Enable Auto-Merge (requires repo setting: Settings > General > Allow auto-merge)
           echo "🔄 Enabling Auto-Merge..."
-          gh pr merge --auto --squash "$BRANCH_NAME"
+          gh pr merge --auto --squash --delete-branch "$BRANCH_NAME"
 
       - name: Notify on Failure
         if: failure()
