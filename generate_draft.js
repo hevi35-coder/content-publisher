@@ -111,31 +111,67 @@ function buildDraftedQueueContent(queueContent, originalTitle, qualityBadge) {
     );
 }
 
+function extractNextTopicFromQueue(queueContent) {
+    const lines = String(queueContent || '').split(/\r?\n/);
+    const titleRegex = /^\*\s+\*\*(.+?)\*\*(.*)$/;
+    const rationaleRegex = /^\s*\*\s+\*Rationale\*:\s+(.+?)\s*$/i;
+    const angleRegex = /^\s*\*\s+\*MandaAct Angle\*:\s+(.+?)\s*$/i;
+
+    for (let index = 0; index < lines.length; index++) {
+        const titleMatch = lines[index].match(titleRegex);
+        if (!titleMatch) {
+            continue;
+        }
+
+        const suffix = String(titleMatch[2] || '');
+        if (/\((?:Drafted|Published)\b/i.test(suffix)) {
+            continue;
+        }
+
+        let rationale = '';
+        let angle = '';
+        let blockEnd = index;
+
+        for (let cursor = index + 1; cursor < lines.length; cursor++) {
+            const line = lines[cursor];
+            if (/^\*\s+\*\*/.test(line) || /^##\s+/.test(line)) {
+                break;
+            }
+
+            blockEnd = cursor;
+            const rationaleMatch = line.match(rationaleRegex);
+            if (rationaleMatch) {
+                rationale = rationaleMatch[1].trim();
+                continue;
+            }
+
+            const angleMatch = line.match(angleRegex);
+            if (angleMatch) {
+                angle = angleMatch[1].trim();
+            }
+        }
+
+        if (!rationale || !angle) {
+            continue;
+        }
+
+        return {
+            fullMatch: lines.slice(index, blockEnd + 1).join('\n'),
+            title: titleMatch[1].trim(),
+            rationale,
+            angle
+        };
+    }
+
+    return null;
+}
+
 /**
  * Read topic from queue
  */
 function readTopic() {
     const queueContent = fs.readFileSync(QUEUE_PATH, 'utf8');
-
-    // Regex to find topics that correspond to the format:
-    // * **Title**
-    //     * *Rationale*: ...
-    //     * *MandaAct Angle*: ...
-    // And excluding those that have "(Drafted ...)" in the title line.
-    const regex = /\*   \*\*(?!.*\((?:Drafted|Published)\))(.*?)\*\*\s*\n\s+\*\s+\*Rationale\*:\s+(.*?)\s*\n\s+\*\s+\*MandaAct Angle\*:\s+(.*?)\s*\n/;
-
-    const match = queueContent.match(regex);
-
-    if (!match) {
-        return null;
-    }
-
-    return {
-        fullMatch: match[0],
-        title: match[1].trim(),
-        rationale: match[2].trim(),
-        angle: match[3].trim()
-    };
+    return extractNextTopicFromQueue(queueContent);
 }
 
 /**
@@ -515,5 +551,6 @@ module.exports = {
     processDraft,
     createTopicSlug,
     resolveTargetProfilesFromTitle,
-    buildDraftedQueueContent
+    buildDraftedQueueContent,
+    extractNextTopicFromQueue
 };

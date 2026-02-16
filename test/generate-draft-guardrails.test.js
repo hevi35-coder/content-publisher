@@ -3,7 +3,8 @@ const assert = require('node:assert/strict');
 const {
     createTopicSlug,
     resolveTargetProfilesFromTitle,
-    buildDraftedQueueContent
+    buildDraftedQueueContent,
+    extractNextTopicFromQueue
 } = require('../generate_draft');
 
 test('createTopicSlug keeps Korean titles usable for filenames', () => {
@@ -96,4 +97,43 @@ test('buildDraftedQueueContent rejects duplicate topic lines', () => {
         () => buildDraftedQueueContent(queue, '[KR-Only] Focus Tactics', '✅ EN:80 KO:82'),
         /duplicate topic lines/
     );
+});
+
+test('extractNextTopicFromQueue skips drafted topics and parses first pending topic', () => {
+    const queue = [
+        '## On Deck (Next Up)',
+        '* **[KR-Only] Done Topic** (Drafted ✅ EN:Skip KO:78)',
+        '  * *Rationale*: already done',
+        '  * *MandaAct Angle*: done angle',
+        '*   **Global Topic Next**',
+        '    *   *Rationale*: latest trend',
+        '    *   *MandaAct Angle*: map steps with 9x9',
+        '    *   *Target*: developers',
+        ''
+    ].join('\n');
+
+    const topic = extractNextTopicFromQueue(queue);
+    assert.equal(topic.title, 'Global Topic Next');
+    assert.equal(topic.rationale, 'latest trend');
+    assert.equal(topic.angle, 'map steps with 9x9');
+    assert.match(topic.fullMatch, /\*\s+\*\*Global Topic Next\*\*/);
+    assert.match(topic.fullMatch, /\*Rationale\*:\s+latest trend/);
+    assert.match(topic.fullMatch, /\*MandaAct Angle\*:\s+map steps with 9x9/);
+});
+
+test('extractNextTopicFromQueue tolerates CRLF and ignores incomplete blocks', () => {
+    const queue = [
+        '## On Deck (Next Up)',
+        '*   **Broken Topic**',
+        '    *   *Rationale*: missing angle',
+        '*   **[KR-Only] Valid Topic**',
+        '    *   *Rationale*: clear steps',
+        '    *   *MandaAct Angle*: break into execution cells',
+        ''
+    ].join('\r\n');
+
+    const topic = extractNextTopicFromQueue(queue);
+    assert.equal(topic.title, '[KR-Only] Valid Topic');
+    assert.equal(topic.rationale, 'clear steps');
+    assert.equal(topic.angle, 'break into execution cells');
 });
