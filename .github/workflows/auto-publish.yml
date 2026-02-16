@@ -1,4 +1,4 @@
-name: Auto Publish to Dev.to
+name: Auto Publish (Content Publisher)
 
 on:
   push:
@@ -8,6 +8,10 @@ on:
       - 'drafts/**'
   workflow_dispatch:
 
+concurrency:
+  group: auto-publish-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -15,7 +19,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
         with:
-          fetch-depth: 2 # To get previous commit for diff
+          fetch-depth: 0 # Needed to diff full push range reliably
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -25,26 +29,77 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Identify Changed File
+      - name: Identify Changed Draft Files
         id: files
         run: |
-          # Get list of changed files in drafts/ directory
-          CHANGED_FILES=$(git diff --name-only HEAD^ HEAD | grep '^drafts/' || true)
-          
+          set -euo pipefail
+
+          # Get all changed markdown files under drafts/ for push range.
+          # Fallback for manual dispatch: latest commit changes.
+          if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+            BASE_SHA="${{ github.event.before }}"
+            HEAD_SHA="${{ github.sha }}"
+            if git cat-file -e "$BASE_SHA^{commit}" 2>/dev/null; then
+              CHANGED_FILES=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" | grep '^drafts/.*\.md$' || true)
+            else
+              CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD | grep '^drafts/.*\.md$' || true)
+            fi
+          elif git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
+            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD | grep '^drafts/.*\.md$' || true)
+          else
+            CHANGED_FILES=$(git show --pretty="" --name-only HEAD | grep '^drafts/.*\.md$' || true)
+          fi
+
           if [ -z "$CHANGED_FILES" ]; then
             echo "No draft files changed."
-            echo "::set-output name=file::"
+            echo "has_files=false" >> $GITHUB_OUTPUT
           else
-            # Take the first one (assuming onep PR per article mostly)
-            FILE=$(echo "$CHANGED_FILES" | head -n 1)
-            echo "Found changed draft: $FILE"
-            echo "file=$FILE" >> $GITHUB_OUTPUT
+            echo "Found changed drafts:"
+            echo "$CHANGED_FILES"
+            {
+              echo "has_files=true"
+              echo "files<<EOF"
+              echo "$CHANGED_FILES"
+              echo "EOF"
+            } >> $GITHUB_OUTPUT
           fi
 
       - name: Run Publisher
-        if: steps.files.outputs.file != ''
+        if: steps.files.outputs.has_files == 'true'
         env:
           DEVTO_API_KEY: ${{ secrets.DEVTO_API_KEY }}
+          HASHNODE_PAT: ${{ secrets.HASHNODE_PAT }}
+          HASHNODE_PUBLICATION_ID: ${{ secrets.HASHNODE_PUBLICATION_ID }}
+          BLOGGER_BLOG_ID: ${{ secrets.BLOGGER_BLOG_ID }}
+          BLOGGER_CLIENT_ID: ${{ secrets.BLOGGER_CLIENT_ID }}
+          BLOGGER_CLIENT_SECRET: ${{ secrets.BLOGGER_CLIENT_SECRET }}
+          BLOGGER_REFRESH_TOKEN: ${{ secrets.BLOGGER_REFRESH_TOKEN }}
+          BLOGGER_ACCESS_TOKEN: ${{ secrets.BLOGGER_ACCESS_TOKEN }}
         run: |
-          echo "🚀 Publishing ${{ steps.files.outputs.file }}..."
-          node publish.js "${{ steps.files.outputs.file }}"
+          set -euo pipefail
+
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            echo "🚀 Publishing $file..."
+            node publish.js "$file"
+          done <<< "${{ steps.files.outputs.files }}"
+
+      - name: Notify on Failure
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.GMAIL_USER }}
+          password: ${{ secrets.GMAIL_APP_PASSWORD }}
+          subject: "❌ [Content Publisher] Auto Publish Failed"
+          to: ${{ secrets.NOTIFY_EMAIL_TO }}
+          from: MandaAct Bot <${{ secrets.GMAIL_USER }}>
+          body: |
+            Auto publish workflow failed.
+            
+            Run ID: ${{ github.run_id }}
+            Trigger: ${{ github.event_name }}
+            
+            🔗 View Logs: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
