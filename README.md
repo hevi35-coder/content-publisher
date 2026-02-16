@@ -99,6 +99,11 @@ BLOGGER_REFRESH_TOKEN=xxx
 GMAIL_USER=xxx@gmail.com
 GMAIL_APP_PASSWORD=xxx
 NOTIFY_EMAIL_TO=xxx@email.com
+
+# Draft Quality Gate (Optional)
+# default(false): quality score below threshold blocks draft pipeline
+# true: continue draft pipeline even when quality is below threshold
+ALLOW_LOW_QUALITY_DRAFTS=false
 ```
 
 ## 🌍 Platform Support
