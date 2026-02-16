@@ -1,7 +1,7 @@
 const fs = require('fs');
-const { execSync } = require('child_process');
 const config = require('./config');
 const client = require('./lib/ai-client');
+const { pushToMain } = require('./lib/git-manager');
 
 const QUEUE_PATH = config.paths.queue;
 const ARCHIVE_PATH = config.paths.archive;
@@ -10,6 +10,27 @@ const KR_ONLY_TAG = '[KR-Only]';
 
 function shouldAutoSyncQueue(env = process.env) {
     return String(env.AUTO_SYNC_QUEUE || '').toLowerCase() === 'true';
+}
+
+function syncQueueToMain(queuePath = QUEUE_PATH, env = process.env, syncFn = pushToMain) {
+    if (!shouldAutoSyncQueue(env)) {
+        console.log("⏭️ Auto-sync skipped (set AUTO_SYNC_QUEUE=true to enable direct push).");
+        return false;
+    }
+
+    console.log("🔄 Auto-syncing to GitHub...");
+    try {
+        const success = syncFn(queuePath, 'chore: auto-update topic queue (Committee)');
+        if (success) {
+            console.log("✅ Changes pushed to main.");
+            return true;
+        }
+        console.warn("⚠️ Git sync skipped or failed.");
+        return false;
+    } catch (gitError) {
+        console.warn("⚠️ Git sync failed (running locally?):", gitError.message);
+        return false;
+    }
 }
 
 function normalizeTopicField(value, fieldName, index) {
@@ -213,20 +234,7 @@ Return a JSON object with a "topics" array containing all 3 topics (1 Global, 2 
         // 5. Automated Sync (Git Push)
         // Safe default: disabled unless AUTO_SYNC_QUEUE=true.
         // CI workflow handles commit/push in a dedicated step.
-        if (shouldAutoSyncQueue()) {
-            console.log("🔄 Auto-syncing to GitHub...");
-            try {
-                execSync(`git add ${QUEUE_PATH}`);
-                execSync('git commit -m "chore: auto-update topic queue (Committee)"');
-                execSync('git push origin main');
-                console.log("✅ Changes pushed to main.");
-            } catch (gitError) {
-                console.warn("⚠️ Git sync failed (running locally?):", gitError.message);
-                // Don't throw error here, just warn, as prompt generation was successful
-            }
-        } else {
-            console.log("⏭️ Auto-sync skipped (set AUTO_SYNC_QUEUE=true to enable direct push).");
-        }
+        syncQueueToMain();
 
         // Send notification
         await notifier.stepComplete('topic_selection', {
@@ -253,6 +261,7 @@ if (require.main === module) {
 module.exports = {
     selectTopic,
     shouldAutoSyncQueue,
+    syncQueueToMain,
     normalizeGeneratedTopics,
     enforceWeeklyTopicMix,
     normalizeTopicField,
