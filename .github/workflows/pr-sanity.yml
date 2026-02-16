@@ -4,6 +4,10 @@ on:
   pull_request:
     branches:
       - main
+  push:
+    branches:
+      - 'draft/**'
+      - 'topic/**'
 
 jobs:
   pr-sanity:
