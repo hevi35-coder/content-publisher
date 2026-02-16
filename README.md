@@ -109,6 +109,12 @@ ALLOW_LOW_QUALITY_DRAFTS=false
 # default(false): select_topic.js does not push directly to main
 # true: allow direct git push from select_topic.js
 AUTO_SYNC_QUEUE=false
+
+# Git Sync Strict Mode (Optional)
+# default(false): local/dev keeps warning-only behavior on git sync failure
+# true: fail the pipeline when cover/asset sync to main fails
+# note: CI=true already enforces strict behavior automatically
+STRICT_GIT_SYNC=false
 ```
 
 ## 🌍 Platform Support
