@@ -35,7 +35,20 @@ class HashnodeAdapter extends BaseAdapter {
             body: JSON.stringify({ query, variables })
         });
 
-        const result = await response.json();
+        let result;
+        try {
+            result = await response.json();
+        } catch (err) {
+            throw new Error(`Hashnode API returned non-JSON response: ${err.message}`);
+        }
+
+        if (!response.ok) {
+            const detail = result?.errors
+                ? JSON.stringify(result.errors)
+                : JSON.stringify(result || {});
+            throw new Error(`Hashnode API HTTP ${response.status}: ${detail}`);
+        }
+
         if (result.errors) {
             throw new Error(`GraphQL Error: ${JSON.stringify(result.errors)}`);
         }
@@ -77,32 +90,27 @@ class HashnodeAdapter extends BaseAdapter {
         const PAGE_SIZE = 20;
         let after = null;
 
-        try {
-            for (let i = 0; i < MAX_PAGES; i++) {
-                const data = await this._graphqlRequest(query, {
-                    id: this.publicationId,
-                    first: PAGE_SIZE,
-                    after
-                });
+        for (let i = 0; i < MAX_PAGES; i++) {
+            const data = await this._graphqlRequest(query, {
+                id: this.publicationId,
+                first: PAGE_SIZE,
+                after
+            });
 
-                const edges = data?.publication?.posts?.edges || [];
-                for (const edge of edges) {
-                    const post = edge?.node;
-                    if (!post) continue;
-                    if (this._normalizeTitle(post.title) === targetTitle) {
-                        return post;
-                    }
+            const edges = data?.publication?.posts?.edges || [];
+            for (const edge of edges) {
+                const post = edge?.node;
+                if (!post) continue;
+                if (this._normalizeTitle(post.title) === targetTitle) {
+                    return post;
                 }
-
-                const pageInfo = data?.publication?.posts?.pageInfo;
-                if (!pageInfo?.hasNextPage || !pageInfo?.endCursor) {
-                    break;
-                }
-                after = pageInfo.endCursor;
             }
-        } catch (err) {
-            console.warn('⚠️ [Hashnode] Failed to check existing posts:', err.message);
-            return null;
+
+            const pageInfo = data?.publication?.posts?.pageInfo;
+            if (!pageInfo?.hasNextPage || !pageInfo?.endCursor) {
+                break;
+            }
+            after = pageInfo.endCursor;
         }
 
         return null;
