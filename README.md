@@ -54,6 +54,7 @@ node scripts/export-naver.js drafts/my-article.md
 - `Notify on Workflow Failure`는 `Weekly Content Automation`, `Auto Publish (Content Publisher)`, `Weekly Schedule Watchdog`의 main 브랜치 실패를 감지합니다.
 - 실패 시 원인 분류(`output/failure-diagnosis.json`, `output/failure-diagnosis.md`)를 생성하고 메일 본문에 조치 가이드를 포함합니다.
 - Watchdog는 기본적으로 `.github/workflows/weekly-content.yml`을 감시하며, 필요 시 `WEEKLY_WORKFLOW_REF`로 대상 workflow 참조를 변경할 수 있습니다.
+- Watchdog API 재시도 기본값: `SCHEDULE_WATCHDOG_API_MAX_ATTEMPTS=3`, `SCHEDULE_WATCHDOG_API_RETRY_BASE_MS=2000`
 
 ## 📁 Architecture
 

@@ -20,6 +20,8 @@ jobs:
       WEEKLY_WORKFLOW_REF: '.github/workflows/weekly-content.yml'
       SCHEDULE_WATCHDOG_GRACE_MINUTES: '120'
       SCHEDULE_WATCHDOG_EARLY_ALLOWANCE_MINUTES: '15'
+      SCHEDULE_WATCHDOG_API_MAX_ATTEMPTS: '3'
+      SCHEDULE_WATCHDOG_API_RETRY_BASE_MS: '2000'
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4

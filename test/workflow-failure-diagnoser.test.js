@@ -72,6 +72,24 @@ test('summarizeWorkflowFailure classifies watchdog missed schedule signature', (
     assert.match(diagnosis.summary, /schedule window/i);
 });
 
+test('summarizeWorkflowFailure classifies watchdog github api unavailable signature', () => {
+    const diagnosis = summarizeWorkflowFailure({
+        workflowName: 'Weekly Schedule Watchdog',
+        eventName: 'schedule',
+        failedJobs: [
+            {
+                name: 'watchdog',
+                failedSteps: ['Check Weekly Schedule Run Health']
+            }
+        ],
+        failedLogExcerpt:
+            '::error::Weekly schedule watchdog failed: WATCHDOG_API_UNAVAILABLE status=502. GitHub API 502'
+    });
+
+    assert.equal(diagnosis.rootCauseCode, 'WATCHDOG_GITHUB_API_UNAVAILABLE');
+    assert.match(diagnosis.summary, /api availability/i);
+});
+
 test('toDiagnosisMarkdown renders key diagnosis fields', () => {
     const markdown = toDiagnosisMarkdown({
         workflowName: 'Auto Publish (Content Publisher)',
