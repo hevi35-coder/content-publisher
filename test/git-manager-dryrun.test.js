@@ -1,7 +1,12 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { pushToMain, shouldRequireGitSyncSuccess, isMainPushContext } = require('../lib/git-manager');
+const {
+    pushToMain,
+    shouldRequireGitSyncSuccess,
+    isMainPushContext,
+    getMainPushArgs
+} = require('../lib/git-manager');
 
 function withEnv(overrides, fn) {
     const previous = {
@@ -86,4 +91,12 @@ test('isMainPushContext blocks detached CI runs for pull requests', () => {
     withEnv({ CI: 'true', GITHUB_REF: 'refs/pull/123/merge', GITHUB_REF_NAME: '' }, () => {
         assert.equal(isMainPushContext('HEAD'), false);
     });
+});
+
+test('getMainPushArgs pushes current HEAD to main', () => {
+    assert.deepEqual(getMainPushArgs(), ['push', 'origin', 'HEAD:main']);
+});
+
+test('getMainPushArgs normalizes custom branch names', () => {
+    assert.deepEqual(getMainPushArgs(' release '), ['push', 'origin', 'HEAD:release']);
 });
