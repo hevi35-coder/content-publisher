@@ -7,6 +7,16 @@ on:
     # 2. Draft Writer: Mon, Wed, Fri at 01:00 KST (Sun/Tue/Thu 16:00 UTC)
     - cron: '0 16 * * 0,2,4'
   workflow_dispatch: # Allow manual trigger
+    inputs:
+      run_target:
+        description: "Select which step to run"
+        required: true
+        default: both
+        type: choice
+        options:
+          - both
+          - topic
+          - draft
 
 jobs:
   automation:
@@ -30,52 +40,62 @@ jobs:
         run: npm ci
 
       - name: Run Topic Committee (Sunday)
-        if: github.event.schedule == '0 16 * * 6' || github.event_name == 'workflow_dispatch'
+        if: github.event.schedule == '0 16 * * 6' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_target == 'both' || github.event.inputs.run_target == 'topic'))
         env:
           GITHUB_MODELS_TOKEN: ${{ secrets.MODELS_TOKEN }}
+          AUTO_SYNC_QUEUE: 'false'
         run: |
+          set -euo pipefail
+
           node select_topic.js
           git config --global user.name "MandaAct Bot"
           git config --global user.email "bot@mandaact.com"
           git add TOPIC_QUEUE.md
-          git commit -m "chore(topic): weekly topic selection" || echo "No changes to commit"
+          if git diff --cached --quiet; then
+            echo "No topic queue changes."
+            exit 0
+          fi
+          git commit -m "chore(topic): weekly topic selection"
           git push
 
       - name: Run Draft Writer (Mon, Wed, Fri)
-        if: github.event.schedule == '0 16 * * 0,2,4' || github.event_name == 'workflow_dispatch'
+        if: github.event.schedule == '0 16 * * 0,2,4' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_target == 'both' || github.event.inputs.run_target == 'draft'))
         env:
           GITHUB_MODELS_TOKEN: ${{ secrets.MODELS_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AUTO_PUBLISH_AFTER_DRAFT: 'false'
         run: |
-          node generate_draft.js
-          
-          # Configure Git
+          set -euo pipefail
+
+          # Configure Git first (generate_draft may run git sync for assets)
           git config --global user.name "MandaAct Bot"
           git config --global user.email "bot@mandaact.com"
+
+          node generate_draft.js
           
-          # Create a new branch for the draft (handle existing branch)
-          BRANCH_NAME="draft/weekly-$(date +%Y-%m-%d)"
-          
-          # Delete remote branch if it exists (prevent conflicts on re-runs)
-          git push origin --delete $BRANCH_NAME 2>/dev/null || echo "No existing branch to delete"
-          
-          git checkout -b $BRANCH_NAME
+          # Create unique branch per run to avoid force-push/delete flows.
+          BRANCH_NAME="draft/weekly-$(date +%Y-%m-%d)-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          git checkout -b "$BRANCH_NAME"
           
           # Commit changes
           git add drafts/ TOPIC_QUEUE.md assets/
-          git commit -m "chore(content): generate weekly draft" || echo "No changes to commit"
+          if git diff --cached --quiet; then
+            echo "No changes generated. Skipping PR creation."
+            exit 0
+          fi
+          git commit -m "chore(content): generate weekly draft"
           
-          # Push branch (force to overwrite if somehow still exists)
-          git push -f origin $BRANCH_NAME
+          # Push branch (no force; unique branch name prevents conflicts)
+          git push origin "$BRANCH_NAME"
           
           # Create Pull Request (Needs GITHUB_TOKEN)
           echo "🚀 Creating Pull Request..."
-          PR_URL=$(gh pr create --title "📝 Weekly Draft: $(date +%Y-%m-%d)" --body "This week's draft is ready. **Auto-merge enabled** - will merge immediately after creation." --base main --head $BRANCH_NAME)
+          PR_URL=$(gh pr create --title "📝 Weekly Draft: $(date +%Y-%m-%d)" --body "This week's draft is ready. **Auto-merge enabled** - will merge immediately after creation." --base main --head "$BRANCH_NAME")
           echo "📝 PR Created: $PR_URL"
           
           # Enable Auto-Merge (requires repo setting: Settings > General > Allow auto-merge)
           echo "🔄 Enabling Auto-Merge..."
-          gh pr merge --auto --squash $BRANCH_NAME
+          gh pr merge --auto --squash "$BRANCH_NAME"
 
       - name: Notify on Failure
         if: failure()
