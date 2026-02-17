@@ -93,7 +93,11 @@ async function main() {
 
     console.log(`📄 Draft: ${draftPath}`);
     console.log(`📡 Platforms: ${platforms.join(', ')}`);
-    console.log(`🧪 DRY_RUN: ${dryRun}\n`);
+    console.log(`🧪 DRY_RUN: ${dryRun}`);
+    if (dryRun) {
+        console.log('[DRY_RUN] Simulation mode active');
+    }
+    console.log('');
 
     const { errors } = await publishToAll(draftPath, platforms, { dryRun });
     if (errors.length > 0) {

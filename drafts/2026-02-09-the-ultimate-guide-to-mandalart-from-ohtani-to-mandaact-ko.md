@@ -47,16 +47,11 @@ cover_image: >-
 
 만다라트는 단순히 목표를 세우는 것을 넘어 실천을 중심으로 한 강력한 도구입니다. **MandaAct**를 활용하면 언제 어디서나 목표를 관리하고, 실행력을 높일 수 있습니다. 지금 바로 시작해 보세요. 작은 행동이 쌓여 큰 변화를 만들어냅니다.
 
-<hr>
+---
 
-<h2>MandaAct 시작하기</h2>
+### MandaAct 시작하기
 
-<p>목표를 9x9 그리드로 시각화하고, 매일 실천 가능한 액션으로 분해하세요.</p>
+목표를 9x9 그리드로 시각화하고, 매일 실천 가능한 액션으로 분해하세요.
+iOS, iPadOS, macOS에서 사용 가능합니다.
 
-<p>
-  <a href="https://apps.apple.com/kr/app/mandaact/id6504776417" target="_blank" style="display:inline-block;padding:12px 24px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;text-decoration:none;border-radius:8px;font-weight:bold;">
-    App Store에서 다운로드
-  </a>
-</p>
-
-<p><small>iOS, iPadOS, macOS에서 사용 가능합니다.</small></p>
+App Store: https://apps.apple.com/app/id6756198473
