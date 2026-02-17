@@ -16,6 +16,9 @@ class HashnodeAdapter extends BaseAdapter {
     }
 
     async authenticate() {
+        if (process.env.DRY_RUN === 'true') {
+            return true;
+        }
         if (!this.pat) {
             throw new Error('HASHNODE_PAT is missing in .env');
         }
@@ -35,38 +38,32 @@ class HashnodeAdapter extends BaseAdapter {
             body: JSON.stringify({ query, variables })
         });
 
-        let result;
-        try {
-            result = await response.json();
-        } catch (err) {
-            throw new Error(`Hashnode API returned non-JSON response: ${err.message}`);
-        }
-
         if (!response.ok) {
-            const detail = result?.errors
-                ? JSON.stringify(result.errors)
-                : JSON.stringify(result || {});
-            throw new Error(`Hashnode API HTTP ${response.status}: ${detail}`);
+            const body = await response.text();
+            throw new Error(`Hashnode HTTP Error (${response.status}): ${body}`);
         }
 
+        const result = await response.json();
         if (result.errors) {
             throw new Error(`GraphQL Error: ${JSON.stringify(result.errors)}`);
+        }
+        if (!result.data) {
+            throw new Error('GraphQL Error: Missing data in response');
         }
         return result.data;
     }
 
-    _normalizeTitle(title) {
-        return String(title || '').trim().toLowerCase();
-    }
-
     async checkExists(title) {
+        if (process.env.DRY_RUN === 'true') {
+            return null;
+        }
+
         await this.authenticate();
 
-        const targetTitle = this._normalizeTitle(title);
-        if (!targetTitle) return null;
-
+        // Lookup post by exact title in this publication to support upsert.
+        // Query shape validated against Hashnode GraphQL endpoint.
         const query = `
-            query GetPublicationPosts($id: ObjectId!, $first: Int!, $after: String) {
+            query PublicationPosts($id: ObjectId!, $first: Int!, $after: String) {
                 publication(id: $id) {
                     posts(first: $first, after: $after) {
                         edges {
@@ -86,31 +83,39 @@ class HashnodeAdapter extends BaseAdapter {
             }
         `;
 
-        const MAX_PAGES = 5;
-        const PAGE_SIZE = 20;
         let after = null;
+        const normalizedTitle = title.trim().toLowerCase();
+        const MAX_SCAN = 200; // bounded scan to avoid heavy pagination in automation
+        let scanned = 0;
 
-        for (let i = 0; i < MAX_PAGES; i++) {
+        while (scanned < MAX_SCAN) {
             const data = await this._graphqlRequest(query, {
                 id: this.publicationId,
-                first: PAGE_SIZE,
+                first: 20,
                 after
             });
 
-            const edges = data?.publication?.posts?.edges || [];
-            for (const edge of edges) {
-                const post = edge?.node;
-                if (!post) continue;
-                if (this._normalizeTitle(post.title) === targetTitle) {
-                    return post;
+            const posts = data?.publication?.posts;
+            if (!posts) return null;
+
+            for (const edge of posts.edges || []) {
+                const node = edge?.node;
+                if (!node?.title) continue;
+                scanned++;
+                if (node.title.trim().toLowerCase() === normalizedTitle) {
+                    return {
+                        id: node.id,
+                        slug: node.slug,
+                        url: node.url,
+                        title: node.title
+                    };
                 }
             }
 
-            const pageInfo = data?.publication?.posts?.pageInfo;
-            if (!pageInfo?.hasNextPage || !pageInfo?.endCursor) {
+            if (!posts.pageInfo?.hasNextPage || !posts.pageInfo?.endCursor) {
                 break;
             }
-            after = pageInfo.endCursor;
+            after = posts.pageInfo.endCursor;
         }
 
         return null;
@@ -118,6 +123,16 @@ class HashnodeAdapter extends BaseAdapter {
 
     async publish(article) {
         await this.authenticate();
+
+        if (process.env.DRY_RUN === 'true') {
+            console.log('🚧 [Hashnode] DRY_RUN: Simulation mode. Skipping actual publish.');
+            return {
+                id: `dry-run-hashnode-id-${Date.now()}`,
+                url: 'https://hashnode.com/dry-run-simulation',
+                slug: 'dry-run',
+                platform: this.name
+            };
+        }
 
         const mutation = `
             mutation PublishPost($input: PublishPostInput!) {
@@ -159,6 +174,16 @@ class HashnodeAdapter extends BaseAdapter {
 
     async update(articleId, article) {
         await this.authenticate();
+
+        if (process.env.DRY_RUN === 'true') {
+            console.log('🚧 [Hashnode] DRY_RUN: Simulation mode. Skipping actual update.');
+            return {
+                id: articleId,
+                url: 'https://hashnode.com/dry-run-simulation',
+                slug: 'dry-run',
+                platform: this.name
+            };
+        }
 
         const mutation = `
             mutation UpdatePost($input: UpdatePostInput!) {

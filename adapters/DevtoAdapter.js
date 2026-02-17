@@ -8,6 +8,7 @@ const axios = require('axios');
 const fs = require('fs');
 const puppeteer = require('puppeteer');
 const BaseAdapter = require('./BaseAdapter');
+const { resolveDevtoPublished, shouldForcePublish } = require('../lib/publish-visibility');
 
 class DevtoAdapter extends BaseAdapter {
     constructor(config) {
@@ -25,25 +26,44 @@ class DevtoAdapter extends BaseAdapter {
     }
 
     async checkExists(title) {
+        const failOpen = process.env.CHECK_EXISTS_FAIL_OPEN === 'true';
         try {
             const response = await axios.get(`${this.baseUrl}/articles/me/all`, {
                 headers: { 'api-key': this.apiKey }
             });
             return response.data.find(a => a.title.trim() === title.trim()) || null;
         } catch (err) {
-            console.warn('⚠️ Failed to fetch existing articles:', err.message);
-            return null;
+            if (failOpen) {
+                console.warn('⚠️ [Dev.to] checkExists failed; fail-open enabled. Proceeding as new publish.', err.message);
+                return null;
+            }
+            throw new Error(`[Dev.to] checkExists failed: ${err.message}`);
         }
     }
 
     async publish(article) {
+        if (process.env.DRY_RUN === 'true') {
+            console.log('🚧 [Dev.to] DRY_RUN: Simulation mode. Skipping actual publish.');
+            console.log(`   Title: ${article.title}`);
+            console.log(`   Tags: ${article.tags}`);
+            return {
+                id: 'dry-run-id-' + Date.now(),
+                url: 'https://dev.to/dry-run-simulation',
+                platform: this.name
+            };
+        }
+
         await this.authenticate();
+
+        if (article?.rawFrontmatter?.published === false && shouldForcePublish()) {
+            console.log('ℹ️ [Dev.to] Frontmatter is draft but FORCE_PUBLISH is active -> publishing publicly.');
+        }
 
         const payload = {
             article: {
                 title: article.title,
                 body_markdown: article.content,
-                published: article.rawFrontmatter.published !== undefined ? article.rawFrontmatter.published : true,
+                published: resolveDevtoPublished(article.rawFrontmatter),
                 tags: article.tags,
                 main_image: article.coverImage ? `${article.coverImage}?v=${Date.now()}` : undefined,
                 series: article.series
@@ -66,6 +86,15 @@ class DevtoAdapter extends BaseAdapter {
     }
 
     async update(articleId, article) {
+        if (process.env.DRY_RUN === 'true') {
+            console.log('🚧 [Dev.to] DRY_RUN: Simulation mode. Skipping actual update.');
+            return {
+                id: articleId,
+                url: 'https://dev.to/dry-run-simulation',
+                platform: this.name
+            };
+        }
+
         await this.authenticate();
 
         const payload = {

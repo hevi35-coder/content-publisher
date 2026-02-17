@@ -8,6 +8,7 @@
  */
 const BaseAdapter = require('./BaseAdapter');
 const { oauthManager } = require('../lib/oauth-manager');
+const { resolveBloggerIsDraft, shouldForcePublish } = require('../lib/publish-visibility');
 
 class BloggerAdapter extends BaseAdapter {
     constructor(config) {
@@ -27,26 +28,54 @@ class BloggerAdapter extends BaseAdapter {
     }
 
     async checkExists(title) {
+        const failOpen = process.env.CHECK_EXISTS_FAIL_OPEN === 'true';
         try {
+            // checkExists is called before publish/update in upsert flow.
+            // Ensure access token exists so fail-closed mode doesn't fail on missing auth state.
+            if (!this.accessToken) {
+                await this.authenticate();
+            }
+
             const response = await fetch(
                 `${this.baseUrl}/blogs/${this.blogId}/posts?maxResults=50`,
                 {
                     headers: { 'Authorization': `Bearer ${this.accessToken}` }
                 }
             );
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
             const data = await response.json();
             if (data.items) {
                 return data.items.find(p => p.title.trim() === title.trim()) || null;
             }
             return null;
         } catch (err) {
-            console.warn('⚠️ [Blogger] Failed to check existing posts:', err.message);
-            return null;
+            if (failOpen) {
+                console.warn('⚠️ [Blogger] checkExists failed; fail-open enabled. Proceeding as new publish.', err.message);
+                return null;
+            }
+            throw new Error(`[Blogger] checkExists failed: ${err.message}`);
         }
     }
 
     async publish(article) {
+        if (process.env.DRY_RUN === 'true') {
+            console.log('🚧 [Blogger] DRY_RUN: Simulation mode. Skipping actual publish.');
+            console.log(`   Title: ${article.title}`);
+            console.log(`   Labels: ${article.tags}`);
+            return {
+                id: 'dry-run-blog-id-' + Date.now(),
+                url: 'https://mandaact.blogspot.com/dry-run-simulation',
+                platform: this.name
+            };
+        }
+
         await this.authenticate();
+
+        if (article?.rawFrontmatter?.published === false && shouldForcePublish()) {
+            console.log('ℹ️ [Blogger] Frontmatter is draft but FORCE_PUBLISH is active -> publishing publicly.');
+        }
 
         const payload = {
             kind: 'blogger#post',
@@ -54,7 +83,7 @@ class BloggerAdapter extends BaseAdapter {
             title: article.title,
             content: article.content, // HTML content
             labels: article.tags || [],
-            isDraft: article.rawFrontmatter.published === false  // ✅ Use isDraft instead of status
+            isDraft: resolveBloggerIsDraft(article.rawFrontmatter)
         };
 
         const response = await fetch(
@@ -85,7 +114,20 @@ class BloggerAdapter extends BaseAdapter {
     }
 
     async update(articleId, article) {
+        if (process.env.DRY_RUN === 'true') {
+            console.log('🚧 [Blogger] DRY_RUN: Simulation mode. Skipping actual update.');
+            return {
+                id: articleId,
+                url: 'https://mandaact.blogspot.com/dry-run-simulation',
+                platform: this.name
+            };
+        }
+
         await this.authenticate();
+
+        if (article?.rawFrontmatter?.published === false && shouldForcePublish()) {
+            console.log('ℹ️ [Blogger] Frontmatter is draft but FORCE_PUBLISH is active -> updating as public.');
+        }
 
         const payload = {
             kind: 'blogger#post',
@@ -94,7 +136,7 @@ class BloggerAdapter extends BaseAdapter {
             title: article.title,
             content: article.content,
             labels: article.tags || [],
-            isDraft: article.rawFrontmatter.published === false  // ✅ Use isDraft
+            isDraft: resolveBloggerIsDraft(article.rawFrontmatter)
         };
 
         const response = await fetch(

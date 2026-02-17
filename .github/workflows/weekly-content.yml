@@ -48,6 +48,24 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
+      - name: Preflight Topic Inputs
+        if: github.event.schedule == '0 16 * * 6' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_target == 'both' || github.event.inputs.run_target == 'topic'))
+        env:
+          GITHUB_MODELS_TOKEN: ${{ secrets.MODELS_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${GITHUB_MODELS_TOKEN:-}" ]; then
+            echo "::error::Missing required secret: MODELS_TOKEN"
+            exit 1
+          fi
+          echo "✅ Topic preflight passed."
+          {
+            echo "# Weekly Workflow Preflight"
+            echo
+            echo "- Topic preflight: passed"
+            echo "- Trigger: ${{ github.event_name }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Run Topic Committee (Sunday)
         if: github.event.schedule == '0 16 * * 6' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_target == 'both' || github.event.inputs.run_target == 'topic'))
         env:
@@ -121,6 +139,27 @@ jobs:
           git checkout main
           git pull --ff-only origin main
 
+      - name: Preflight Draft Inputs
+        if: github.event.schedule == '0 16 * * 0,2,4' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_target == 'both' || github.event.inputs.run_target == 'draft'))
+        env:
+          GITHUB_MODELS_TOKEN: ${{ secrets.MODELS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if [ -z "${GITHUB_MODELS_TOKEN:-}" ]; then
+            echo "::error::Missing required secret: MODELS_TOKEN"
+            exit 1
+          fi
+          ./scripts/check-gh-cli-auth.sh
+          echo "✅ Draft preflight passed."
+          {
+            echo "- Draft preflight: passed"
+            echo "- GH auth: passed"
+            echo "- Trigger: ${{ github.event_name }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Run Draft Writer (Mon, Wed, Fri)
         if: github.event.schedule == '0 16 * * 0,2,4' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_target == 'both' || github.event.inputs.run_target == 'draft'))
         env:
@@ -180,8 +219,8 @@ jobs:
           echo "🔄 Enabling Auto-Merge..."
           gh pr merge --auto --squash --delete-branch "$BRANCH_NAME"
 
-      - name: Notify on Failure
-        if: failure()
+      - name: Notify on Failure (Legacy Inline)
+        if: ${{ failure() && (vars.INLINE_FAILURE_NOTIFY == 'true') }}
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com

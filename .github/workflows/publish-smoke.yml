@@ -1,0 +1,192 @@
+name: Publish Smoke (Dry Run)
+
+on:
+  schedule:
+    # Daily at 00:40 KST (15:40 UTC previous day)
+    - cron: '40 15 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: publish-smoke-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  smoke-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Restore Previous Smoke Failure Snapshot
+        id: restore-state
+        uses: actions/cache/restore@v4
+        with:
+          path: .smoke-state
+          key: publish-smoke-failed-${{ github.ref }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            publish-smoke-failed-${{ github.ref }}-
+
+      - name: Select Smoke Draft Files
+        id: files
+        run: node scripts/select-smoke-drafts.js
+
+      - name: Smoke Publish Summary
+        run: |
+          set -euo pipefail
+          echo "Smoke file count: ${{ steps.files.outputs.file_count }}"
+          echo "DRY_RUN=true"
+          echo "FORCE_PUBLISH=true"
+          echo "Selected files:"
+          printf '%s\n' "${{ steps.files.outputs.files }}"
+
+      - name: Preflight Smoke Draft Validation
+        env:
+          DRY_RUN: 'true'
+          MIN_DRAFT_BODY_CHARS: ${{ vars.MIN_DRAFT_BODY_CHARS || '120' }}
+          TARGET_FILES: ${{ steps.files.outputs.files }}
+        run: node scripts/check-publish-secrets.js
+
+      - name: Run Smoke Publish
+        id: smoke
+        env:
+          DRY_RUN: 'true'
+          FORCE_PUBLISH: 'true'
+          VERIFY_PUBLISHED_URLS: 'false'
+        run: |
+          set -euo pipefail
+          : > smoke-run.log
+          failed=0
+          failed_files=()
+
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            echo "🧪 Smoke publishing $file" | tee -a smoke-run.log
+            if node publish.js "$file" 2>&1 | tee -a smoke-run.log; then
+              echo "✅ Smoke success: $file" | tee -a smoke-run.log
+            else
+              echo "❌ Smoke failed: $file" | tee -a smoke-run.log
+              failed=1
+              failed_files+=("$file")
+            fi
+          done <<< "${{ steps.files.outputs.files }}"
+
+          echo "failed=${failed}" >> "$GITHUB_OUTPUT"
+          {
+            echo "failed_files<<EOF"
+            if [ "${#failed_files[@]}" -gt 0 ]; then
+              printf '%s\n' "${failed_files[@]}"
+            fi
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+          if [ "$failed" -ne 0 ]; then
+            echo "::error::Smoke publish failed for one or more files."
+            exit 1
+          fi
+
+      - name: Build Failure Delta
+        id: delta
+        if: always()
+        run: |
+          set -euo pipefail
+
+          mkdir -p .smoke-state
+          prev_file=".smoke-state/failed-files.txt"
+          curr_file=".smoke-state/failed-files.current.txt"
+          tmp_new=".smoke-state/new-failed.tmp"
+          tmp_recovered=".smoke-state/recovered.tmp"
+
+          if [ -f "$prev_file" ]; then
+            sed '/^$/d' "$prev_file" | sort -u > "${prev_file}.sorted"
+            mv "${prev_file}.sorted" "$prev_file"
+          else
+            : > "$prev_file"
+          fi
+
+          printf '%s\n' "${{ steps.smoke.outputs.failed_files }}" | sed '/^$/d' | sort -u > "$curr_file"
+
+          comm -13 "$prev_file" "$curr_file" > "$tmp_new" || true
+          comm -23 "$prev_file" "$curr_file" > "$tmp_recovered" || true
+
+          {
+            echo "new_failed<<EOF"
+            cat "$tmp_new"
+            echo "EOF"
+            echo "recovered<<EOF"
+            cat "$tmp_recovered"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+          cp "$curr_file" "$prev_file"
+
+      - name: Write Smoke Summary
+        if: always()
+        run: |
+          set -euo pipefail
+          {
+            echo "# Publish Smoke Summary"
+            echo
+            echo "- Run ID: ${{ github.run_id }}"
+            echo "- Trigger: ${{ github.event_name }}"
+            echo "- Status: ${{ job.status }}"
+            echo "- DRY_RUN: true"
+            echo "- FORCE_PUBLISH: true"
+            echo "- Failed: ${{ steps.smoke.outputs.failed || '0' }}"
+            echo
+            echo "## Selected Draft Files"
+            printf '%s\n' "${{ steps.files.outputs.files }}"
+            if [ -n "${{ steps.smoke.outputs.failed_files }}" ]; then
+              echo
+              echo "## Failed Draft Files"
+              printf '%s\n' "${{ steps.smoke.outputs.failed_files }}"
+            fi
+            if [ -n "${{ steps.delta.outputs.new_failed }}" ]; then
+              echo
+              echo "## Newly Failed Since Previous Run"
+              printf '%s\n' "${{ steps.delta.outputs.new_failed }}"
+            fi
+            if [ -n "${{ steps.delta.outputs.recovered }}" ]; then
+              echo
+              echo "## Recovered Since Previous Run"
+              printf '%s\n' "${{ steps.delta.outputs.recovered }}"
+            fi
+            if [ -f smoke-run.log ]; then
+              echo
+              echo "## Log Snippet (last 120 lines)"
+              echo '```text'
+              tail -n 120 smoke-run.log
+              echo '```'
+            fi
+          } > smoke-summary.md
+
+          cat smoke-summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Smoke Diagnostics Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: publish-smoke-diagnostics-${{ github.run_id }}
+          path: |
+            smoke-summary.md
+            smoke-run.log
+            .smoke-state/failed-files.txt
+          if-no-files-found: error
+
+      - name: Save Smoke Failure Snapshot
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .smoke-state
+          key: publish-smoke-failed-${{ github.ref }}-${{ github.run_id }}-${{ github.run_attempt }}
