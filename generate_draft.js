@@ -11,17 +11,17 @@
 
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const matter = require('gray-matter');
 const config = require('./config');
 const client = require('./lib/ai-client');
 const { notifier } = require('./lib/notifier');
 const { getProfile, buildPromptInstructions } = require('./lib/tone-profiles');
 const { validateTrend, buildAvoidanceInstructions, shouldRejectTopic } = require('./lib/trend-validator');
-const { checkQuality, printReport } = require('./quality_gate');
-const { APP_LINKS } = require('./lib/cta-injector');
-const { pushCoversToMain } = require('./lib/git-manager');
-const { exportForNaver } = require('./scripts/export-naver');
-const { publishToAll } = require('./lib/publisher');
+const { checkQuality } = require('./draft-quality-gate');
+const { enforceDraftQualityThreshold } = require('./lib/draft-quality-threshold');
+const { injectCTAToFile } = require('./lib/cta-injector');
+const { pushCoversToMain, shouldRequireGitSyncSuccess } = require('./lib/git-manager');
 
 const QUEUE_PATH = config.paths.queue;
 const CONTEXT_PATH = config.paths.context;
@@ -30,32 +30,148 @@ const DRAFTS_DIR = config.paths.drafts;
 // Configuration
 const MAX_REGENERATION_ATTEMPTS = 3;
 const QUALITY_THRESHOLD = 70;
+const KR_ONLY_TAG = '[KR-Only]';
+const EN_ONLY_TAG = '[EN-Only]';
+
+function allowLowQualityDrafts() {
+    return String(process.env.ALLOW_LOW_QUALITY_DRAFTS || '').toLowerCase() === 'true';
+}
+
+function createTopicSlug(title) {
+    const normalizedTitle = String(title || '')
+        .toLowerCase()
+        .normalize('NFC')
+        .replace(/[^\p{L}\p{N}]+/gu, '-')
+        .replace(/(^-|-$)+/g, '');
+
+    if (normalizedTitle) {
+        return normalizedTitle;
+    }
+
+    const hash = crypto
+        .createHash('sha1')
+        .update(String(title || 'untitled-topic'))
+        .digest('hex')
+        .slice(0, 10);
+
+    return `topic-${hash}`;
+}
+
+function resolveTargetProfilesFromTitle(title) {
+    const rawTitle = String(title || '');
+    const isKROnly = rawTitle.includes(KR_ONLY_TAG);
+    const isENOnly = rawTitle.includes(EN_ONLY_TAG);
+
+    if (isKROnly && isENOnly) {
+        throw new Error(`Invalid topic tags: ${KR_ONLY_TAG} and ${EN_ONLY_TAG} cannot be combined.`);
+    }
+
+    const profiles = [];
+    if (!isKROnly) profiles.push('devto');
+    if (!isENOnly) profiles.push('blogger_kr');
+
+    if (profiles.length === 0) {
+        throw new Error('No generation targets resolved from topic tags.');
+    }
+
+    return { profiles, isKROnly, isENOnly };
+}
+
+function escapeRegExp(string) {
+    return String(string || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function buildDraftedQueueContent(queueContent, originalTitle, qualityBadge) {
+    const safeQueueContent = String(queueContent || '');
+    const safeTitle = String(originalTitle || '').trim();
+    const safeBadge = String(qualityBadge || '').trim();
+
+    if (!safeTitle) {
+        throw new Error('Cannot update queue: original title is empty.');
+    }
+    if (!safeBadge) {
+        throw new Error('Cannot update queue: quality badge is empty.');
+    }
+
+    const titleLinePattern = `^\\*\\s+\\*\\*${escapeRegExp(safeTitle)}\\*\\*\\s*$`;
+    const exactLineRegexGlobal = new RegExp(titleLinePattern, 'gm');
+    const matches = safeQueueContent.match(exactLineRegexGlobal) || [];
+
+    if (matches.length === 0) {
+        throw new Error(`Cannot update queue: topic line not found for "${safeTitle}".`);
+    }
+    if (matches.length > 1) {
+        throw new Error(`Cannot update queue: duplicate topic lines found for "${safeTitle}".`);
+    }
+
+    const exactLineRegexSingle = new RegExp(titleLinePattern, 'm');
+    return safeQueueContent.replace(
+        exactLineRegexSingle,
+        `*   **${safeTitle}** (Drafted ${safeBadge})`
+    );
+}
+
+function extractNextTopicFromQueue(queueContent) {
+    const lines = String(queueContent || '').split(/\r?\n/);
+    const titleRegex = /^\*\s+\*\*(.+?)\*\*(.*)$/;
+    const rationaleRegex = /^\s*\*\s+\*Rationale\*:\s+(.+?)\s*$/i;
+    const angleRegex = /^\s*\*\s+\*MandaAct Angle\*:\s+(.+?)\s*$/i;
+
+    for (let index = 0; index < lines.length; index++) {
+        const titleMatch = lines[index].match(titleRegex);
+        if (!titleMatch) {
+            continue;
+        }
+
+        const suffix = String(titleMatch[2] || '');
+        if (/\((?:Drafted|Published)\b/i.test(suffix)) {
+            continue;
+        }
+
+        let rationale = '';
+        let angle = '';
+        let blockEnd = index;
+
+        for (let cursor = index + 1; cursor < lines.length; cursor++) {
+            const line = lines[cursor];
+            if (/^\*\s+\*\*/.test(line) || /^##\s+/.test(line)) {
+                break;
+            }
+
+            blockEnd = cursor;
+            const rationaleMatch = line.match(rationaleRegex);
+            if (rationaleMatch) {
+                rationale = rationaleMatch[1].trim();
+                continue;
+            }
+
+            const angleMatch = line.match(angleRegex);
+            if (angleMatch) {
+                angle = angleMatch[1].trim();
+            }
+        }
+
+        if (!rationale || !angle) {
+            continue;
+        }
+
+        return {
+            fullMatch: lines.slice(index, blockEnd + 1).join('\n'),
+            title: titleMatch[1].trim(),
+            rationale,
+            angle
+        };
+    }
+
+    return null;
+}
 
 /**
  * Read topic from queue
  */
 function readTopic() {
     const queueContent = fs.readFileSync(QUEUE_PATH, 'utf8');
-
-    // Regex to find topics that correspond to the format:
-    // * **Title**
-    //     * *Rationale*: ...
-    //     * *MandaAct Angle*: ...
-    // And excluding those that have "(Drafted ...)" in the title line.
-    const regex = /\*   \*\*(?!.*\((?:Drafted|Published)\))(.*?)\*\*\s*\n\s+\*\s+\*Rationale\*:\s+(.*?)\s*\n\s+\*\s+\*MandaAct Angle\*:\s+(.*?)\s*\n/;
-
-    const match = queueContent.match(regex);
-
-    if (!match) {
-        return null;
-    }
-
-    return {
-        fullMatch: match[0],
-        title: match[1].trim(),
-        rationale: match[2].trim(),
-        angle: match[3].trim()
-    };
+    return extractNextTopicFromQueue(queueContent);
 }
 
 /**
@@ -89,10 +205,7 @@ ${avoidanceInstructions}
 2. **해결책 (개념)**: 시각적 분해 / 9x9 그리드의 힘
 3. **도구 (MandaAct)**: 어떻게 이 앱이 도움이 되는가 (Goal Diagnosis, 9x9 Grid, Sub-goal)
 4. **실천 방안**: 독자가 바로 시도할 수 있는 것
-5. **마무리 및 CTA**: 앱의 가치를 요약하고 다운로드를 유도합니다.
-   - 문구: "MandaAct 시작하기: 목표를 9x9 그리드로 시각화하고, 매일 실천 가능한 액션으로 분해하세요."
-   - 앱스토어 링크 포함 필수: ${APP_LINKS.appStore.ko}
-   - macOS, iOS, iPadOS 지원 언급 필수.
+5. **마무리**: 앱 다운로드 유도
 
 ## 제약사항
 - "OCR", "Deep Work Mode" 기능 언급 금지 (존재하지 않음)
@@ -103,7 +216,7 @@ ${avoidanceInstructions}
 ## 출력 형식
 YAML frontmatter 포함 마크다운:
 ---
-title: "여기에_한국어_제목_작성"
+title: "${topic.title}"
 published: false
 tags: [생산성, 개발자, 목표관리, mandaact]
 cover_image: "PLACEHOLDER"
@@ -127,10 +240,7 @@ ${avoidanceInstructions}
 2. **The Solution (Mental Model)**: Visual decomposition / 9x9 grid concept
 3. **The Tool (MandaAct)**: How the app helps (Goal Diagnosis, 9x9 Grid, Sub-goal Decomposition)
 4. **Practical Tips**: What readers can try immediately
-5. **Closing & CTA**: Summarize the value and encourage app download.
-   - Message: "Get Started with MandaAct: Visualize your goals in a 9x9 grid and break them down into daily actions."
-   - App Store Link required: ${APP_LINKS.appStore.en}
-   - Mention support for macOS, iOS, and iPadOS.
+5. **Call to Action**: App download
 
 ## Constraints
 - Do NOT mention "OCR" or "Deep Work Mode" (these features don't exist)
@@ -139,7 +249,7 @@ ${avoidanceInstructions}
 ## Output Format
 Markdown with YAML frontmatter:
 ---
-title: "Refined Title Here"
+title: "${topic.title}"
 published: false
 tags: [productivity, developers, career, mandaact]
 series: "Building MandaAct"
@@ -267,13 +377,13 @@ async function processDraft(topic, profileId, trendResult, context) {
         draft = await verifyDraft(draft, context);
 
         // Save temporarily for quality check
-        const slug = topic.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+        const slug = createTopicSlug(topic.title);
         const date = new Date().toISOString().split('T')[0];
         const tempFilename = `${date}-${slug}${suffix}.md`;
         const tempPath = saveDraft(draft, tempFilename);
 
         // Quality check
-        qualityReport = checkQuality(tempPath);
+        qualityReport = checkQuality(tempPath, { profileId });
 
         if (qualityReport.score >= QUALITY_THRESHOLD) {
             console.log(`   ✅ Quality passed: ${qualityReport.score}/100`);
@@ -286,19 +396,17 @@ async function processDraft(topic, profileId, trendResult, context) {
         }
     }
 
-    if (!qualityReport || qualityReport.score < QUALITY_THRESHOLD) {
-        throw new Error(
-            `Quality gate failed for ${profileId}: ${qualityReport?.score ?? 'N/A'}/${QUALITY_THRESHOLD} after ${attempts} attempts`
-        );
-    }
-
-    // Extract localized title from generated draft
-    const parsed = matter(draft);
-    const localizedTitle = parsed.data.title || topic.title;
+    enforceDraftQualityThreshold(qualityReport, {
+        profileId,
+        threshold: QUALITY_THRESHOLD,
+        attempts,
+        maxAttempts: MAX_REGENERATION_ATTEMPTS,
+        allowBelowThreshold: allowLowQualityDrafts()
+    });
 
     // Generate cover image
-    const slug = topic.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-    const coverInfo = await generateCoverImage(localizedTitle, slug, lang);
+    const slug = createTopicSlug(topic.title);
+    const coverInfo = await generateCoverImage(topic.title, slug, lang);
 
     // Update draft with cover URL
     draft = draft.replace(/cover_image: ".*?"/, `cover_image: "${coverInfo.coverUrl}"`);
@@ -309,7 +417,8 @@ async function processDraft(topic, profileId, trendResult, context) {
     const filePath = saveDraft(draft, filename);
 
     // Inject CTA (forced, not prompt-dependent)
-    console.log(`   ✅ CTA integrated via AI prompt.`);
+    console.log(`   📲 Injecting CTA...`);
+    injectCTAToFile(filePath, profileId, { lang, force: false });
 
     return {
         profileId,
@@ -333,8 +442,8 @@ async function generateDraft() {
         // 1. Read Topic
         const topic = readTopic();
         if (!topic) {
-            console.error('❌ CRITICAL: No topics found in queue. Failing workflow.');
-            throw new Error("Queue Empty: 'On Deck' topic not found or regex mismatch in TOPIC_QUEUE.md");
+            console.log('⚠️ No topics found in queue. Exiting.');
+            return;
         }
         console.log(`📝 Selected Topic: ${topic.title}\n`);
 
@@ -355,18 +464,18 @@ async function generateDraft() {
         // 4. Determine target platforms based on tags
         console.log('\n🚀 Phase 2: Parallel Draft Generation');
 
-        const isKROnly = topic.title.includes('[KR-Only]');
-        const isENOnly = topic.title.includes('[EN-Only]');
+        const { profiles, isKROnly, isENOnly } = resolveTargetProfilesFromTitle(topic.title);
 
         // Clean title for AI generation (remove tags like [KR-Only], [SEO], etc)
         const originalTitle = topic.title;
         topic.title = topic.title.replace(/\[.*?\]\s*/g, '').trim();
+        if (!topic.title) {
+            throw new Error('Invalid topic title after tag normalization.');
+        }
         console.log(`   Targeting: ${isKROnly ? 'KR Only' : isENOnly ? 'EN Only' : 'All Channels'}`);
         console.log(`   Clean Title: "${topic.title}"`);
 
-        const tasks = [];
-        if (!isKROnly) tasks.push(processDraft(topic, 'devto', trendResult, context));
-        if (!isENOnly) tasks.push(processDraft(topic, 'blogger_kr', trendResult, context));
+        const tasks = profiles.map((profileId) => processDraft(topic, profileId, trendResult, context));
 
         const results = await Promise.all(tasks);
         const resultEN = results.find(r => r.language === 'en');
@@ -397,63 +506,24 @@ async function generateDraft() {
         const koScore = resultKO ? `KO:${resultKO.qualityReport.score}` : 'KO:Skip';
         const qualityBadge = `✅ ${enScore} ${koScore}`;
 
-        // Regex to match the original line with tags in the queue
-        // We use the originalTitle because readTopic reads it with tags
-        const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const titleRegex = new RegExp(`\\*   \\*\\*${escapeRegExp(originalTitle)}\\*\\*`);
-
-        const updatedQueue = queueContent.replace(
-            titleRegex,
-            `*   **${originalTitle}** (Drafted ${qualityBadge})`
-        );
+        const updatedQueue = buildDraftedQueueContent(queueContent, originalTitle, qualityBadge);
         fs.writeFileSync(QUEUE_PATH, updatedQueue, 'utf8');
 
         // 7. Auto-push cover images to main
         console.log('🔄 Syncing cover images to GitHub...');
-        pushCoversToMain(`Add cover images for: ${topic.title}`);
+        const coverSyncSuccess = pushCoversToMain(`Add cover images for: ${topic.title}`);
+        if (!coverSyncSuccess) {
+            if (shouldRequireGitSyncSuccess()) {
+                throw new Error('Cover image sync failed. Aborting to avoid broken cover URLs.');
+            }
+            console.warn('⚠️ Cover image sync failed. Continuing because STRICT_GIT_SYNC is disabled.');
+        }
 
         // 8. Send notification
         const files = [];
         const qualityScores = {};
         if (resultEN) { files.push(resultEN.filename); qualityScores.en = resultEN.qualityReport.score; }
         if (resultKO) { files.push(resultKO.filename); qualityScores.ko = resultKO.qualityReport.score; }
-
-        if (resultKO) {
-            console.log('\n🚀 Phase 3: Exporting for Naver Blog...');
-            try {
-                await exportForNaver(resultKO.filePath);
-                console.log('✅ Naver export successful (notification sent via export-naver.js)');
-            } catch (exportError) {
-                console.error('⚠️ Naver export failed:', exportError.message);
-            }
-        }
-
-        const shouldAutoPublishAfterDraft = process.env.AUTO_PUBLISH_AFTER_DRAFT === 'true';
-        if (shouldAutoPublishAfterDraft) {
-            console.log('\n🚀 Phase 4: Auto-Publishing...');
-
-            // Publish EN Draft to Dev.to + Hashnode
-            if (resultEN) {
-                try {
-                    console.log('📤 Publishing EN draft to Dev.to + Hashnode...');
-                    await publishToAll(resultEN.filePath, ['devto', 'hashnode']);
-                } catch (pubError) {
-                    console.error('⚠️ EN publishing failed:', pubError.message);
-                }
-            }
-
-            // Publish KO Draft to Blogger
-            if (resultKO) {
-                try {
-                    console.log('📤 Publishing KO draft to Blogger...');
-                    await publishToAll(resultKO.filePath, ['blogger']);
-                } catch (pubError) {
-                    console.error('⚠️ Blogger publishing failed:', pubError.message);
-                }
-            }
-        } else {
-            console.log('\n⏭️ Phase 4 skipped: AUTO_PUBLISH_AFTER_DRAFT is not enabled.');
-        }
 
         await notifier.stepComplete('draft_generation', {
             title: topic.title,
@@ -475,4 +545,12 @@ if (require.main === module) {
     generateDraft();
 }
 
-module.exports = { generateDraft, generateWithProfile, processDraft };
+module.exports = {
+    generateDraft,
+    generateWithProfile,
+    processDraft,
+    createTopicSlug,
+    resolveTargetProfilesFromTitle,
+    buildDraftedQueueContent,
+    extractNextTopicFromQueue
+};
