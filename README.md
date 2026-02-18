@@ -21,8 +21,16 @@
 |------|------|------|
 | 매일 | 00:40 KST | Publish Smoke (Dry Run, diagnostics artifact 업로드) |
 | 일요일 | 17:00 KST | Topic Selection |
-| 월/수/금 | 17:00 KST | Draft + PR + Auto-Merge (EN: 수요일, KOR: 월/수/금) |
+| 월/수/금 | 17:00 KST | Draft + PR + Auto-Merge (EN: 수, KOR: 월/수/금) |
 | main push | 이벤트 기반 | Auto Publish (KO→Blogger, EN→Dev.to+Hashnode) |
+
+### 스케줄 변경 Playbook (KST)
+
+- 시간/요일 변경은 `config/weekly-schedule.json`만 수정합니다.
+- 파생 파일 동기화: `npm run schedule:sync`
+- 드리프트 검증: `npm run schedule:check`
+- 최소 회귀 검증: `node --test test/schedule-watchdog.test.js test/workflow-guardrails.test.js`
+- 배포 전 최종 검증: `./scripts/ci-sanity-checks.sh`
 
 ## 🚀 Quick Start
 
@@ -138,6 +146,7 @@ NOTIFY_EMAIL_TO=xxx@email.com
 - `PR Sanity` 워크플로우는 아래를 자동 검증합니다.
   - GitHub Actions YAML 문법
   - 스케줄 cron 가드레일(주간 17:00 KST, 스모크 00:40 KST)
+  - 스케줄 파생 파일 동기화 가드레일(`node scripts/sync-weekly-schedule.js --check`)
   - 워크플로우 summary 가드레일(`GITHUB_STEP_SUMMARY` 핵심 섹션)
   - 핵심 JS 스크립트 구문 오류 (`node --check`)
   - 회귀 테스트 (`npm test`)

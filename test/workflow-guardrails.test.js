@@ -9,6 +9,7 @@ const PUBLISH_SMOKE_WORKFLOW = path.resolve(__dirname, '../.github/workflows/pub
 const PR_SANITY_WORKFLOW = path.resolve(__dirname, '../.github/workflows/pr-sanity.yml');
 const WEEKLY_CONTENT_WORKFLOW = path.resolve(__dirname, '../.github/workflows/weekly-content.yml');
 const NOTIFY_ON_FAILURE_WORKFLOW = path.resolve(__dirname, '../.github/workflows/notify-on-failure.yml');
+const CI_SANITY_SCRIPT = path.resolve(__dirname, '../scripts/ci-sanity-checks.sh');
 
 function read(filePath) {
     return fs.readFileSync(filePath, 'utf8');
@@ -53,7 +54,7 @@ test('workflow schedules stay pinned to intended KST windows', () => {
     const weekly = read(WEEKLY_CONTENT_WORKFLOW);
     const smoke = read(PUBLISH_SMOKE_WORKFLOW);
 
-    // Weekly: Sunday 17:00 KST and Mon/Wed/Fri 17:00 KST
+    // Weekly: Sunday 17:00 KST and Monday/Wednesday/Friday 17:00 KST
     assert.match(weekly, /cron:\s*'0 8 \* \* 0'/m);
     assert.match(weekly, /cron:\s*'0 8 \* \* 1,3,5'/m);
 
@@ -67,6 +68,11 @@ test('pr-sanity workflow enforces regression tests', () => {
     assert.match(yml, /run:\s*npm test/m);
 });
 
+test('ci-sanity script blocks schedule drift', () => {
+    const script = read(CI_SANITY_SCRIPT);
+    assert.match(script, /sync-weekly-schedule\.js --check/m);
+});
+
 test('weekly-content workflow includes preflight checks for topic/draft paths', () => {
     const yml = read(WEEKLY_CONTENT_WORKFLOW);
 
@@ -75,6 +81,7 @@ test('weekly-content workflow includes preflight checks for topic/draft paths', 
     assert.match(yml, /name:\s*Preflight Draft Inputs/m);
     assert.match(yml, /scripts\/check-gh-cli-auth\.sh/m);
     assert.match(yml, /GH_TOKEN:\s*\$\{\{\s*secrets\.GITHUB_TOKEN\s*\}\}/m);
+    assert.match(yml, /SKIP_COVER_MAIN_SYNC:\s*'true'/m);
     assert.match(yml, /Weekly Workflow Preflight/m);
     assert.match(yml, /\$GITHUB_STEP_SUMMARY/m);
     assert.match(yml, /name:\s*Notify on Failure \(Legacy Inline\)/m);

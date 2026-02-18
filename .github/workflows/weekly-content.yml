@@ -4,7 +4,7 @@ on:
   schedule:
     # 1. Topic Committee: Sunday at 17:00 KST (Sunday 08:00 UTC)
     - cron: '0 8 * * 0'
-    # 2. Draft Writer: Mon, Wed, Fri at 17:00 KST (Mon/Wed/Fri 08:00 UTC)
+    # 2. Draft Writer: Monday/Wednesday/Friday at 17:00 KST (Monday/Wednesday/Friday 08:00 UTC)
     - cron: '0 8 * * 1,3,5'
   workflow_dispatch: # Allow manual trigger
     inputs:
@@ -171,6 +171,7 @@ jobs:
           GITHUB_MODELS_TOKEN: ${{ secrets.MODELS_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SKIP_COVER_MAIN_SYNC: 'true'
           AUTO_PUBLISH_AFTER_DRAFT: 'false'
           DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run || 'false' }}
         run: |

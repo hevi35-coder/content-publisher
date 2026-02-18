@@ -15,6 +15,9 @@ node --check select_topic.js
 echo "[ci-sanity] Syntax-check module directories"
 find adapters lib scripts -type f -name '*.js' -print0 | xargs -0 -n1 node --check
 
+echo "[ci-sanity] Validate schedule-derived files are in sync"
+node scripts/sync-weekly-schedule.js --check
+
 echo "[ci-sanity] Syntax-check shell scripts"
 while IFS= read -r script; do
   bash -n "$script"

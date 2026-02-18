@@ -4,7 +4,9 @@
   "description": "",
   "main": "publish.js",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "schedule:sync": "node scripts/sync-weekly-schedule.js",
+    "schedule:check": "node scripts/sync-weekly-schedule.js --check"
   },
   "keywords": [],
   "author": "",

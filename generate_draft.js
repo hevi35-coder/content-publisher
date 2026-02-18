@@ -37,6 +37,10 @@ function allowLowQualityDrafts() {
     return String(process.env.ALLOW_LOW_QUALITY_DRAFTS || '').toLowerCase() === 'true';
 }
 
+function shouldSkipCoverMainSync() {
+    return String(process.env.SKIP_COVER_MAIN_SYNC || '').toLowerCase() === 'true';
+}
+
 function createTopicSlug(title) {
     const normalizedTitle = String(title || '')
         .toLowerCase()
@@ -509,14 +513,18 @@ async function generateDraft() {
         const updatedQueue = buildDraftedQueueContent(queueContent, originalTitle, qualityBadge);
         fs.writeFileSync(QUEUE_PATH, updatedQueue, 'utf8');
 
-        // 7. Auto-push cover images to main
-        console.log('🔄 Syncing cover images to GitHub...');
-        const coverSyncSuccess = pushCoversToMain(`Add cover images for: ${topic.title}`);
-        if (!coverSyncSuccess) {
-            if (shouldRequireGitSyncSuccess()) {
-                throw new Error('Cover image sync failed. Aborting to avoid broken cover URLs.');
+        // 7. Auto-push cover images to main (optional in CI PR flow)
+        if (shouldSkipCoverMainSync()) {
+            console.log('⏭️ Skipping cover sync to main (SKIP_COVER_MAIN_SYNC=true).');
+        } else {
+            console.log('🔄 Syncing cover images to GitHub...');
+            const coverSyncSuccess = pushCoversToMain(`Add cover images for: ${topic.title}`);
+            if (!coverSyncSuccess) {
+                if (shouldRequireGitSyncSuccess()) {
+                    throw new Error('Cover image sync failed. Aborting to avoid broken cover URLs.');
+                }
+                console.warn('⚠️ Cover image sync failed. Continuing because STRICT_GIT_SYNC is disabled.');
             }
-            console.warn('⚠️ Cover image sync failed. Continuing because STRICT_GIT_SYNC is disabled.');
         }
 
         // 8. Send notification
