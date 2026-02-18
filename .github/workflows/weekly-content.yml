@@ -35,6 +35,7 @@ jobs:
       contents: write # Needed to push changes (QUEUE updates, new Drafts)
       pull-requests: write # Needed if we want to make a PR (future)
       statuses: write # Needed to set required status check context on bot-created PR branches
+      actions: write # Needed to trigger downstream auto-publish workflow_dispatch
 
     steps:
       - name: Checkout Code
@@ -199,6 +200,12 @@ jobs:
             echo "No changes generated. Skipping PR creation."
             exit 0
           fi
+          DRAFT_FILES_CSV=$(git diff --cached --name-only -- 'drafts/*.md' | paste -sd, -)
+          if [ -z "${DRAFT_FILES_CSV}" ]; then
+            echo "::warning::No drafts/*.md changes detected in commit set. Auto Publish dispatch will be skipped."
+          else
+            echo "Draft files for publish: ${DRAFT_FILES_CSV}"
+          fi
           git commit -m "chore(content): generate weekly draft"
 
           echo "🧪 Running regression tests before posting pr-sanity status..."
@@ -223,7 +230,36 @@ jobs:
           
           # Enable Auto-Merge (requires repo setting: Settings > General > Allow auto-merge)
           echo "🔄 Enabling Auto-Merge..."
-          gh pr merge --auto --squash --delete-branch "$BRANCH_NAME"
+          gh pr merge --auto --squash --delete-branch "$PR_URL"
+
+          echo "⏳ Waiting for Draft PR merge before triggering Auto Publish..."
+          for _ in $(seq 1 60); do
+            MERGED_AT=$(gh pr view "${PR_URL}" --json mergedAt --jq '.mergedAt')
+            if [ "${MERGED_AT}" != "null" ] && [ -n "${MERGED_AT}" ]; then
+              echo "✅ Draft PR merged at ${MERGED_AT}"
+              break
+            fi
+            sleep 2
+          done
+
+          MERGED_AT=$(gh pr view "${PR_URL}" --json mergedAt --jq '.mergedAt')
+          if [ "${MERGED_AT}" = "null" ] || [ -z "${MERGED_AT}" ]; then
+            echo "❌ Draft PR merge timeout. Auto Publish dispatch skipped."
+            exit 1
+          fi
+
+          if [ -n "${DRAFT_FILES_CSV}" ]; then
+            echo "🚀 Triggering Auto Publish workflow_dispatch..."
+            gh workflow run auto-publish.yml --ref main -f draft_files="${DRAFT_FILES_CSV}" -f dry_run=false
+            {
+              echo "- Auto Publish dispatch: requested"
+              echo "- Draft files: ${DRAFT_FILES_CSV}"
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            {
+              echo "- Auto Publish dispatch: skipped (no drafts/*.md in staged diff)"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - name: Notify on Failure (Legacy Inline)
         if: ${{ failure() && (vars.INLINE_FAILURE_NOTIFY == 'true') }}

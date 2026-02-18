@@ -22,7 +22,7 @@
 | 매일 | 00:40 KST | Publish Smoke (Dry Run, diagnostics artifact 업로드) |
 | 일요일 | 19:07 KST | Topic Selection |
 | 월/수/금 | 19:07 KST | Draft + PR + Auto-Merge (EN: 수, KOR: 월/수/금) |
-| main push | 이벤트 기반 | Auto Publish (KO→Blogger, EN→Dev.to+Hashnode) |
+| weekly merge handoff / main push | 이벤트 기반 | Auto Publish (KO→Blogger, EN→Dev.to+Hashnode) |
 
 ### 스케줄 변경 Playbook (KST)
 
@@ -52,6 +52,7 @@ node scripts/export-naver.js drafts/my-article.md
 
 - `Auto Publish (Content Publisher)`를 수동 실행할 때 `draft_files` 입력값을 넣으세요.
 - 입력 예시: `drafts/2026-02-16-example.md,drafts/2026-02-16-example-ko.md`
+- 주간 Draft 자동화는 PR merge 후 `Auto Publish`를 `workflow_dispatch`로 직접 호출합니다(`draft_files` 전달).
 - 수동 실행에서 `draft_files`가 비어 있으면 워크플로우는 즉시 실패합니다(무의미한 성공 방지).
 - 수동 실행의 `dry_run` 기본값은 `true`입니다(안전 기본값).
 - `dry_run=true`이면 실제 게시 없이 시뮬레이션만 수행됩니다.
