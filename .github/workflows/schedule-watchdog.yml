@@ -2,11 +2,11 @@ name: Weekly Schedule Watchdog
 
 on:
   schedule:
-    # Run after expected 17:00 KST schedule (grace included)
-    # Sunday 19:30 KST (Sunday 10:30 UTC)
-    - cron: '30 10 * * 0'
-    # Monday/Wednesday/Friday 19:30 KST (Monday/Wednesday/Friday 10:30 UTC)
-    - cron: '30 10 * * 1,3,5'
+    # Run after expected 17:07 KST schedule (grace included)
+    # Sunday 20:37 KST (Sunday 11:37 UTC)
+    - cron: '37 11 * * 0'
+    # Monday/Wednesday/Friday 20:37 KST (Monday/Wednesday/Friday 11:37 UTC)
+    - cron: '37 11 * * 1,3,5'
   workflow_dispatch:
 
 jobs:
@@ -18,7 +18,7 @@ jobs:
     env:
       TZ: Asia/Seoul
       WEEKLY_WORKFLOW_REF: '.github/workflows/weekly-content.yml'
-      SCHEDULE_WATCHDOG_GRACE_MINUTES: '120'
+      SCHEDULE_WATCHDOG_GRACE_MINUTES: '180'
       SCHEDULE_WATCHDOG_EARLY_ALLOWANCE_MINUTES: '15'
       SCHEDULE_WATCHDOG_API_MAX_ATTEMPTS: '3'
       SCHEDULE_WATCHDOG_API_RETRY_BASE_MS: '2000'

@@ -20,17 +20,20 @@
 | 요일 | 시간 | 작업 |
 |------|------|------|
 | 매일 | 00:40 KST | Publish Smoke (Dry Run, diagnostics artifact 업로드) |
-| 일요일 | 17:00 KST | Topic Selection |
-| 월/수/금 | 17:00 KST | Draft + PR + Auto-Merge (EN: 수, KOR: 월/수/금) |
+| 일요일 | 17:07 KST | Topic Selection |
+| 월/수/금 | 17:07 KST | Draft + PR + Auto-Merge (EN: 수, KOR: 월/수/금) |
 | main push | 이벤트 기반 | Auto Publish (KO→Blogger, EN→Dev.to+Hashnode) |
 
 ### 스케줄 변경 Playbook (KST)
 
 - 시간/요일 변경은 `config/weekly-schedule.json`만 수정합니다.
+- 정각(`:00`)은 피하고 오프셋 분(`:07`)을 유지합니다(스케줄 큐 혼잡 완화).
+- `watchdog_delay_minutes > watchdog_grace_minutes` 불변식을 유지합니다.
 - 파생 파일 동기화: `npm run schedule:sync`
 - 드리프트 검증: `npm run schedule:check`
 - 최소 회귀 검증: `node --test test/schedule-watchdog.test.js test/workflow-guardrails.test.js`
 - 배포 전 최종 검증: `./scripts/ci-sanity-checks.sh`
+- 운영 이슈 발생 시: `docs/SCHEDULE_TRIGGER_TROUBLESHOOTING.md`
 
 ## 🚀 Quick Start
 
@@ -145,7 +148,7 @@ NOTIFY_EMAIL_TO=xxx@email.com
 
 - `PR Sanity` 워크플로우는 아래를 자동 검증합니다.
   - GitHub Actions YAML 문법
-  - 스케줄 cron 가드레일(주간 17:00 KST, 스모크 00:40 KST)
+  - 스케줄 cron 가드레일(주간 17:07 KST, 스모크 00:40 KST)
   - 스케줄 파생 파일 동기화 가드레일(`node scripts/sync-weekly-schedule.js --check`)
   - 워크플로우 summary 가드레일(`GITHUB_STEP_SUMMARY` 핵심 섹션)
   - 핵심 JS 스크립트 구문 오류 (`node --check`)
@@ -175,4 +178,5 @@ NOTIFY_EMAIL_TO=xxx@email.com
 - [클라우드 수동 발행 리허설 체크리스트](docs/CLOUD_MANUAL_PUBLISH_REHEARSAL_CHECKLIST.md)
 - [Codex 클라우드 환경 세팅](docs/CODEX_CLOUD_SETUP.md)
 - [클라우드 실행 Runbook](docs/CLOUD_EXEC_RUNBOOK.md)
+- [주간 스케줄 트리거 트러블슈팅](docs/SCHEDULE_TRIGGER_TROUBLESHOOTING.md)
 - [Obsidian Docs](../MyObsidianVault/10_Projects/01_Active/Content%20Publisher/00_Overview.md)

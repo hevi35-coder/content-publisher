@@ -8,11 +8,121 @@ const AUTO_PUBLISH_WORKFLOW = path.resolve(__dirname, '../.github/workflows/auto
 const PUBLISH_SMOKE_WORKFLOW = path.resolve(__dirname, '../.github/workflows/publish-smoke.yml');
 const PR_SANITY_WORKFLOW = path.resolve(__dirname, '../.github/workflows/pr-sanity.yml');
 const WEEKLY_CONTENT_WORKFLOW = path.resolve(__dirname, '../.github/workflows/weekly-content.yml');
+const SCHEDULE_WATCHDOG_WORKFLOW = path.resolve(__dirname, '../.github/workflows/schedule-watchdog.yml');
 const NOTIFY_ON_FAILURE_WORKFLOW = path.resolve(__dirname, '../.github/workflows/notify-on-failure.yml');
 const CI_SANITY_SCRIPT = path.resolve(__dirname, '../scripts/ci-sanity-checks.sh');
+const WEEKLY_SCHEDULE_CONFIG = path.resolve(__dirname, '../config/weekly-schedule.json');
+
+const WEEKDAY_INDEX = {
+    SUN: 0,
+    MON: 1,
+    TUE: 2,
+    WED: 3,
+    THU: 4,
+    FRI: 5,
+    SAT: 6
+};
 
 function read(filePath) {
     return fs.readFileSync(filePath, 'utf8');
+}
+
+function parseTime(timeText) {
+    const m = String(timeText || '').trim().match(/^([01]?\d|2[0-3]):([0-5]\d)$/);
+    assert.ok(m, 'weekly_time_kst must be HH:MM');
+    return {
+        hour: Number(m[1]),
+        minute: Number(m[2])
+    };
+}
+
+function toWeekdayIndex(value, field) {
+    const index = WEEKDAY_INDEX[String(value || '').trim().toUpperCase()];
+    assert.equal(typeof index, 'number', `invalid ${field}`);
+    return index;
+}
+
+function toWeekdayList(values, field) {
+    assert.ok(Array.isArray(values) && values.length > 0, `${field} must be a non-empty array`);
+    return values.map((value) => toWeekdayIndex(value, field));
+}
+
+function uniqueSorted(values) {
+    return [...new Set(values)].sort((a, b) => a - b);
+}
+
+function convertKstToUtcDayTime(weekdayKst, hourKst, minuteKst) {
+    let hourUtc = hourKst - 9;
+    let dayShift = 0;
+    while (hourUtc < 0) {
+        hourUtc += 24;
+        dayShift -= 1;
+    }
+    while (hourUtc >= 24) {
+        hourUtc -= 24;
+        dayShift += 1;
+    }
+    return {
+        weekdayUtc: (weekdayKst + dayShift + 7) % 7,
+        hourUtc,
+        minuteUtc: minuteKst
+    };
+}
+
+function shiftKstDayTime(weekdayKst, hourKst, minuteKst, deltaMinutes) {
+    const total = hourKst * 60 + minuteKst + deltaMinutes;
+    const dayShift = Math.floor(total / 1440);
+    const minuteOfDay = ((total % 1440) + 1440) % 1440;
+    return {
+        weekdayKst: (weekdayKst + dayShift + 7) % 7,
+        hourKst: Math.floor(minuteOfDay / 60),
+        minuteKst: minuteOfDay % 60
+    };
+}
+
+function toCron(minuteUtc, hourUtc, weekdaysUtc) {
+    return `${minuteUtc} ${hourUtc} * * ${weekdaysUtc.join(',')}`;
+}
+
+function escapeRegex(text) {
+    return String(text).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function deriveExpectedSchedule() {
+    const cfg = JSON.parse(read(WEEKLY_SCHEDULE_CONFIG));
+    const time = parseTime(cfg.weekly_time_kst);
+    const topicDayKst = toWeekdayIndex(cfg.topic_weekday_kst, 'topic_weekday_kst');
+    const draftDaysKst = toWeekdayList(cfg.draft_weekdays_kst, 'draft_weekdays_kst');
+    const watchdogDelayMinutes = Number(cfg.watchdog_delay_minutes);
+    const watchdogGraceMinutes = Number(cfg.watchdog_grace_minutes);
+
+    assert.ok(Number.isInteger(watchdogDelayMinutes) && watchdogDelayMinutes >= 0, 'invalid watchdog_delay_minutes');
+    assert.ok(Number.isInteger(watchdogGraceMinutes) && watchdogGraceMinutes >= 0, 'invalid watchdog_grace_minutes');
+    assert.ok(watchdogDelayMinutes > watchdogGraceMinutes, 'watchdog_delay_minutes must be greater than watchdog_grace_minutes');
+
+    const topicUtc = convertKstToUtcDayTime(topicDayKst, time.hour, time.minute);
+    const draftUtc = draftDaysKst.map((day) => convertKstToUtcDayTime(day, time.hour, time.minute));
+    const draftWeekdaysUtc = uniqueSorted(draftUtc.map((entry) => entry.weekdayUtc));
+
+    const topicWatchdogKst = shiftKstDayTime(topicDayKst, time.hour, time.minute, watchdogDelayMinutes);
+    const draftWatchdogKst = draftDaysKst.map((day) => shiftKstDayTime(day, time.hour, time.minute, watchdogDelayMinutes));
+    const topicWatchdogUtc = convertKstToUtcDayTime(
+        topicWatchdogKst.weekdayKst,
+        topicWatchdogKst.hourKst,
+        topicWatchdogKst.minuteKst
+    );
+    const draftWatchdogUtc = draftWatchdogKst.map((entry) =>
+        convertKstToUtcDayTime(entry.weekdayKst, entry.hourKst, entry.minuteKst)
+    );
+    const draftWatchdogWeekdaysUtc = uniqueSorted(draftWatchdogUtc.map((entry) => entry.weekdayUtc));
+
+    return {
+        topicCron: toCron(topicUtc.minuteUtc, topicUtc.hourUtc, [topicUtc.weekdayUtc]),
+        draftCron: toCron(topicUtc.minuteUtc, topicUtc.hourUtc, draftWeekdaysUtc),
+        watchdogTopicCron: toCron(topicWatchdogUtc.minuteUtc, topicWatchdogUtc.hourUtc, [topicWatchdogUtc.weekdayUtc]),
+        watchdogDraftCron: toCron(topicWatchdogUtc.minuteUtc, topicWatchdogUtc.hourUtc, draftWatchdogWeekdaysUtc),
+        watchdogGraceMinutes
+    };
 }
 
 test('auto-publish workflow keeps manual safety defaults and guardrails', () => {
@@ -51,12 +161,19 @@ test('publish-smoke workflow exists as daily dry-run rehearsal', () => {
 });
 
 test('workflow schedules stay pinned to intended KST windows', () => {
+    const expected = deriveExpectedSchedule();
     const weekly = read(WEEKLY_CONTENT_WORKFLOW);
+    const watchdog = read(SCHEDULE_WATCHDOG_WORKFLOW);
     const smoke = read(PUBLISH_SMOKE_WORKFLOW);
 
-    // Weekly: Sunday 17:00 KST and Monday/Wednesday/Friday 17:00 KST
-    assert.match(weekly, /cron:\s*'0 8 \* \* 0'/m);
-    assert.match(weekly, /cron:\s*'0 8 \* \* 1,3,5'/m);
+    // Weekly schedule from config
+    assert.match(weekly, new RegExp(`cron:\\s*'${escapeRegex(expected.topicCron)}'`, 'm'));
+    assert.match(weekly, new RegExp(`cron:\\s*'${escapeRegex(expected.draftCron)}'`, 'm'));
+
+    // Watchdog schedule and grace from config
+    assert.match(watchdog, new RegExp(`cron:\\s*'${escapeRegex(expected.watchdogTopicCron)}'`, 'm'));
+    assert.match(watchdog, new RegExp(`cron:\\s*'${escapeRegex(expected.watchdogDraftCron)}'`, 'm'));
+    assert.match(watchdog, new RegExp(`SCHEDULE_WATCHDOG_GRACE_MINUTES:\\s*'${expected.watchdogGraceMinutes}'`, 'm'));
 
     // Smoke: Daily 00:40 KST
     assert.match(smoke, /cron:\s*'40 15 \* \* \*'/m);

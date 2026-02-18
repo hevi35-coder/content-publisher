@@ -137,9 +137,20 @@ function derive() {
     const enWeekdayKst = parseWeekday(cfg.en_weekday_kst, 'en_weekday_kst');
     const korWeekdaysKst = parseWeekdayList(cfg.kor_weekdays_kst, 'kor_weekdays_kst');
     const watchdogDelayMinutes = Number(cfg.watchdog_delay_minutes);
+    const watchdogGraceMinutes = Number(cfg.watchdog_grace_minutes);
 
     if (!Number.isInteger(watchdogDelayMinutes) || watchdogDelayMinutes < 0) {
         fail(`Invalid watchdog_delay_minutes: ${cfg.watchdog_delay_minutes}`);
+    }
+
+    if (!Number.isInteger(watchdogGraceMinutes) || watchdogGraceMinutes < 0) {
+        fail(`Invalid watchdog_grace_minutes: ${cfg.watchdog_grace_minutes}`);
+    }
+
+    if (watchdogDelayMinutes <= watchdogGraceMinutes) {
+        fail(
+            `watchdog_delay_minutes (${watchdogDelayMinutes}) must be greater than watchdog_grace_minutes (${watchdogGraceMinutes}).`
+        );
     }
 
     if (!draftWeekdaysKst.includes(enWeekdayKst)) {
@@ -193,6 +204,7 @@ function derive() {
         draftWatchdogWeekdaysUtcLong: formatLongDayList(draftWatchdogUtcWeekdays),
         watchdogTimeKstText: `${pad2(topicWatchdogKst.hourKst)}:${pad2(topicWatchdogKst.minuteKst)}`,
         watchdogTimeUtcText: `${pad2(topicWatchdogUtc.hourUtc)}:${pad2(topicWatchdogUtc.minuteUtc)}`,
+        watchdogGraceMinutes,
         expectedWeekdaysUtc,
         expectedHourUtc: topicUtc.hourUtc,
         expectedMinuteUtc: topicUtc.minuteUtc,
@@ -250,6 +262,13 @@ function updateWatchdogWorkflow(content, d) {
         /# .*\n\s*- cron: '.*'\n\s*workflow_dispatch:/,
         `# ${d.draftWatchdogWeekdaysKstLong} ${d.watchdogTimeKstText} KST (${d.draftWatchdogWeekdaysUtcLong} ${d.watchdogTimeUtcText} UTC)\n    - cron: '${d.draftWatchdogCron}'\n  workflow_dispatch:`,
         'watchdog draft schedule'
+    );
+
+    updated = replaceOnce(
+        updated,
+        /SCHEDULE_WATCHDOG_GRACE_MINUTES:\s*'\d+'/,
+        `SCHEDULE_WATCHDOG_GRACE_MINUTES: '${d.watchdogGraceMinutes}'`,
+        'watchdog grace minutes'
     );
 
     return updated;

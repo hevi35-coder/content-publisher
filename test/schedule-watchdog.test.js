@@ -32,6 +32,10 @@ function parseScheduleConfig() {
     const minuteKst = Number(m[2]);
     const topicDayKst = WEEKDAY_INDEX[String(cfg.topic_weekday_kst || '').toUpperCase()];
     const draftDaysKst = cfg.draft_weekdays_kst.map((d) => WEEKDAY_INDEX[String(d).toUpperCase()]);
+    const watchdogDelayMinutes = Number(cfg.watchdog_delay_minutes);
+    const watchdogGraceMinutes = Number(cfg.watchdog_grace_minutes);
+    assert.ok(Number.isInteger(watchdogDelayMinutes) && watchdogDelayMinutes >= 0, 'watchdog_delay_minutes must be >= 0');
+    assert.ok(Number.isInteger(watchdogGraceMinutes) && watchdogGraceMinutes >= 0, 'watchdog_grace_minutes must be >= 0');
 
     const hourUtc = hourKst - 9 < 0 ? hourKst + 15 : hourKst - 9;
     const dayShift = hourKst - 9 < 0 ? -1 : 0;
@@ -42,7 +46,9 @@ function parseScheduleConfig() {
     return {
         hourUtc,
         minuteUtc: minuteKst,
-        expectedWeekdaysUtc: [...new Set([topicDayUtc, ...draftDaysUtc])].sort((a, b) => a - b)
+        expectedWeekdaysUtc: [...new Set([topicDayUtc, ...draftDaysUtc])].sort((a, b) => a - b),
+        watchdogDelayMinutes,
+        watchdogGraceMinutes
     };
 }
 
@@ -94,4 +100,11 @@ test('evaluateWeeklyScheduleHealth reports missed when no schedule run is found'
     assert.equal(result.status, 'MISSED');
     assert.equal(result.dueSlotUtc, dueSlot.toISOString());
     assert.equal(result.matchedRunAtUtc, '');
+});
+
+test('watchdog delay stays above grace to avoid stale slot checks', () => {
+    assert.ok(
+        derived.watchdogDelayMinutes > derived.watchdogGraceMinutes,
+        `watchdog_delay_minutes (${derived.watchdogDelayMinutes}) must be > watchdog_grace_minutes (${derived.watchdogGraceMinutes})`
+    );
 });
