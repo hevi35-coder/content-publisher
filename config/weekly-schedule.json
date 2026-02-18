@@ -1,6 +1,6 @@
 {
   "timezone": "Asia/Seoul",
-  "weekly_time_kst": "17:07",
+  "weekly_time_kst": "19:07",
   "topic_weekday_kst": "SUN",
   "draft_weekdays_kst": ["MON", "WED", "FRI"],
   "watchdog_delay_minutes": 210,
