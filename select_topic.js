@@ -116,7 +116,7 @@ function enforceWeeklyTopicMix(topics) {
         throw new Error('Invalid response format: require at least 1 Global Dev and 2 Productivity topics.');
     }
 
-    return [globalTopics[0], productivityTopics[0], productivityTopics[1]];
+    return [productivityTopics[0], globalTopics[0], productivityTopics[1]];
 }
 
 async function selectTopic() {
@@ -154,14 +154,14 @@ Please analyze the current context and generate **3 distinct topics** in TWO cat
 - **Focus**: Technical depth, coding best practices, system architecture, engineering career.
 - **Target**: Global developers (Dev.to, Hashnode).
 - **Style**: Professional, technical, insightful.
-- **Schedule**: This will be published on **Monday**.
+- **Schedule**: This will be published on **Wednesday**.
 
 ### Category B: Productivity & MandaAct (Generate 2 Topics)
 - **Focus**: Goal setting, Mandalart usage, life-hacking, overcoming procrastination, self-improvement.
 - **Target**: Korean productivity seekers (Naver Blog, Blogger).
 - **Style**: Motivational, practical, easy to read.
 - **Constraint**: **MUST** include the tag "[KR-Only]" in the title (e.g., "[KR-Only] How to...").
-- **Schedule**: These will be published on **Wednesday and Friday**.
+- **Schedule**: These will be published on **Monday and Friday**.
 
 ### Output Format
 Return a JSON object with a "topics" array containing all 3 topics (1 Global, 2 Productivity).
@@ -209,13 +209,13 @@ Return a JSON object with a "topics" array containing all 3 topics (1 Global, 2 
         console.log(`\n✅ Committee Decision: Generated ${topics.length} topics.`);
 
         // 4. Update Queue with Strict Ordering
-        // Order: 1. Global Dev (Mon), 2. Productivity (Wed), 3. Productivity (Fri)
+        // Order: 1. Productivity (Mon), 2. Global Dev (Wed), 3. Productivity (Fri)
         let newEntries = "";
 
         // Helper to formatting
         const formatTopic = (t) => `*   **${t.title}**\n    *   *Rationale*: ${t.rationale}\n    *   *MandaAct Angle*: ${t.mandaact_angle}\n    *   *Target*: ${t.target_audience}\n\n`;
 
-        // Sequence: [Global Dev, Productivity, Productivity]
+        // Sequence: [Productivity, Global Dev, Productivity]
         topics.forEach((topic) => {
             newEntries += formatTopic(topic);
         });

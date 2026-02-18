@@ -53,9 +53,9 @@ test('workflow schedules stay pinned to intended KST windows', () => {
     const weekly = read(WEEKLY_CONTENT_WORKFLOW);
     const smoke = read(PUBLISH_SMOKE_WORKFLOW);
 
-    // Weekly: Sunday 01:00 KST and Mon/Wed/Fri 01:00 KST
-    assert.match(weekly, /cron:\s*'0 16 \* \* 6'/m);
-    assert.match(weekly, /cron:\s*'0 16 \* \* 0,2,4'/m);
+    // Weekly: Sunday 13:00 KST and Mon/Wed/Fri 13:00 KST
+    assert.match(weekly, /cron:\s*'0 4 \* \* 0'/m);
+    assert.match(weekly, /cron:\s*'0 4 \* \* 1,3,5'/m);
 
     // Smoke: Daily 00:40 KST
     assert.match(smoke, /cron:\s*'40 15 \* \* \*'/m);

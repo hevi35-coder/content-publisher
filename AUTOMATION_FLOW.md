@@ -5,8 +5,8 @@ This diagram illustrates the "Zero-Touch" multi-channel pipeline for MandaAct.
 ```mermaid
 graph TD
     %% Schedules (KST)
-    Sunday((📅 Sunday 01:00)) -->|Trigger| TopicCommittee
-    MWF((📅 Mon/Wed/Fri 01:00)) -->|Trigger| DraftWriter
+    Sunday((📅 Sunday 13:00)) -->|Trigger| TopicCommittee
+    MWF((📅 Mon/Wed/Fri 13:00)) -->|Trigger| DraftWriter
 
     %% Phase 1: Topic Selection
     subgraph "Phase 1: Topic Committee"
@@ -54,7 +54,7 @@ graph TD
 
 1. **Sunday (Topic Committee)**:
    - `select_topic.js` reads archive and trend signals.
-   - Result: next topic is added to `TOPIC_QUEUE.md`.
+   - Result: queue order is set for Mon/Wed/Fri (KO / EN+KO / KO).
 
 2. **Mon/Wed/Fri (Draft Writer + Quality Gate)**:
    - `generate_draft.js` generates EN/KO drafts and cover images.

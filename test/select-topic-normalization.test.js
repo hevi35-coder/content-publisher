@@ -126,7 +126,7 @@ test('enforceWeeklyTopicMix rejects insufficient category mix', () => {
     );
 });
 
-test('enforceWeeklyTopicMix returns exactly 3 ordered topics and dedupes titles', () => {
+test('enforceWeeklyTopicMix returns exactly 3 ordered topics for Mon/Wed/Fri and dedupes titles', () => {
     const normalized = normalizeGeneratedTopics({
         topics: [
             {
@@ -169,8 +169,8 @@ test('enforceWeeklyTopicMix returns exactly 3 ordered topics and dedupes titles'
 
     const weeklyTopics = enforceWeeklyTopicMix(normalized);
     assert.equal(weeklyTopics.length, 3);
-    assert.equal(weeklyTopics[0].category, 'Global Dev');
-    assert.equal(weeklyTopics[0].title, 'Modern API Design');
-    assert.equal(weeklyTopics[1].title, '[KR-Only] Focus Tactics');
+    assert.equal(weeklyTopics[0].title, '[KR-Only] Focus Tactics');
+    assert.equal(weeklyTopics[1].category, 'Global Dev');
+    assert.equal(weeklyTopics[1].title, 'Modern API Design');
     assert.equal(weeklyTopics[2].title, '[KR-Only] Execution Framework');
 });

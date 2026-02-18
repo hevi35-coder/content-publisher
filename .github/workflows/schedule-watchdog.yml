@@ -2,11 +2,11 @@ name: Weekly Schedule Watchdog
 
 on:
   schedule:
-    # Run after expected 01:00 KST schedule (grace included)
-    # Sunday 03:30 KST (Saturday 18:30 UTC)
-    - cron: '30 18 * * 6'
-    # Mon/Wed/Fri 03:30 KST (Sun/Tue/Thu 18:30 UTC)
-    - cron: '30 18 * * 0,2,4'
+    # Run after expected 13:00 KST schedule (grace included)
+    # Sunday 15:30 KST (Sunday 06:30 UTC)
+    - cron: '30 6 * * 0'
+    # Mon/Wed/Fri 15:30 KST (Mon/Wed/Fri 06:30 UTC)
+    - cron: '30 6 * * 1,3,5'
   workflow_dispatch:
 
 jobs:
