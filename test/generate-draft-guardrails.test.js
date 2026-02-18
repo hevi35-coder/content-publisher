@@ -1,11 +1,40 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const {
+    shouldSkipCoverMainSync,
     createTopicSlug,
     resolveTargetProfilesFromTitle,
     buildDraftedQueueContent,
     extractNextTopicFromQueue
 } = require('../generate_draft');
+
+test('shouldSkipCoverMainSync defaults to false', () => {
+    const prev = process.env.SKIP_COVER_MAIN_SYNC;
+    delete process.env.SKIP_COVER_MAIN_SYNC;
+    try {
+        assert.equal(shouldSkipCoverMainSync(), false);
+    } finally {
+        if (typeof prev === 'undefined') {
+            delete process.env.SKIP_COVER_MAIN_SYNC;
+        } else {
+            process.env.SKIP_COVER_MAIN_SYNC = prev;
+        }
+    }
+});
+
+test('shouldSkipCoverMainSync is true when env is enabled', () => {
+    const prev = process.env.SKIP_COVER_MAIN_SYNC;
+    process.env.SKIP_COVER_MAIN_SYNC = 'TrUe';
+    try {
+        assert.equal(shouldSkipCoverMainSync(), true);
+    } finally {
+        if (typeof prev === 'undefined') {
+            delete process.env.SKIP_COVER_MAIN_SYNC;
+        } else {
+            process.env.SKIP_COVER_MAIN_SYNC = prev;
+        }
+    }
+});
 
 test('createTopicSlug keeps Korean titles usable for filenames', () => {
     const slug = createTopicSlug('만다라트의 완벽 가이드');

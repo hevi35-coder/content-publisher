@@ -557,6 +557,7 @@ module.exports = {
     generateDraft,
     generateWithProfile,
     processDraft,
+    shouldSkipCoverMainSync,
     createTopicSlug,
     resolveTargetProfilesFromTitle,
     buildDraftedQueueContent,
