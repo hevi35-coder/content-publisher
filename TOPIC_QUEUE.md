@@ -8,7 +8,7 @@
 *This file is automatically updated by the Sunday Topic Committee.*
 
 ## On Deck (Next Up)
-*   **[KR-Only] How to Start the Perfect Morning Routine with the 9x9 Grid**
+*   **[KR-Only] How to Start the Perfect Morning Routine with the 9x9 Grid** (Drafted ✅ EN:Skip KO:70)
     *   *Rationale*: Many Korean professionals and students struggle to establish a consistent morning routine that sets the tone for a productive day. This article addresses the need for a structured method to create a personalized routine focused on achieving daily goals and maintaining mental clarity.
     *   *MandaAct Angle*: MandaAct's 9x9 grid can be used to design an ideal morning routine by categorizing activities into focus areas such as health, learning, and planning. By visually organizing the routine and tracking progress, users can build habits that align with their broader goals.
     *   *Target*: Korean professionals, students, and indie hackers seeking to improve their daily habits and productivity.
