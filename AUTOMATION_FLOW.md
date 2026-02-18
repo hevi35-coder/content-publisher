@@ -5,8 +5,8 @@ This diagram illustrates the "Zero-Touch" multi-channel pipeline for MandaAct.
 ```mermaid
 graph TD
     %% Schedules (KST)
-    Sunday((📅 Sunday 13:00)) -->|Trigger| TopicCommittee
-    MWF((📅 Mon/Wed/Fri 13:00)) -->|Trigger| DraftWriter
+    Sunday((📅 Sunday 17:00)) -->|Trigger| TopicCommittee
+    MWF((📅 Mon/Wed/Fri 17:00)) -->|Trigger| DraftWriter
 
     %% Phase 1: Topic Selection
     subgraph "Phase 1: Topic Committee"
