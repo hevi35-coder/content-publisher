@@ -18,7 +18,7 @@
     *   *MandaAct Angle*: MandaAct's 9x9 grid can help developers plan the transition to edge computing by breaking down the complex architecture into manageable steps such as edge node placement, data flow optimization, security protocols, and monitoring strategies. This structured approach ensures a smooth implementation of edge computing in modern applications.
     *   *Target*: Senior developers, system architects, full-stack developers interested in staying ahead of architectural trends.
 
-*   **[KR-Only] Overcoming Overwhelm: Breaking Down Stressful Projects with Mandalart**
+*   **[KR-Only] Overcoming Overwhelm: Breaking Down Stressful Projects with Mandalart** (Drafted ✅ EN:Skip KO:70)
     *   *Rationale*: Stress and overwhelm are common when tackling large, ambiguous projects, especially for Korean professionals and students juggling multiple responsibilities. This article will offer actionable strategies to manage and simplify overwhelming tasks using the Mandalart framework.
     *   *MandaAct Angle*: MandaAct's 9x9 grid helps users break down complex projects into smaller, actionable tasks, providing clarity and a sense of control. By visualizing progress and focusing on one step at a time, users can reduce stress and maintain momentum.
     *   *Target*: Korean students, junior developers, and professionals dealing with high-pressure projects and seeking a practical way to stay organized.
