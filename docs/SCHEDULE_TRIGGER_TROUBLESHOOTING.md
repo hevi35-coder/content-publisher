@@ -24,6 +24,9 @@
 - Historical schedule run start times were consistently delayed vs defined cron:
   - sample absolute delays: `63, 65, 83, 111, 115, 119, 147, 160` minutes
   - this indicates scheduler drift / queue latency risk, not only job runtime issues
+- Weekly draft PR merge itself can succeed while downstream auto-publish is absent:
+  - when merge is created by workflow `GITHUB_TOKEN`, a separate `push`-trigger workflow may not fire
+  - this explains "draft exists but Dev.to/Blogger not published" in the same window
 - Prior runtime failure (separate issue) also existed:
   - direct main push for covers caused protected branch rejection (`GH006`)
   - fixed by `SKIP_COVER_MAIN_SYNC=true` in weekly draft flow
@@ -35,7 +38,7 @@
 | Cron expression wrong | Rejected | Cron verified from workflow and reflected in API |
 | Workflow disabled | Rejected | Workflow state `active` |
 | Branch mismatch | Rejected | Runs and workflow on `main` |
-| Token/permission block on trigger | Rejected | Trigger absence happened before job-level auth |
+| Token/event propagation limit on downstream trigger | Supported | weekly run merged PR, but `auto-publish` `push` trigger did not appear |
 | GitHub scheduler queue/delay/drop | Supported | repeated large delays, including > 2h |
 | Runtime failure mistaken as trigger failure | Partially true | happened for earlier run, but does not explain absent new event |
 
@@ -54,11 +57,19 @@
 4. CI guardrails:
    - drift check runs in `scripts/ci-sanity-checks.sh`
    - tests assert schedule config alignment and watchdog invariants
+5. Weekly -> Auto Publish explicit handoff:
+   - after Draft PR auto-merge confirmation, weekly workflow dispatches `auto-publish.yml` directly
+   - dispatch payload includes `draft_files` and `dry_run=false` for deterministic publish scope
+6. Merge gating before handoff:
+   - weekly workflow now waits for Draft PR `mergedAt` before dispatch
+   - prevents dispatch against not-yet-merged drafts
 
 ## Operational Runbook (Until Stable)
 
 1. T+20m (after expected slot): check if new `schedule` run exists.
-2. If absent at T+20m: run `workflow_dispatch` with `run_target=draft` (`dry_run=false`) manually.
+2. If absent at T+20m:
+   - run `workflow_dispatch` with `run_target=draft` (`dry_run=false`) manually.
+   - if Draft PR already merged but publish missing, run `Auto Publish (Content Publisher)` manually with explicit `draft_files`.
 3. T+40m: capture run ID + logs, append to this document.
 4. If scheduler miss repeats 2+ times in 7 days: keep off-minute scheduling and open GitHub support ticket with run IDs/timestamps.
 

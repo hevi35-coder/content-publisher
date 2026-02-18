@@ -198,7 +198,10 @@ test('weekly-content workflow includes preflight checks for topic/draft paths', 
     assert.match(yml, /name:\s*Preflight Draft Inputs/m);
     assert.match(yml, /scripts\/check-gh-cli-auth\.sh/m);
     assert.match(yml, /GH_TOKEN:\s*\$\{\{\s*secrets\.GITHUB_TOKEN\s*\}\}/m);
+    assert.match(yml, /actions:\s*write/m);
     assert.match(yml, /SKIP_COVER_MAIN_SYNC:\s*'true'/m);
+    assert.match(yml, /Waiting for Draft PR merge before triggering Auto Publish/m);
+    assert.match(yml, /gh workflow run auto-publish\.yml --ref main -f draft_files=.* -f dry_run=false/m);
     assert.match(yml, /Weekly Workflow Preflight/m);
     assert.match(yml, /\$GITHUB_STEP_SUMMARY/m);
     assert.match(yml, /name:\s*Notify on Failure \(Legacy Inline\)/m);
