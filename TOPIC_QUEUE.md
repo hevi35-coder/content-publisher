@@ -13,7 +13,7 @@
     *   *MandaAct Angle*: MandaAct's 9x9 grid can be used to design an ideal morning routine by categorizing activities into focus areas such as health, learning, and planning. By visually organizing the routine and tracking progress, users can build habits that align with their broader goals.
     *   *Target*: Korean professionals, students, and indie hackers seeking to improve their daily habits and productivity.
 
-*   **The Silent Revolution: How Edge Computing is Redefining System Architecture**
+*   **The Silent Revolution: How Edge Computing is Redefining System Architecture** (Drafted ✅ EN:75 KO:70)
     *   *Rationale*: Edge computing is rapidly changing how developers design systems by bringing computation and data storage closer to the data sources. This trend is crucial for improving latency, reducing bandwidth costs, and enabling applications like IoT and real-time analytics. With the rise of 5G and distributed systems, it's essential for developers to understand the principles and best practices of edge computing.
     *   *MandaAct Angle*: MandaAct's 9x9 grid can help developers plan the transition to edge computing by breaking down the complex architecture into manageable steps such as edge node placement, data flow optimization, security protocols, and monitoring strategies. This structured approach ensures a smooth implementation of edge computing in modern applications.
     *   *Target*: Senior developers, system architects, full-stack developers interested in staying ahead of architectural trends.
