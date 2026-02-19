@@ -137,6 +137,18 @@ jobs:
             node publish.js "$file"
           done <<< "${{ steps.files.outputs.files }}"
 
+      - name: Post-publish Hashnode Duplicate Cleanup
+        if: steps.files.outputs.has_files == 'true'
+        env:
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.dry_run || 'true') || (vars.DRY_RUN || 'false') }}
+          TARGET_FILES: ${{ steps.files.outputs.files }}
+          HASHNODE_AUTO_DEDUPE: ${{ vars.HASHNODE_AUTO_DEDUPE || 'true' }}
+          HASHNODE_DEDUPE_MAX_SCAN: ${{ vars.HASHNODE_DEDUPE_MAX_SCAN || '240' }}
+          HASHNODE_PAT: ${{ secrets.HASHNODE_PAT }}
+          HASHNODE_PUBLICATION_ID: ${{ secrets.HASHNODE_PUBLICATION_ID }}
+        run: |
+          node scripts/hashnode-post-publish-dedupe.js
+
       - name: Notify on Failure (Legacy Inline)
         if: ${{ failure() && (vars.INLINE_FAILURE_NOTIFY == 'true') }}
         uses: dawidd6/action-send-mail@v3

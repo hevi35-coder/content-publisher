@@ -79,6 +79,13 @@
 8. Same-day duplicate generation guard:
    - `generate_draft` skips profiles that already have a same-day KST draft file
    - prevents delayed `schedule` + manual fallback from generating two drafts for the same profile/day
+9. Manual fallback timing guard (enforced in workflow):
+   - `workflow_dispatch` draft/both with `dry_run=false` is blocked before `T+60` from due slot
+   - blocked when the due slot already has a `schedule` run (prevents manual+delayed double run)
+   - emergency override exists: `manual_fallback_force=true` (explicit opt-in)
+10. Post-publish Hashnode duplicate cleanup:
+   - auto-publish now checks duplicate titles for target EN drafts
+   - if duplicates exist, keep canonical post and remove retry duplicates automatically
 
 ## Operational Runbook (Until Stable)
 
@@ -87,6 +94,7 @@
    - keep monitoring; do not immediately conclude hard miss (observed real delay: 47m on `2026-02-19`).
 3. If still absent at T+60m:
    - run `workflow_dispatch` with `run_target=draft` (`dry_run=false`) manually.
+   - do not use `manual_fallback_force=true` unless there is a confirmed emergency.
    - if Draft PR already merged but publish missing, run `Auto Publish (Content Publisher)` manually with explicit `draft_files`.
 4. T+90m: capture run ID + logs, append to this document.
 5. If scheduler miss repeats 2+ times in 7 days: keep off-minute scheduling and open GitHub support ticket with run IDs/timestamps.
@@ -96,6 +104,7 @@
 - `npm run schedule:sync`
 - `npm run schedule:check`
 - `node --test test/schedule-watchdog.test.js test/workflow-guardrails.test.js`
+- `node --test test/manual-fallback-guard.test.js test/hashnode-dedupe.test.js`
 - `./scripts/ci-sanity-checks.sh`
 
 ## Definition of Done

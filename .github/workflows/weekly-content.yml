@@ -25,6 +25,14 @@ on:
         options:
           - 'false'
           - 'true'
+      manual_fallback_force:
+        description: "Bypass fallback timing guard (emergency only)"
+        required: true
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
 
 jobs:
   automation:
@@ -165,6 +173,24 @@ jobs:
             echo "- GH auth: passed"
             echo "- Trigger: ${{ github.event_name }}"
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Enforce Manual Fallback Window
+        if: github.event_name == 'workflow_dispatch' && (github.event.inputs.run_target == 'both' || github.event.inputs.run_target == 'draft')
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          RUN_TARGET: ${{ github.event.inputs.run_target || '' }}
+          DRY_RUN: ${{ github.event.inputs.dry_run || 'true' }}
+          MANUAL_FALLBACK_FORCE: ${{ github.event.inputs.manual_fallback_force || 'false' }}
+          MANUAL_FALLBACK_MIN_DELAY_MINUTES: '60'
+          MANUAL_FALLBACK_EARLY_ALLOWANCE_MINUTES: '15'
+          MANUAL_FALLBACK_API_MAX_ATTEMPTS: '3'
+          MANUAL_FALLBACK_API_RETRY_BASE_MS: '2000'
+          WEEKLY_WORKFLOW_REF: '.github/workflows/weekly-content.yml'
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          node scripts/enforce-manual-fallback-window.js
 
       - name: Run Draft Writer (Tue, Thu, Sat)
         if: github.event.schedule == '7 7 * * 2,4,6' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_target == 'both' || github.event.inputs.run_target == 'draft'))

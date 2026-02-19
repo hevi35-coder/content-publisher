@@ -136,6 +136,9 @@ test('auto-publish workflow keeps manual safety defaults and guardrails', () => 
     assert.match(yml, /name:\s*Resolve Target Draft Files/m);
     assert.match(yml, /name:\s*Manual Run Missing Draft Files/m);
     assert.match(yml, /No draft files resolved for manual run/m);
+    assert.match(yml, /name:\s*Post-publish Hashnode Duplicate Cleanup/m);
+    assert.match(yml, /node scripts\/hashnode-post-publish-dedupe\.js/m);
+    assert.match(yml, /HASHNODE_AUTO_DEDUPE:\s*\$\{\{\s*vars\.HASHNODE_AUTO_DEDUPE/m);
     assert.match(yml, /Auto Publish Summary/m);
     assert.match(yml, /\$GITHUB_STEP_SUMMARY/m);
     assert.match(yml, /name:\s*Notify on Failure \(Legacy Inline\)/m);
@@ -197,6 +200,9 @@ test('weekly-content workflow includes preflight checks for topic/draft paths', 
     assert.match(yml, /Missing required secret:\s*MODELS_TOKEN/m);
     assert.match(yml, /name:\s*Preflight Draft Inputs/m);
     assert.match(yml, /scripts\/check-gh-cli-auth\.sh/m);
+    assert.match(yml, /name:\s*Enforce Manual Fallback Window/m);
+    assert.match(yml, /node scripts\/enforce-manual-fallback-window\.js/m);
+    assert.match(yml, /manual_fallback_force:/m);
     assert.match(yml, /GH_TOKEN:\s*\$\{\{\s*secrets\.GITHUB_TOKEN\s*\}\}/m);
     assert.match(yml, /actions:\s*write/m);
     assert.match(yml, /SKIP_COVER_MAIN_SYNC:\s*'true'/m);
