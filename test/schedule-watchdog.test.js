@@ -61,7 +61,23 @@ function addMinutes(date, minutes) {
 }
 
 const derived = parseScheduleConfig();
-const dueSlot = toUtcDate(2026, 1, 16, derived.hourUtc, derived.minuteUtc); // Monday slot reference
+
+function resolveReferenceDueSlot() {
+    const anchorYear = 2026;
+    const anchorMonth = 1; // February
+    const anchorDay = 15; // Sunday
+
+    for (let dayOffset = 0; dayOffset < 7; dayOffset += 1) {
+        const candidate = toUtcDate(anchorYear, anchorMonth, anchorDay + dayOffset, derived.hourUtc, derived.minuteUtc);
+        if (derived.expectedWeekdaysUtc.includes(candidate.getUTCDay())) {
+            return candidate;
+        }
+    }
+
+    throw new Error('Failed to resolve reference due slot from schedule config');
+}
+
+const dueSlot = resolveReferenceDueSlot();
 
 
 test('expected schedule constants stay aligned with weekly schedule config', () => {
@@ -71,7 +87,7 @@ test('expected schedule constants stay aligned with weekly schedule config', () 
 });
 
 test('getLatestExpectedSlotBefore resolves latest due slot with grace cutoff', () => {
-    const cutoff = addMinutes(dueSlot, 23 * 60 + 30); // Tuesday before next slot
+    const cutoff = addMinutes(dueSlot, 60);
     const slot = getLatestExpectedSlotBefore(cutoff);
     assert.equal(slot.toISOString(), dueSlot.toISOString());
 });
@@ -92,7 +108,7 @@ test('evaluateWeeklyScheduleHealth is healthy when matching schedule run exists'
 test('evaluateWeeklyScheduleHealth reports missed when no schedule run is found', () => {
     const result = evaluateWeeklyScheduleHealth({
         now: addMinutes(dueSlot, 150),
-        scheduledRunTimes: [addMinutes(dueSlot, -3 * 24 * 60 + 5).toISOString()], // previous Friday run
+        scheduledRunTimes: [addMinutes(dueSlot, -24 * 60 + 5).toISOString()],
         graceMinutes: 120,
         earlyAllowanceMinutes: 15
     });

@@ -25,6 +25,7 @@ const WEEKDAY_INDEX = {
 };
 
 const INDEX_TO_LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const INDEX_TO_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const INDEX_TO_KO = ['일', '월', '화', '수', '목', '금', '토'];
 
 function parseArgs(argv) {
@@ -78,6 +79,14 @@ function formatLongDayList(indices) {
 
 function formatKoDayList(indices) {
     return indices.map((index) => INDEX_TO_KO[index]).join('/');
+}
+
+function formatShortDayList(indices) {
+    return indices.map((index) => INDEX_TO_SHORT[index]).join('/');
+}
+
+function formatShortDayListCsv(indices) {
+    return indices.map((index) => INDEX_TO_SHORT[index]).join(', ');
 }
 
 function convertKstToUtcDayTime(weekdayKst, hourKst, minuteKst) {
@@ -195,6 +204,7 @@ function derive() {
         topicWatchdogCron,
         draftWatchdogCron,
         topicWeekdayKstLong: INDEX_TO_LONG[topicWeekdayKst],
+        topicWeekdayKstShort: INDEX_TO_SHORT[topicWeekdayKst],
         topicWeekdayUtcLong: INDEX_TO_LONG[topicUtc.weekdayUtc],
         draftWeekdaysKstLong: formatLongDayList(draftWeekdaysKst),
         draftWeekdaysUtcLong: formatLongDayList(draftUtcWeekdays),
@@ -208,6 +218,9 @@ function derive() {
         expectedWeekdaysUtc,
         expectedHourUtc: topicUtc.hourUtc,
         expectedMinuteUtc: topicUtc.minuteUtc,
+        draftWeekdaysKo: formatKoDayList(draftWeekdaysKst),
+        draftWeekdaysKstShort: formatShortDayList(draftWeekdaysKst),
+        draftWeekdaysKstShortCsv: formatShortDayListCsv(draftWeekdaysKst),
         enWeekdayKo: INDEX_TO_KO[enWeekdayKst],
         korWeekdaysKo: formatKoDayList(korWeekdaysKst)
     };
@@ -242,6 +255,20 @@ function updateWeeklyWorkflow(content, d) {
         /github\.event\.schedule == '[^']+' \|\| \(github\.event_name == 'workflow_dispatch' && \(github\.event\.inputs\.run_target == 'both' \|\| github\.event\.inputs\.run_target == 'draft'\)\)/g,
         `github.event.schedule == '${d.draftCron}' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_target == 'both' || github.event.inputs.run_target == 'draft'))`,
         'weekly workflow draft condition'
+    );
+
+    updated = replaceOnce(
+        updated,
+        /- name: Run Topic Committee \([^)]+\)/,
+        `- name: Run Topic Committee (${d.topicWeekdayKstShort})`,
+        'weekly workflow topic step name'
+    );
+
+    updated = replaceOnce(
+        updated,
+        /- name: Run Draft Writer \([^)]+\)/,
+        `- name: Run Draft Writer (${d.draftWeekdaysKstShortCsv})`,
+        'weekly workflow draft step name'
     );
 
     return updated;
@@ -313,8 +340,8 @@ function updateReadme(content, d) {
 
     updated = replaceOnce(
         updated,
-        /\| 월\/수\/금 \| .* KST \| Draft \+ PR \+ Auto-Merge \(EN: [^,]+, KOR: [^)]+\) \|/,
-        `| 월/수/금 | ${d.timeKstText} KST | Draft + PR + Auto-Merge (EN: ${d.enWeekdayKo}, KOR: ${d.korWeekdaysKo}) |`,
+        /\| [^|]+ \| .* KST \| Draft \+ PR \+ Auto-Merge \(EN: [^,]+, KOR: [^)]+\) \|/,
+        `| ${d.draftWeekdaysKo} | ${d.timeKstText} KST | Draft + PR + Auto-Merge (EN: ${d.enWeekdayKo}, KOR: ${d.korWeekdaysKo}) |`,
         'README draft row'
     );
 
@@ -333,16 +360,30 @@ function updateAutomationFlow(content, d) {
 
     updated = replaceOnce(
         updated,
-        /Sunday\(\(📅 Sunday .*\)\) -->\|Trigger\| TopicCommittee/,
-        `Sunday((📅 Sunday ${d.timeKstText})) -->|Trigger| TopicCommittee`,
+        /^[ \t]*[A-Za-z0-9_]+\(\(📅 Sunday .*?\)\) -->\|Trigger\| TopicCommittee$/m,
+        `    Sunday((📅 Sunday ${d.timeKstText})) -->|Trigger| TopicCommittee`,
         'automation flow sunday line'
     );
 
     updated = replaceOnce(
         updated,
-        /MWF\(\(📅 Mon\/Wed\/Fri .*\)\) -->\|Trigger\| DraftWriter/,
-        `MWF((📅 Mon/Wed/Fri ${d.timeKstText})) -->|Trigger| DraftWriter`,
-        'automation flow mwf line'
+        /^[ \t]*[A-Za-z0-9_]+\(\(📅 .*?\)\) -->\|Trigger\| DraftWriter$/m,
+        `    DraftSchedule((📅 ${d.draftWeekdaysKstShort} ${d.timeKstText})) -->|Trigger| DraftWriter`,
+        'automation flow draft line'
+    );
+
+    updated = replaceOnce(
+        updated,
+        /2\. \*\*.* \(Draft Writer \+ Quality Gate\)\*\*:/,
+        `2. **${d.draftWeekdaysKstShort} (Draft Writer + Quality Gate)**:`,
+        'automation flow step heading'
+    );
+
+    updated = replaceOnce(
+        updated,
+        /Result: queue order is set for .* \(KO \/ EN\+KO \/ KO\)\./,
+        `Result: queue order is set for ${d.draftWeekdaysKstShort} (KO / EN+KO / KO).`,
+        'automation flow queue note'
     );
 
     return updated;
