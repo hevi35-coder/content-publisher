@@ -170,3 +170,43 @@
 - Current evidence supports **delayed schedule arrival**, not a hard "event not triggered" state.
 - At least for the latest due slot (`2026-02-19 16:07 KST`), watchdog matched an eventual schedule run and classified the system `HEALTHY`.
 - Operationally, manual fallback should continue to be treated as `T+60` safety action (already enforced in workflow guard) to avoid delayed-event overlap.
+
+## Pre-Slot Readiness Snapshot (`2026-02-20`, KST)
+
+### Current Time / Next Due Slot
+
+- Snapshot time: `2026-02-20 01:07:59 KST` (`2026-02-19 16:07:59 UTC`)
+- Next draft slot:
+  - `2026-02-21 16:07:00 KST` (Saturday)
+  - `2026-02-21T07:07:00Z` (UTC)
+- Next watchdog slot:
+  - `2026-02-21 19:37:00 KST`
+  - `2026-02-21T10:37:00Z` (UTC)
+
+### Readiness Checks (Completed)
+
+- Workflow state:
+  - `Weekly Content Automation` active
+  - `Weekly Schedule Watchdog` active
+  - `Auto Publish (Content Publisher)` active
+  - `Publish Smoke (Dry Run)` active
+  - `Notify on Workflow Failure` active
+- Actions repo permissions:
+  - `enabled=true`
+  - `allowed_actions=all`
+  - `default_workflow_permissions=read`
+- Smoke publish dry-run:
+  - run `22189726653` success
+  - includes `Preflight Smoke Draft Validation` + `Run Smoke Publish` success
+- Watchdog fallback rehearsal (safe):
+  - watchdog run `22188799398` success
+  - downstream weekly-content run `22188812835` success
+  - rehearsal proof line: `Draft writer: skipped (rehearsal mode)`
+
+### Live Monitoring Plan (Next Slot)
+
+1. At `2026-02-21 16:07 KST`: confirm `Weekly Content Automation` new `event=schedule` run creation.
+2. At `T+20m` (`16:27 KST`): if absent, continue watch (known delayed-arrival pattern exists).
+3. At `T+60m` (`17:07 KST`): if still absent, execute manual fallback (`run_target=draft`, `dry_run=false`, `manual_fallback_force=false`).
+4. At `19:37 KST`: watchdog should classify slot health or auto-dispatch fallback on `MISSED`.
+5. Capture run IDs + key logs and append under this document immediately after slot window.
