@@ -40,7 +40,8 @@
 5. Hashnode duplicate publish mitigation
    - Hashnode public URL reachability verification is skipped by default.
    - Uncertain publish failures trigger post-check reconciliation before retry publish.
-   - Auto-publish performs post-publish duplicate-title cleanup for target EN drafts and removes retry duplicates.
+   - Auto-publish performs post-publish duplicate-title cleanup for target EN drafts.
+   - Cleanup runs in safe mode: removes only recent retry-suffix duplicates, and blocks deletion when canonical base slug is ambiguous.
 
 ## Verification
 

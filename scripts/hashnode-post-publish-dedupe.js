@@ -15,6 +15,14 @@ function parsePositiveInt(value, fallback) {
     return parsed;
 }
 
+function parsePositiveFloat(value, fallback) {
+    const parsed = Number.parseFloat(String(value || ''));
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+        return fallback;
+    }
+    return parsed;
+}
+
 function parseTargetFiles(raw) {
     return String(raw || '')
         .split(/\r?\n|,/)
@@ -192,8 +200,12 @@ async function main() {
 
     const endpoint = String(process.env.HASHNODE_GQL_ENDPOINT || 'https://gql.hashnode.com').trim();
     const maxScan = parsePositiveInt(process.env.HASHNODE_DEDUPE_MAX_SCAN, 240);
+    const dedupeMaxAgeHours = parsePositiveFloat(process.env.HASHNODE_DEDUPE_MAX_AGE_HOURS, 12);
+    const dedupeNow = new Date();
 
-    console.log(`[HashnodeDedupe] Loading posts (maxScan=${maxScan})...`);
+    console.log(
+        `[HashnodeDedupe] Loading posts (maxScan=${maxScan}, maxAgeHours=${dedupeMaxAgeHours}, safeMode=true)...`
+    );
     const posts = await fetchPublicationPosts({
         endpoint,
         pat,
@@ -206,15 +218,23 @@ async function main() {
     let duplicateGroups = 0;
 
     for (const title of titles) {
-        const plan = buildDedupePlan(posts, title);
+        const plan = buildDedupePlan(posts, title, {
+            safeMode: true,
+            maxAgeHours: dedupeMaxAgeHours,
+            now: dedupeNow
+        });
         if (!plan.keep || plan.remove.length === 0) {
-            console.log(`[HashnodeDedupe] No duplicates for title: "${title}"`);
+            console.log(
+                `[HashnodeDedupe] No auto-removable duplicates for title: "${title}"` +
+                    ` (reason=${plan.reason}, totalMatches=${plan.totalMatches}, recentMatches=${plan.recentMatches}).`
+            );
             continue;
         }
 
         duplicateGroups += 1;
         console.log(
-            `[HashnodeDedupe] Duplicates found for "${title}". keep=${plan.keep.slug || plan.keep.id}, remove=${plan.remove.length}`
+            `[HashnodeDedupe] Duplicates found for "${title}".` +
+                ` keep=${plan.keep.slug || plan.keep.id}, remove=${plan.remove.length}, reason=${plan.reason}`
         );
 
         for (const duplicate of plan.remove) {

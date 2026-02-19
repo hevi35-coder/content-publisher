@@ -85,7 +85,9 @@
    - emergency override exists: `manual_fallback_force=true` (explicit opt-in)
 10. Post-publish Hashnode duplicate cleanup:
    - auto-publish now checks duplicate titles for target EN drafts
-   - if duplicates exist, keep canonical post and remove retry duplicates automatically
+   - safe-mode auto-delete applies only to recent duplicates (`HASHNODE_DEDUPE_MAX_AGE_HOURS`, default `12h`)
+   - deletion is blocked unless a base slug (no numeric suffix) is present in-window
+   - when blocked, workflow logs reason and keeps posts unchanged for manual review
 
 ## Operational Runbook (Until Stable)
 

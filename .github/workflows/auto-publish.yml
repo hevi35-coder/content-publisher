@@ -144,6 +144,7 @@ jobs:
           TARGET_FILES: ${{ steps.files.outputs.files }}
           HASHNODE_AUTO_DEDUPE: ${{ vars.HASHNODE_AUTO_DEDUPE || 'true' }}
           HASHNODE_DEDUPE_MAX_SCAN: ${{ vars.HASHNODE_DEDUPE_MAX_SCAN || '240' }}
+          HASHNODE_DEDUPE_MAX_AGE_HOURS: ${{ vars.HASHNODE_DEDUPE_MAX_AGE_HOURS || '12' }}
           HASHNODE_PAT: ${{ secrets.HASHNODE_PAT }}
           HASHNODE_PUBLICATION_ID: ${{ secrets.HASHNODE_PUBLICATION_ID }}
         run: |
