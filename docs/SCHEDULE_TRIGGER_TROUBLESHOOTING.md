@@ -112,3 +112,41 @@
 - Scheduled run appears around configured minute (`16:07 KST`) within expected operational tolerance.
 - No repeated missed trigger over a 7-day observation window.
 - No false-positive watchdog miss caused by scheduler delay within configured grace.
+
+## RCA Re-Start Snapshot (`2026-02-19`, KST)
+
+### Scope
+
+- Diagnostic window: `2026-02-19 23:40` to `2026-02-19 23:44` (KST)
+- Objective: re-validate missed-trigger root cause across `Events / API / Repo settings` after stabilization hotfixes.
+
+### Events (GitHub Actions)
+
+- Weekly schedule run confirmed:
+  - run `22173222589` (`event=schedule`)
+  - created: `2026-02-19T07:54:19Z` (`2026-02-19 16:54:19 KST`)
+  - expected slot: `2026-02-19T07:07:00Z` (`2026-02-19 16:07 KST`)
+  - observed scheduler delay: about `47m`
+- Manual watchdog re-check:
+  - run `22186437377` (`workflow_dispatch`) result `success`
+  - watchdog output:
+    - `Watchdog status: HEALTHY`
+    - `Due slot UTC: 2026-02-19T07:07:00.000Z`
+    - `Matched run UTC: 2026-02-19T07:54:19.000Z`
+
+### API / Repository Settings
+
+- Actions permissions API:
+  - `enabled=true`
+  - `allowed_actions=all`
+  - `default_workflow_permissions=read`
+- Workflow state API:
+  - `Weekly Content Automation`: `active`
+  - `Weekly Schedule Watchdog`: `active`
+- No repo-level disablement or workflow inactivity signal found.
+
+### Conclusion
+
+- Current evidence supports **delayed schedule arrival**, not a hard "event not triggered" state.
+- At least for the latest due slot (`2026-02-19 16:07 KST`), watchdog matched an eventual schedule run and classified the system `HEALTHY`.
+- Operationally, manual fallback should continue to be treated as `T+60` safety action (already enforced in workflow guard) to avoid delayed-event overlap.
