@@ -33,6 +33,14 @@ on:
         options:
           - 'false'
           - 'true'
+      skip_draft_writer:
+        description: "Rehearsal mode: skip draft generation step"
+        required: true
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
 
 jobs:
   automation:
@@ -193,7 +201,7 @@ jobs:
           node scripts/enforce-manual-fallback-window.js
 
       - name: Run Draft Writer (Tue, Thu, Sat)
-        if: github.event.schedule == '7 7 * * 2,4,6' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_target == 'both' || github.event.inputs.run_target == 'draft'))
+        if: (github.event.schedule == '7 7 * * 2,4,6' || (github.event_name == 'workflow_dispatch' && (github.event.inputs.run_target == 'both' || github.event.inputs.run_target == 'draft'))) && !(github.event_name == 'workflow_dispatch' && (github.event.inputs.skip_draft_writer || 'false') == 'true')
         env:
           GITHUB_MODELS_TOKEN: ${{ secrets.MODELS_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -286,6 +294,14 @@ jobs:
               echo "- Auto Publish dispatch: skipped (no drafts/*.md in staged diff)"
             } >> "$GITHUB_STEP_SUMMARY"
           fi
+
+      - name: Rehearsal Skip Draft Writer
+        if: github.event_name == 'workflow_dispatch' && (github.event.inputs.run_target == 'both' || github.event.inputs.run_target == 'draft') && (github.event.inputs.skip_draft_writer || 'false') == 'true'
+        run: |
+          echo "🧪 Rehearsal mode enabled: skip_draft_writer=true, draft generation step was intentionally skipped."
+          {
+            echo "- Draft writer: skipped (rehearsal mode)"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Notify on Failure (Legacy Inline)
         if: ${{ failure() && (vars.INLINE_FAILURE_NOTIFY == 'true') }}

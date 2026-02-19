@@ -64,7 +64,8 @@ jobs:
               --ref main \
               -f run_target=draft \
               -f dry_run=true \
-              -f manual_fallback_force=true
+              -f manual_fallback_force=true \
+              -f skip_draft_writer=true
           else
             echo "Watchdog detected missed schedule slot (${{ steps.watchdog.outputs.due_slot_utc }}). Triggering Weekly Content Automation fallback run (run_target=draft)."
             gh workflow run "Weekly Content Automation" \

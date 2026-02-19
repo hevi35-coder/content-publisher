@@ -205,6 +205,7 @@ test('schedule watchdog auto-dispatches fallback on missed slots', () => {
     assert.match(yml, /-f dry_run=false/m);
     assert.match(yml, /-f dry_run=true/m);
     assert.match(yml, /-f manual_fallback_force=true/m);
+    assert.match(yml, /-f skip_draft_writer=true/m);
     assert.match(yml, /Rehearsal mode:/m);
     assert.match(yml, /name:\s*Write Watchdog Summary/m);
     assert.match(yml, /name:\s*Fail on Missed Slot \(Alert Surface\)/m);
@@ -232,9 +233,11 @@ test('weekly-content workflow includes preflight checks for topic/draft paths', 
     assert.match(yml, /name:\s*Enforce Manual Fallback Window/m);
     assert.match(yml, /node scripts\/enforce-manual-fallback-window\.js/m);
     assert.match(yml, /manual_fallback_force:/m);
+    assert.match(yml, /skip_draft_writer:/m);
     assert.match(yml, /GH_TOKEN:\s*\$\{\{\s*secrets\.GITHUB_TOKEN\s*\}\}/m);
     assert.match(yml, /actions:\s*write/m);
     assert.match(yml, /SKIP_COVER_MAIN_SYNC:\s*'true'/m);
+    assert.match(yml, /name:\s*Rehearsal Skip Draft Writer/m);
     assert.match(yml, /Waiting for Draft PR merge before triggering Auto Publish/m);
     assert.match(yml, /gh workflow run auto-publish\.yml --ref main -f draft_files=.* -f dry_run=false/m);
     assert.match(yml, /Weekly Workflow Preflight/m);

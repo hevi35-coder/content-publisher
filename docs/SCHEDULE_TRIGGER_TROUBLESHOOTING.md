@@ -95,7 +95,7 @@
    - watchdog still fails intentionally after dispatch to keep alert/incident visibility
 12. Watchdog rehearsal path (safe simulation):
    - manual `workflow_dispatch` supports `simulate_missed=true`
-   - in rehearsal mode, watchdog dispatches `Weekly Content Automation` with `run_target=draft`, `dry_run=true`, `manual_fallback_force=true`
+   - in rehearsal mode, watchdog dispatches `Weekly Content Automation` with `run_target=draft`, `dry_run=true`, `manual_fallback_force=true`, `skip_draft_writer=true`
    - rehearsal does not fail watchdog run even when simulating missed slot (no alert noise)
 
 ## Operational Runbook (Until Stable)
