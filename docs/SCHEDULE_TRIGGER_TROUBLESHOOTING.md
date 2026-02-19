@@ -98,7 +98,7 @@
 3. If still absent at T+60m:
    - run `workflow_dispatch` with `run_target=draft` (`dry_run=false`) manually.
    - do not use `manual_fallback_force=true` unless there is a confirmed emergency.
-   - if Draft PR already merged but publish missing, run `Auto Publish (Content Publisher)` manually with explicit `draft_files`.
+   - if Draft PR already merged but publish missing, run `Auto Publish (Content Publisher)` manually with explicit `draft_files` and `live_publish_confirm`.
 4. T+90m: capture run ID + logs, append to this document.
 5. If scheduler miss repeats 2+ times in 7 days: keep off-minute scheduling and open GitHub support ticket with run IDs/timestamps.
 

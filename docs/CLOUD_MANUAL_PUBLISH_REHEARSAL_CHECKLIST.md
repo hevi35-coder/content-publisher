@@ -51,6 +51,9 @@
 ## 3. 실제 수동 발행 (전환)
 
 - [ ] `DRY_RUN=false`로 변경
+- [ ] `live_publish_confirm` 입력
+  - [ ] 기본값: `LIVE_PUBLISH_OK`
+  - [ ] 저장소 변수 `LIVE_PUBLISH_CONFIRM_TOKEN`을 쓰는 경우 해당 값으로 입력
 - [ ] 동일 `draft_files`로 다시 수동 실행
 - [ ] 실행 후 검증
   - [ ] `PUBLICATION SUMMARY`에 플랫폼별 성공 URL 출력

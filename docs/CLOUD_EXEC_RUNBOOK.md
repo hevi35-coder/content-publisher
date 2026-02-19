@@ -122,7 +122,8 @@ gh auth status >/dev/null 2>&1 || { echo "::error::gh 인증 미구성. GH_TOKEN
 gh workflow run "Auto Publish (Content Publisher)" \
   -R "$REPO" \
   -f draft_files="$RUNBOOK_FILES" \
-  -f dry_run=false
+  -f dry_run=false \
+  -f live_publish_confirm="${LIVE_PUBLISH_CONFIRM_TOKEN:-LIVE_PUBLISH_OK}"
 ```
 
 ```bash
