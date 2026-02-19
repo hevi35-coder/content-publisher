@@ -13,7 +13,7 @@ jobs:
   watchdog:
     runs-on: ubuntu-latest
     permissions:
-      actions: read
+      actions: write
       contents: read
     env:
       TZ: Asia/Seoul
@@ -35,6 +35,45 @@ jobs:
         run: npm ci
 
       - name: Check Weekly Schedule Run Health
+        id: watchdog
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/check-weekly-schedule-watchdog.js
+
+      - name: Trigger Draft Fallback Run (On Missed Schedule)
+        if: steps.watchdog.outputs.watchdog_status == 'MISSED' && github.event_name == 'schedule' && github.run_attempt == 1
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          echo "Watchdog detected missed schedule slot (${{ steps.watchdog.outputs.due_slot_utc }}). Triggering Weekly Content Automation fallback run (run_target=draft)."
+          gh workflow run "Weekly Content Automation" \
+            --ref main \
+            -f run_target=draft \
+            -f dry_run=false \
+            -f manual_fallback_force=false
+
+      - name: Write Watchdog Summary
+        if: always()
+        run: |
+          {
+            echo "## Weekly Schedule Watchdog"
+            echo
+            echo "- Status: ${{ steps.watchdog.outputs.watchdog_status || 'UNKNOWN' }}"
+            echo "- Due slot (UTC): ${{ steps.watchdog.outputs.due_slot_utc || 'n/a' }}"
+            echo "- Matched run (UTC): ${{ steps.watchdog.outputs.matched_run_at_utc || 'n/a' }}"
+            echo "- Fallback dispatch attempted: ${{ steps.watchdog.outputs.watchdog_status == 'MISSED' && github.event_name == 'schedule' && github.run_attempt == 1 }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Fail on Missed Slot (Alert Surface)
+        if: steps.watchdog.outputs.watchdog_status == 'MISSED'
+        run: |
+          echo "::error::SCHEDULE_SLOT_MISSED Watchdog triggered fallback dispatch and is failing intentionally for visibility."
+          exit 1
+
+      - name: Fail on Watchdog Runtime Error
+        if: steps.watchdog.outcome == 'failure' && steps.watchdog.outputs.watchdog_status != 'MISSED'
+        run: |
+          echo "::error::WATCHDOG_RUNTIME_ERROR Weekly schedule watchdog script failed unexpectedly."
+          exit 1

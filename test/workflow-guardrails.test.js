@@ -191,6 +191,22 @@ test('workflow schedules stay pinned to intended KST windows', () => {
     assert.match(smoke, /cron:\s*'40 15 \* \* \*'/m);
 });
 
+test('schedule watchdog auto-dispatches fallback on missed slots', () => {
+    const yml = read(SCHEDULE_WATCHDOG_WORKFLOW);
+
+    assert.match(yml, /permissions:\s*\n\s*actions:\s*write/m);
+    assert.match(yml, /name:\s*Check Weekly Schedule Run Health/m);
+    assert.match(yml, /id:\s*watchdog/m);
+    assert.match(yml, /continue-on-error:\s*true/m);
+    assert.match(yml, /name:\s*Trigger Draft Fallback Run \(On Missed Schedule\)/m);
+    assert.match(yml, /gh workflow run "Weekly Content Automation"/m);
+    assert.match(yml, /-f run_target=draft/m);
+    assert.match(yml, /-f dry_run=false/m);
+    assert.match(yml, /name:\s*Write Watchdog Summary/m);
+    assert.match(yml, /name:\s*Fail on Missed Slot \(Alert Surface\)/m);
+    assert.match(yml, /SCHEDULE_SLOT_MISSED/m);
+});
+
 test('pr-sanity workflow enforces regression tests', () => {
     const yml = read(PR_SANITY_WORKFLOW);
     assert.match(yml, /name:\s*Run Regression Tests/m);

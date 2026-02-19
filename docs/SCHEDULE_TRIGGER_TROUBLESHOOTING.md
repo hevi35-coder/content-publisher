@@ -89,6 +89,10 @@
    - deletion is blocked unless a base slug (no numeric suffix) is present in-window
    - when blocked, workflow logs reason and keeps posts unchanged for manual review
    - dedupe step is non-blocking by default; set `HASHNODE_AUTO_DEDUPE_STRICT=true` to fail pipeline on dedupe errors
+11. Watchdog auto-recovery handoff:
+   - if watchdog detects `MISSED`, it dispatches `Weekly Content Automation` with `run_target=draft` and `dry_run=false`
+   - auto-dispatch is limited to scheduled watchdog runs and first attempt (`run_attempt == 1`) to avoid duplicate fallback dispatch on reruns
+   - watchdog still fails intentionally after dispatch to keep alert/incident visibility
 
 ## Operational Runbook (Until Stable)
 
@@ -99,8 +103,10 @@
    - run `workflow_dispatch` with `run_target=draft` (`dry_run=false`) manually.
    - do not use `manual_fallback_force=true` unless there is a confirmed emergency.
    - if Draft PR already merged but publish missing, run `Auto Publish (Content Publisher)` manually with explicit `draft_files` and `live_publish_confirm` (must match secret `LIVE_PUBLISH_CONFIRM_TOKEN`).
-4. T+90m: capture run ID + logs, append to this document.
-5. If scheduler miss repeats 2+ times in 7 days: keep off-minute scheduling and open GitHub support ticket with run IDs/timestamps.
+4. If still absent by watchdog window (`T+210m`):
+   - scheduled watchdog auto-dispatches fallback draft run and raises an alerting failure intentionally.
+5. T+90m or after watchdog alert: capture run ID + logs, append to this document.
+6. If scheduler miss repeats 2+ times in 7 days: keep off-minute scheduling and open GitHub support ticket with run IDs/timestamps.
 
 ## Verification Checklist
 
