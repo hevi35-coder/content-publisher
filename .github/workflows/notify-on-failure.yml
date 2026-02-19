@@ -86,15 +86,28 @@ jobs:
 
       - name: Write Incident Summary
         if: always()
+        env:
+          SHOULD_NOTIFY: ${{ steps.gate.outputs.should_notify }}
+          WF_NAME: ${{ github.event.workflow_run.name }}
+          WF_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          WF_RUN_URL: ${{ github.event.workflow_run.html_url }}
+          SUMMARY_FAILED_JOBS: ${{ steps.context.outputs.failed_jobs }}
+          SUMMARY_ERROR_HIGHLIGHTS: ${{ steps.context.outputs.error_highlights }}
+          SUMMARY_FETCH_NOTE: ${{ steps.context.outputs.fetch_note }}
+          SUMMARY_HIGHLIGHT_NOTE: ${{ steps.context.outputs.highlight_note }}
+          SUMMARY_ACTION_GUIDANCE: ${{ steps.context.outputs.action_guidance }}
+          SUMMARY_SMOKE_HINT: ${{ steps.context.outputs.smoke_hint }}
         run: |
-          if [ "${{ steps.gate.outputs.should_notify }}" != "true" ]; then
+          set -euo pipefail
+
+          if [ "${SHOULD_NOTIFY}" != "true" ]; then
             {
               echo "# Workflow Incident Summary"
               echo
-              echo "- Workflow: ${{ github.event.workflow_run.name }}"
-              echo "- Conclusion: ${{ github.event.workflow_run.conclusion }}"
+              echo "- Workflow: ${WF_NAME}"
+              echo "- Conclusion: ${WF_CONCLUSION}"
               echo "- Notification: skipped (non-failure conclusion)"
-              echo "- Run URL: ${{ github.event.workflow_run.html_url }}"
+              echo "- Run URL: ${WF_RUN_URL}"
             } >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
@@ -102,34 +115,34 @@ jobs:
           {
             echo "# Workflow Incident Summary"
             echo
-            echo "- Workflow: ${{ github.event.workflow_run.name }}"
-            echo "- Conclusion: ${{ github.event.workflow_run.conclusion }}"
+            echo "- Workflow: ${WF_NAME}"
+            echo "- Conclusion: ${WF_CONCLUSION}"
             echo "- Notification: sent"
-            echo "- Run URL: ${{ github.event.workflow_run.html_url }}"
+            echo "- Run URL: ${WF_RUN_URL}"
             echo
             echo "## Failed Jobs"
-            printf '%s\n' "${{ steps.context.outputs.failed_jobs }}"
+            printf '%s\n' "${SUMMARY_FAILED_JOBS}"
             echo
             echo "## Error Highlights"
-            printf '%s\n' "${{ steps.context.outputs.error_highlights }}"
-            if [ -n "${{ steps.context.outputs.fetch_note }}" ]; then
+            printf '%s\n' "${SUMMARY_ERROR_HIGHLIGHTS}"
+            if [ -n "${SUMMARY_FETCH_NOTE}" ]; then
               echo
               echo "## Fetch Note"
-              printf '%s\n' "${{ steps.context.outputs.fetch_note }}"
+              printf '%s\n' "${SUMMARY_FETCH_NOTE}"
             fi
-            if [ -n "${{ steps.context.outputs.highlight_note }}" ]; then
+            if [ -n "${SUMMARY_HIGHLIGHT_NOTE}" ]; then
               echo
               echo "## Highlight Note"
-              printf '%s\n' "${{ steps.context.outputs.highlight_note }}"
+              printf '%s\n' "${SUMMARY_HIGHLIGHT_NOTE}"
             fi
-            if [ -n "${{ steps.context.outputs.action_guidance }}" ]; then
+            if [ -n "${SUMMARY_ACTION_GUIDANCE}" ]; then
               echo
               echo "## Action Guidance"
-              printf '%s\n' "${{ steps.context.outputs.action_guidance }}"
+              printf '%s\n' "${SUMMARY_ACTION_GUIDANCE}"
             fi
-            if [ -n "${{ steps.context.outputs.smoke_hint }}" ]; then
+            if [ -n "${SUMMARY_SMOKE_HINT}" ]; then
               echo
               echo "## Smoke Hint"
-              printf '%s\n' "${{ steps.context.outputs.smoke_hint }}"
+              printf '%s\n' "${SUMMARY_SMOKE_HINT}"
             fi
           } >> "$GITHUB_STEP_SUMMARY"

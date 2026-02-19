@@ -256,6 +256,8 @@ test('notify-on-failure watches all critical workflows', () => {
     assert.match(yml, /ERROR_HIGHLIGHTS:\s*\$\{\{\s*steps\.context\.outputs\.error_highlights\s*\}\}/m);
     assert.match(yml, /HIGHLIGHT_NOTE:\s*\$\{\{\s*steps\.context\.outputs\.highlight_note\s*\}\}/m);
     assert.match(yml, /name:\s*Write Incident Summary/m);
+    assert.match(yml, /SUMMARY_ERROR_HIGHLIGHTS:\s*\$\{\{\s*steps\.context\.outputs\.error_highlights\s*\}\}/m);
+    assert.match(yml, /printf '%s\\n' "\$\{SUMMARY_ERROR_HIGHLIGHTS\}"/m);
     assert.match(yml, /Notification: skipped \(non-failure conclusion\)/m);
     assert.match(yml, /Notification: sent/m);
     assert.match(yml, /## Action Guidance/m);
