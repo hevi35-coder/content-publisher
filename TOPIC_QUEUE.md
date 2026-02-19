@@ -29,7 +29,7 @@
     *   *MandaAct Angle*: MandaAct's 9x9 framework can help engineering teams design structured onboarding processes by breaking them down into key phases: pre-joining preparation, first-week tasks, mentorship matching, tools training, project familiarization, and feedback loops. By visualizing onboarding milestones, teams can ensure new hires are set up for success.
     *   *Target*: Senior developers, team leads, engineering managers, HR professionals in tech companies.
 
-*   **[KR-Only] How to Build Momentum on Your Goals with the 9x9 Mandalart Framework**
+*   **[KR-Only] How to Build Momentum on Your Goals with the 9x9 Mandalart Framework** (Drafted ✅ EN:Skip KO:75)
     *   *Rationale*: Many Korean professionals and students struggle with maintaining motivation and momentum in their personal and professional goals. This is especially relevant during periods of high stress or when tackling long-term projects. This article will provide a step-by-step guide to building and sustaining momentum using the Mandalart framework.
     *   *MandaAct Angle*: MandaAct's digital Mandalart tool helps users break down their goals into smaller, actionable tasks and design a structured plan to achieve them. By utilizing features like reminders and progress tracking, users can maintain consistent progress and avoid feeling stuck.
     *   *Target*: Korean professionals, students, and self-improvement enthusiasts who struggle with maintaining motivation and progress on their goals.
