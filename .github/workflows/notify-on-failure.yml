@@ -12,24 +12,44 @@ on:
 jobs:
   notify-failure:
     runs-on: ubuntu-latest
-    if: ${{ contains(fromJson('["failure","timed_out","cancelled","action_required","startup_failure"]'), github.event.workflow_run.conclusion) }}
     permissions:
       actions: read
       contents: read
     
     steps:
+      - name: Evaluate Notification Eligibility
+        id: gate
+        run: |
+          set -euo pipefail
+          CONCLUSION="${{ github.event.workflow_run.conclusion }}"
+          SHOULD_NOTIFY='false'
+          case "${CONCLUSION}" in
+            failure|timed_out|cancelled|action_required|startup_failure)
+              SHOULD_NOTIFY='true'
+              ;;
+          esac
+          echo "conclusion=${CONCLUSION}" >> "$GITHUB_OUTPUT"
+          echo "should_notify=${SHOULD_NOTIFY}" >> "$GITHUB_OUTPUT"
+          if [ "${SHOULD_NOTIFY}" != "true" ]; then
+            echo "ℹ️ Skipping failure notification for conclusion=${CONCLUSION}"
+          fi
+
       - name: Checkout Code
+        if: steps.gate.outputs.should_notify == 'true'
         uses: actions/checkout@v4
 
       - name: Setup Node.js
+        if: steps.gate.outputs.should_notify == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
       - name: Install Dependencies
+        if: steps.gate.outputs.should_notify == 'true'
         run: npm ci
 
       - name: Build Failure Context
+        if: steps.gate.outputs.should_notify == 'true'
         id: context
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -44,6 +64,7 @@ jobs:
         run: node scripts/build-workflow-failure-context.js
 
       - name: Send Failure Notification
+        if: steps.gate.outputs.should_notify == 'true'
         env:
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
@@ -66,11 +87,24 @@ jobs:
       - name: Write Incident Summary
         if: always()
         run: |
+          if [ "${{ steps.gate.outputs.should_notify }}" != "true" ]; then
+            {
+              echo "# Workflow Incident Summary"
+              echo
+              echo "- Workflow: ${{ github.event.workflow_run.name }}"
+              echo "- Conclusion: ${{ github.event.workflow_run.conclusion }}"
+              echo "- Notification: skipped (non-failure conclusion)"
+              echo "- Run URL: ${{ github.event.workflow_run.html_url }}"
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
           {
             echo "# Workflow Incident Summary"
             echo
             echo "- Workflow: ${{ github.event.workflow_run.name }}"
             echo "- Conclusion: ${{ github.event.workflow_run.conclusion }}"
+            echo "- Notification: sent"
             echo "- Run URL: ${{ github.event.workflow_run.html_url }}"
             echo
             echo "## Failed Jobs"

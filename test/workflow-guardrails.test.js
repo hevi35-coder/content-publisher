@@ -218,10 +218,12 @@ test('notify-on-failure watches all critical workflows', () => {
     assert.match(yml, /"Weekly Content Automation"/m);
     assert.match(yml, /"Publish Smoke \(Dry Run\)"/m);
     assert.match(yml, /"Auto Publish \(Content Publisher\)"/m);
-    assert.match(yml, /\["failure","timed_out","cancelled","action_required","startup_failure"\]/m);
     for (const conclusion of FAILED_CONCLUSION_LIST) {
-        assert.match(yml, new RegExp(`"${conclusion}"`));
+        assert.match(yml, new RegExp(`\\b${escapeRegex(conclusion)}\\b`));
     }
+    assert.match(yml, /name:\s*Evaluate Notification Eligibility/m);
+    assert.match(yml, /should_notify=/m);
+    assert.match(yml, /if:\s*steps\.gate\.outputs\.should_notify == 'true'/m);
     assert.match(yml, /name:\s*Build Failure Context/m);
     assert.match(yml, /node scripts\/build-workflow-failure-context\.js/m);
     assert.match(yml, /node scripts\/send-workflow-failure-notification\.js/m);
@@ -229,6 +231,8 @@ test('notify-on-failure watches all critical workflows', () => {
     assert.match(yml, /ERROR_HIGHLIGHTS:\s*\$\{\{\s*steps\.context\.outputs\.error_highlights\s*\}\}/m);
     assert.match(yml, /HIGHLIGHT_NOTE:\s*\$\{\{\s*steps\.context\.outputs\.highlight_note\s*\}\}/m);
     assert.match(yml, /name:\s*Write Incident Summary/m);
+    assert.match(yml, /Notification: skipped \(non-failure conclusion\)/m);
+    assert.match(yml, /Notification: sent/m);
     assert.match(yml, /## Action Guidance/m);
     assert.match(yml, /## Error Highlights/m);
     assert.match(yml, /## Fetch Note/m);
