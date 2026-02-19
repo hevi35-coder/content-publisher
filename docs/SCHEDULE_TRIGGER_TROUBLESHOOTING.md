@@ -210,3 +210,12 @@
 3. At `T+60m` (`17:07 KST`): if still absent, execute manual fallback (`run_target=draft`, `dry_run=false`, `manual_fallback_force=false`).
 4. At `19:37 KST`: watchdog should classify slot health or auto-dispatch fallback on `MISSED`.
 5. Capture run IDs + key logs and append under this document immediately after slot window.
+
+### One-command Live Check
+
+- Readable summary:
+  - `npm run ops:slot-health`
+- JSON output (for copy/paste incident records):
+  - `node scripts/report-slot-health.js -R hevi35-coder/content-publisher --json`
+- CI-style fail on missed slot:
+  - `node scripts/report-slot-health.js -R hevi35-coder/content-publisher --fail-on-missed`

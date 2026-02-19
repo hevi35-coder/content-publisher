@@ -6,7 +6,8 @@
   "scripts": {
     "test": "node --test",
     "schedule:sync": "node scripts/sync-weekly-schedule.js",
-    "schedule:check": "node scripts/sync-weekly-schedule.js --check"
+    "schedule:check": "node scripts/sync-weekly-schedule.js --check",
+    "ops:slot-health": "node scripts/report-slot-health.js -R hevi35-coder/content-publisher"
   },
   "keywords": [],
   "author": "",
