@@ -22,6 +22,7 @@ const { checkQuality } = require('./draft-quality-gate');
 const { enforceDraftQualityThreshold } = require('./lib/draft-quality-threshold');
 const { injectCTAToFile } = require('./lib/cta-injector');
 const { pushCoversToMain, shouldRequireGitSyncSuccess } = require('./lib/git-manager');
+const { sanitizeDraftMarkdownContent } = require('./lib/draft-cleaner');
 
 const QUEUE_PATH = config.paths.queue;
 const CONTEXT_PATH = config.paths.context;
@@ -294,7 +295,8 @@ ${draft}
 1. Scan the draft for feature claims.
 2. If the draft mentions features NOT in the Context (e.g., "OCR", "Deep Work Mode", "Social Sharing"), **REWRITE** those sections to refer to actual features (e.g., "Goal Diagnosis", "9x9 Grid", "Clarity Score").
 3. Keep the tone and flow consistent.
-4. Output the **Corrected Article** (Markdown).
+4. Output ONLY the corrected article markdown (including original frontmatter).
+5. Do NOT add explanations, notes, checklists, or sections like "Changes Made".
 `;
 
     const response = await client.chat.completions.create({
@@ -321,8 +323,7 @@ function saveDraft(content, filename) {
         fs.mkdirSync(DRAFTS_DIR, { recursive: true });
     }
 
-    // Clean markdown fences if present
-    const cleanContent = content.replace(/^```markdown\n/, '').replace(/\n```$/, '');
+    const cleanContent = sanitizeDraftMarkdownContent(content);
     fs.writeFileSync(filePath, cleanContent, 'utf8');
 
     return filePath;

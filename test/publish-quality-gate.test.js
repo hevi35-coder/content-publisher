@@ -33,6 +33,18 @@ test('publish-quality-gate flags broken image references', () => {
     assert.match(result.issues.join(' | '), /Broken image reference/);
 });
 
+test('publish-quality-gate flags editorial note leakage', () => {
+    const content = [
+        '<p>본문 내용입니다.</p>',
+        '<h3>Changes Made:</h3>',
+        '<p>1. remove hallucination text</p>'
+    ].join('\n');
+    const result = publishGate.validateContent(content, 'A reasonable title');
+
+    assert.equal(result.passed, false);
+    assert.match(result.issues.join(' | '), /Editorial notes leak detected/i);
+});
+
 test('legacy quality-gate shim keeps compatibility', () => {
     const content = '<p>Compatibility path for existing imports.</p>'.repeat(4);
     const title = 'Compatibility check title';

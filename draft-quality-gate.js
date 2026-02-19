@@ -9,6 +9,7 @@
 const fs = require('fs');
 const matter = require('gray-matter');
 const { getProfile } = require('./lib/tone-profiles');
+const { containsEditorialNotes } = require('./lib/draft-cleaner');
 
 function stripMarkdown(text) {
     return String(text || '')
@@ -186,6 +187,7 @@ function checkQuality(filePath, options = {}) {
         language,
         profileId: profile.id
     };
+    let hasFatalIssue = false;
 
     // 1. SEO: Title Length (channel-aware max)
     const title = frontmatter.title || '';
@@ -338,14 +340,42 @@ function checkQuality(filePath, options = {}) {
         '앱 스토어'
     ];
     const hasCallToAction = ctaKeywords.some((keyword) => lower.includes(keyword));
+    const hasWebsiteCta = lower.includes('mandaact.vercel.app');
     if (!hasCallToAction) {
         report.checks.push({ name: 'Call to Action', status: '⚠️', message: 'No clear CTA detected.', penalty: 10 });
         report.score -= 10;
+    } else if (!hasWebsiteCta) {
+        report.checks.push({
+            name: 'Call to Action',
+            status: '⚠️',
+            message: 'CTA is missing website link (mandaact.vercel.app).',
+            penalty: 5
+        });
+        report.score -= 5;
     } else {
-        report.checks.push({ name: 'Call to Action', status: '✅', message: 'CTA detected', penalty: 0 });
+        report.checks.push({ name: 'Call to Action', status: '✅', message: 'CTA detected (app + website)', penalty: 0 });
     }
 
-    report.passed = report.score >= 70;
+    // 7. Editorial leakage guard
+    if (containsEditorialNotes(content)) {
+        report.checks.push({
+            name: 'Editorial Leakage',
+            status: '❌',
+            message: 'Detected trailing editorial notes (e.g., "Changes Made"). Remove before publish.',
+            penalty: 40
+        });
+        report.score -= 40;
+        hasFatalIssue = true;
+    } else {
+        report.checks.push({
+            name: 'Editorial Leakage',
+            status: '✅',
+            message: 'No editorial note leakage detected',
+            penalty: 0
+        });
+    }
+
+    report.passed = report.score >= 70 && !hasFatalIssue;
     report.grade =
         report.score >= 90 ? 'A' :
         report.score >= 80 ? 'B' :

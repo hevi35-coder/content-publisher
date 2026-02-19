@@ -52,7 +52,7 @@ test('countWords and readability are language-aware for Korean content', () => {
 });
 
 test('checkQuality skips English readability scoring for Korean draft and detects Korean CTA', () => {
-    const sentence = '이 글은 목표 관리 방법을 설명합니다. 앱스토어에서 다운로드해 지금 시작해보세요.';
+    const sentence = '이 글은 목표 관리 방법을 설명합니다. 앱스토어에서 다운로드하고 https://mandaact.vercel.app 에서 자세히 보세요.';
     const content = Array.from({ length: 150 }, () => sentence).join(' ');
     const { tmpDir, filePath } = createDraftFile({
         filename: 'sample-ko.md',
@@ -74,6 +74,26 @@ test('checkQuality skips English readability scoring for Korean draft and detect
 
         const wordCountCheck = getCheck(report, 'Word Count');
         assert.doesNotMatch(wordCountCheck.message, /^0 words/);
+    } finally {
+        fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+});
+
+test('checkQuality warns when CTA is missing website link', () => {
+    const sentence = '이 글은 목표 관리 방법을 설명합니다. 앱스토어에서 다운로드해 지금 시작해보세요.';
+    const content = Array.from({ length: 140 }, () => sentence).join(' ');
+    const { tmpDir, filePath } = createDraftFile({
+        filename: 'sample-ko-missing-website.md',
+        title: 'CTA 웹사이트 링크 누락 검증을 위한 한국어 샘플 제목입니다',
+        tags: ['생산성', '개발자', '습관'],
+        content
+    });
+
+    try {
+        const report = checkQuality(filePath);
+        const ctaCheck = getCheck(report, 'Call to Action');
+        assert.equal(ctaCheck.status, '⚠️');
+        assert.match(ctaCheck.message, /missing website link/i);
     } finally {
         fs.rmSync(tmpDir, { recursive: true, force: true });
     }
