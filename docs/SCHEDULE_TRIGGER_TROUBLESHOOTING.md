@@ -97,6 +97,10 @@
    - manual `workflow_dispatch` supports `simulate_missed=true`
    - in rehearsal mode, watchdog dispatches `Weekly Content Automation` with `run_target=draft`, `dry_run=true`, `manual_fallback_force=true`, `skip_draft_writer=true`
    - rehearsal does not fail watchdog run even when simulating missed slot (no alert noise)
+13. Bot-dispatched failure notification fallback:
+   - `Weekly Content Automation` / `Auto Publish` now send inline failure mail when run is `workflow_dispatch` by `github-actions[bot]`
+   - `Notify on Workflow Failure` additionally monitors `Weekly Schedule Watchdog`
+   - this closes alert gaps when central `workflow_run` notification is not generated for chained bot dispatches
 
 ## Operational Runbook (Until Stable)
 

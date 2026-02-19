@@ -151,7 +151,10 @@ test('auto-publish workflow keeps manual safety defaults and guardrails', () => 
     assert.match(yml, /Auto Publish Summary/m);
     assert.match(yml, /\$GITHUB_STEP_SUMMARY/m);
     assert.match(yml, /name:\s*Notify on Failure \(Legacy Inline\)/m);
-    assert.match(yml, /if:\s*\$\{\{\s*failure\(\)\s*&&\s*\(vars\.INLINE_FAILURE_NOTIFY == 'true'\)\s*\}\}/m);
+    assert.match(
+        yml,
+        /if:\s*\$\{\{\s*failure\(\)\s*&&\s*\(vars\.INLINE_FAILURE_NOTIFY == 'true' \|\| \(github\.event_name == 'workflow_dispatch' && github\.actor == 'github-actions\[bot\]'\)\)\s*\}\}/m
+    );
 });
 
 test('publish-smoke workflow exists as daily dry-run rehearsal', () => {
@@ -243,6 +246,10 @@ test('weekly-content workflow includes preflight checks for topic/draft paths', 
     assert.match(yml, /Weekly Workflow Preflight/m);
     assert.match(yml, /\$GITHUB_STEP_SUMMARY/m);
     assert.match(yml, /name:\s*Notify on Failure \(Legacy Inline\)/m);
+    assert.match(
+        yml,
+        /if:\s*\$\{\{\s*failure\(\)\s*&&\s*\(vars\.INLINE_FAILURE_NOTIFY == 'true' \|\| \(github\.event_name == 'workflow_dispatch' && github\.actor == 'github-actions\[bot\]'\)\)\s*\}\}/m
+    );
 });
 
 test('notify-on-failure watches all critical workflows', () => {
@@ -250,6 +257,7 @@ test('notify-on-failure watches all critical workflows', () => {
     assert.match(yml, /"Weekly Content Automation"/m);
     assert.match(yml, /"Publish Smoke \(Dry Run\)"/m);
     assert.match(yml, /"Auto Publish \(Content Publisher\)"/m);
+    assert.match(yml, /"Weekly Schedule Watchdog"/m);
     for (const conclusion of FAILED_CONCLUSION_LIST) {
         assert.match(yml, new RegExp(`\\b${escapeRegex(conclusion)}\\b`));
     }

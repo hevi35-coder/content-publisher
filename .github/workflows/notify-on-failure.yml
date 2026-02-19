@@ -6,6 +6,7 @@ on:
       - "Weekly Content Automation"
       - "Publish Smoke (Dry Run)"
       - "Auto Publish (Content Publisher)"
+      - "Weekly Schedule Watchdog"
     types:
       - completed
 
