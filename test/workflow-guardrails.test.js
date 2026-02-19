@@ -137,9 +137,13 @@ test('auto-publish workflow keeps manual safety defaults and guardrails', () => 
     assert.match(yml, /name:\s*Manual Run Missing Draft Files/m);
     assert.match(yml, /No draft files resolved for manual run/m);
     assert.match(yml, /name:\s*Post-publish Hashnode Duplicate Cleanup/m);
+    assert.match(yml, /id:\s*hashnode_dedupe/m);
+    assert.match(yml, /continue-on-error:\s*true/m);
     assert.match(yml, /node scripts\/hashnode-post-publish-dedupe\.js/m);
     assert.match(yml, /HASHNODE_AUTO_DEDUPE:\s*\$\{\{\s*vars\.HASHNODE_AUTO_DEDUPE/m);
     assert.match(yml, /HASHNODE_DEDUPE_MAX_AGE_HOURS:\s*\$\{\{\s*vars\.HASHNODE_DEDUPE_MAX_AGE_HOURS/m);
+    assert.match(yml, /name:\s*Enforce Dedupe Failure Policy/m);
+    assert.match(yml, /HASHNODE_AUTO_DEDUPE_STRICT:\s*\$\{\{\s*vars\.HASHNODE_AUTO_DEDUPE_STRICT/m);
     assert.match(yml, /Auto Publish Summary/m);
     assert.match(yml, /\$GITHUB_STEP_SUMMARY/m);
     assert.match(yml, /name:\s*Notify on Failure \(Legacy Inline\)/m);

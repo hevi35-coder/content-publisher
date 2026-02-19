@@ -88,6 +88,7 @@
    - safe-mode auto-delete applies only to recent duplicates (`HASHNODE_DEDUPE_MAX_AGE_HOURS`, default `12h`)
    - deletion is blocked unless a base slug (no numeric suffix) is present in-window
    - when blocked, workflow logs reason and keeps posts unchanged for manual review
+   - dedupe step is non-blocking by default; set `HASHNODE_AUTO_DEDUPE_STRICT=true` to fail pipeline on dedupe errors
 
 ## Operational Runbook (Until Stable)
 

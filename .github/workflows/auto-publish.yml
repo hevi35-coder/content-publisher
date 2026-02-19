@@ -138,7 +138,9 @@ jobs:
           done <<< "${{ steps.files.outputs.files }}"
 
       - name: Post-publish Hashnode Duplicate Cleanup
+        id: hashnode_dedupe
         if: steps.files.outputs.has_files == 'true'
+        continue-on-error: true
         env:
           DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.dry_run || 'true') || (vars.DRY_RUN || 'false') }}
           TARGET_FILES: ${{ steps.files.outputs.files }}
@@ -149,6 +151,22 @@ jobs:
           HASHNODE_PUBLICATION_ID: ${{ secrets.HASHNODE_PUBLICATION_ID }}
         run: |
           node scripts/hashnode-post-publish-dedupe.js
+
+      - name: Enforce Dedupe Failure Policy
+        if: steps.files.outputs.has_files == 'true' && steps.hashnode_dedupe.outcome == 'failure'
+        env:
+          HASHNODE_AUTO_DEDUPE_STRICT: ${{ vars.HASHNODE_AUTO_DEDUPE_STRICT || 'false' }}
+        run: |
+          if [ "${HASHNODE_AUTO_DEDUPE_STRICT}" = "true" ]; then
+            echo "::error::Hashnode dedupe failed and strict mode is enabled (HASHNODE_AUTO_DEDUPE_STRICT=true)."
+            exit 1
+          fi
+
+          echo "::warning::Hashnode dedupe failed, but strict mode is disabled. Continuing pipeline."
+          {
+            echo "- Hashnode dedupe: failed (non-blocking)"
+            echo "- Strict mode: ${HASHNODE_AUTO_DEDUPE_STRICT}"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Notify on Failure (Legacy Inline)
         if: ${{ failure() && (vars.INLINE_FAILURE_NOTIFY == 'true') }}

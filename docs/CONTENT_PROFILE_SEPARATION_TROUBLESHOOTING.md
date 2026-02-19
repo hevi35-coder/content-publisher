@@ -42,6 +42,7 @@
    - Uncertain publish failures trigger post-check reconciliation before retry publish.
    - Auto-publish performs post-publish duplicate-title cleanup for target EN drafts.
    - Cleanup runs in safe mode: removes only recent retry-suffix duplicates, and blocks deletion when canonical base slug is ambiguous.
+   - Dedupe errors are non-blocking by default (`HASHNODE_AUTO_DEDUPE_STRICT=false`) to avoid false pipeline failure loops.
 
 ## Verification
 
