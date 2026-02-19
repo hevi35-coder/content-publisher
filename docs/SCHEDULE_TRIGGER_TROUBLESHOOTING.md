@@ -93,6 +93,10 @@
    - if watchdog detects `MISSED`, it dispatches `Weekly Content Automation` with `run_target=draft` and `dry_run=false`
    - auto-dispatch is limited to scheduled watchdog runs and first attempt (`run_attempt == 1`) to avoid duplicate fallback dispatch on reruns
    - watchdog still fails intentionally after dispatch to keep alert/incident visibility
+12. Watchdog rehearsal path (safe simulation):
+   - manual `workflow_dispatch` supports `simulate_missed=true`
+   - in rehearsal mode, watchdog dispatches `Weekly Content Automation` with `run_target=draft`, `dry_run=true`, `manual_fallback_force=true`
+   - rehearsal does not fail watchdog run even when simulating missed slot (no alert noise)
 
 ## Operational Runbook (Until Stable)
 
@@ -115,6 +119,9 @@
 - `node --test test/schedule-watchdog.test.js test/workflow-guardrails.test.js`
 - `node --test test/manual-fallback-guard.test.js test/hashnode-dedupe.test.js`
 - `./scripts/ci-sanity-checks.sh`
+- Rehearsal dispatch:
+  - run `Weekly Schedule Watchdog` with `simulate_missed=true`
+  - confirm a downstream `Weekly Content Automation` run starts with `workflow_dispatch` and `dry_run=true`
 
 ## Definition of Done
 

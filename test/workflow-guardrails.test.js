@@ -194,6 +194,7 @@ test('workflow schedules stay pinned to intended KST windows', () => {
 test('schedule watchdog auto-dispatches fallback on missed slots', () => {
     const yml = read(SCHEDULE_WATCHDOG_WORKFLOW);
 
+    assert.match(yml, /workflow_dispatch:\s*\n\s*inputs:\s*\n\s*simulate_missed:/m);
     assert.match(yml, /permissions:\s*\n\s*actions:\s*write/m);
     assert.match(yml, /name:\s*Check Weekly Schedule Run Health/m);
     assert.match(yml, /id:\s*watchdog/m);
@@ -202,6 +203,9 @@ test('schedule watchdog auto-dispatches fallback on missed slots', () => {
     assert.match(yml, /gh workflow run "Weekly Content Automation"/m);
     assert.match(yml, /-f run_target=draft/m);
     assert.match(yml, /-f dry_run=false/m);
+    assert.match(yml, /-f dry_run=true/m);
+    assert.match(yml, /-f manual_fallback_force=true/m);
+    assert.match(yml, /Rehearsal mode:/m);
     assert.match(yml, /name:\s*Write Watchdog Summary/m);
     assert.match(yml, /name:\s*Fail on Missed Slot \(Alert Surface\)/m);
     assert.match(yml, /SCHEDULE_SLOT_MISSED/m);

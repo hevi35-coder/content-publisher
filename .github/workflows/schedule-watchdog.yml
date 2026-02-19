@@ -8,6 +8,15 @@ on:
     # Tuesday/Thursday/Saturday 19:37 KST (Tuesday/Thursday/Saturday 10:37 UTC)
     - cron: '37 10 * * 2,4,6'
   workflow_dispatch:
+    inputs:
+      simulate_missed:
+        description: "Rehearsal: simulate missed slot and test fallback dispatch path"
+        required: true
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
 
 jobs:
   watchdog:
@@ -42,17 +51,28 @@ jobs:
         run: node scripts/check-weekly-schedule-watchdog.js
 
       - name: Trigger Draft Fallback Run (On Missed Schedule)
-        if: steps.watchdog.outputs.watchdog_status == 'MISSED' && github.event_name == 'schedule' && github.run_attempt == 1
+        if: |
+          (steps.watchdog.outputs.watchdog_status == 'MISSED' && github.event_name == 'schedule' && github.run_attempt == 1) ||
+          (github.event_name == 'workflow_dispatch' && (github.event.inputs.simulate_missed || 'false') == 'true')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          echo "Watchdog detected missed schedule slot (${{ steps.watchdog.outputs.due_slot_utc }}). Triggering Weekly Content Automation fallback run (run_target=draft)."
-          gh workflow run "Weekly Content Automation" \
-            --ref main \
-            -f run_target=draft \
-            -f dry_run=false \
-            -f manual_fallback_force=false
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.simulate_missed || 'false' }}" = "true" ]; then
+            echo "Watchdog rehearsal mode: simulating MISSED slot and triggering DRY_RUN fallback dispatch."
+            gh workflow run "Weekly Content Automation" \
+              --ref main \
+              -f run_target=draft \
+              -f dry_run=true \
+              -f manual_fallback_force=true
+          else
+            echo "Watchdog detected missed schedule slot (${{ steps.watchdog.outputs.due_slot_utc }}). Triggering Weekly Content Automation fallback run (run_target=draft)."
+            gh workflow run "Weekly Content Automation" \
+              --ref main \
+              -f run_target=draft \
+              -f dry_run=false \
+              -f manual_fallback_force=false
+          fi
 
       - name: Write Watchdog Summary
         if: always()
@@ -63,11 +83,12 @@ jobs:
             echo "- Status: ${{ steps.watchdog.outputs.watchdog_status || 'UNKNOWN' }}"
             echo "- Due slot (UTC): ${{ steps.watchdog.outputs.due_slot_utc || 'n/a' }}"
             echo "- Matched run (UTC): ${{ steps.watchdog.outputs.matched_run_at_utc || 'n/a' }}"
-            echo "- Fallback dispatch attempted: ${{ steps.watchdog.outputs.watchdog_status == 'MISSED' && github.event_name == 'schedule' && github.run_attempt == 1 }}"
+            echo "- Rehearsal mode: ${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.simulate_missed || 'false') == 'true' }}"
+            echo "- Fallback dispatch attempted: ${{ (steps.watchdog.outputs.watchdog_status == 'MISSED' && github.event_name == 'schedule' && github.run_attempt == 1) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.simulate_missed || 'false') == 'true') }}"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Fail on Missed Slot (Alert Surface)
-        if: steps.watchdog.outputs.watchdog_status == 'MISSED'
+        if: steps.watchdog.outputs.watchdog_status == 'MISSED' && github.event_name == 'schedule'
         run: |
           echo "::error::SCHEDULE_SLOT_MISSED Watchdog triggered fallback dispatch and is failing intentionally for visibility."
           exit 1
