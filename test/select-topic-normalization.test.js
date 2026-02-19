@@ -4,7 +4,9 @@ const assert = require('node:assert/strict');
 const {
     normalizeGeneratedTopics,
     normalizeCategory,
-    enforceWeeklyTopicMix
+    enforceWeeklyTopicMix,
+    deriveWeeklyTopicSlots,
+    loadWeeklyScheduleConfig
 } = require('../select_topic');
 
 test('normalizeGeneratedTopics rejects missing topics array', () => {
@@ -38,7 +40,7 @@ test('normalizeCategory rejects unknown categories', () => {
     );
 });
 
-test('normalizeGeneratedTopics normalizes fields and KR-only title tags', () => {
+test('normalizeGeneratedTopics normalizes fields and language target tags', () => {
     const topics = normalizeGeneratedTopics({
         topics: [
             {
@@ -67,7 +69,7 @@ test('normalizeGeneratedTopics normalizes fields and KR-only title tags', () => 
 
     assert.equal(topics.length, 3);
     assert.equal(topics[0].category, 'Global Dev');
-    assert.equal(topics[0].title, 'Modern API Design');
+    assert.equal(topics[0].title, '[EN-Only] Modern API Design');
     assert.equal(topics[0].rationale, 'why it matters');
 
     assert.equal(topics[1].category, 'Productivity');
@@ -94,6 +96,7 @@ test('normalizeGeneratedTopics rejects unknown category values', () => {
 });
 
 test('enforceWeeklyTopicMix rejects insufficient category mix', () => {
+    const slotPlan = deriveWeeklyTopicSlots(loadWeeklyScheduleConfig());
     const normalized = normalizeGeneratedTopics({
         topics: [
             {
@@ -122,11 +125,12 @@ test('enforceWeeklyTopicMix rejects insufficient category mix', () => {
 
     assert.throws(
         () => enforceWeeklyTopicMix(normalized),
-        /require at least 1 Global Dev and 2 Productivity topics/
+        new RegExp(`require at least ${slotPlan.enCount} Global Dev and ${slotPlan.koCount} Productivity topics`)
     );
 });
 
-test('enforceWeeklyTopicMix returns exactly 3 ordered topics for Mon/Wed/Fri and dedupes titles', () => {
+test('enforceWeeklyTopicMix follows schedule-derived slot order and dedupes titles', () => {
+    const slotPlan = deriveWeeklyTopicSlots(loadWeeklyScheduleConfig());
     const normalized = normalizeGeneratedTopics({
         topics: [
             {
@@ -158,19 +162,37 @@ test('enforceWeeklyTopicMix returns exactly 3 ordered topics for Mon/Wed/Fri and
                 target_audience: 't4'
             },
             {
-                category: 'Global Dev',
-                title: 'CI Guard Rails',
+                category: 'Productivity',
+                title: 'Habit Loop Design',
                 rationale: 'r5',
                 mandaact_angle: 'a5',
                 target_audience: 't5'
+            },
+            {
+                category: 'Global Dev',
+                title: 'CI Guard Rails',
+                rationale: 'r6',
+                mandaact_angle: 'a6',
+                target_audience: 't6'
             }
         ]
     });
 
     const weeklyTopics = enforceWeeklyTopicMix(normalized);
-    assert.equal(weeklyTopics.length, 3);
-    assert.equal(weeklyTopics[0].title, '[KR-Only] Focus Tactics');
-    assert.equal(weeklyTopics[1].category, 'Global Dev');
-    assert.equal(weeklyTopics[1].title, 'Modern API Design');
-    assert.equal(weeklyTopics[2].title, '[KR-Only] Execution Framework');
+    assert.equal(weeklyTopics.length, slotPlan.slots.length);
+
+    const expectedEnTitles = ['[EN-Only] Modern API Design'];
+    const expectedKoTitles = ['[KR-Only] Focus Tactics', '[KR-Only] Execution Framework', '[KR-Only] Habit Loop Design'];
+    let enCursor = 0;
+    let koCursor = 0;
+
+    for (let i = 0; i < slotPlan.slots.length; i += 1) {
+        if (slotPlan.slots[i] === 'en') {
+            assert.equal(weeklyTopics[i].title, expectedEnTitles[enCursor]);
+            enCursor += 1;
+        } else {
+            assert.equal(weeklyTopics[i].title, expectedKoTitles[koCursor]);
+            koCursor += 1;
+        }
+    }
 });

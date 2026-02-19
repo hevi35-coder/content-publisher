@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 const config = require('./config');
 const client = require('./lib/ai-client');
 const { pushToMain } = require('./lib/git-manager');
@@ -7,6 +8,22 @@ const QUEUE_PATH = config.paths.queue;
 const ARCHIVE_PATH = config.paths.archive;
 const { notifier } = require('./lib/notifier');
 const KR_ONLY_TAG = '[KR-Only]';
+const EN_ONLY_TAG = '[EN-Only]';
+const WEEKLY_SCHEDULE_PATH = path.join(__dirname, 'config', 'weekly-schedule.json');
+const WEEKDAY_INDEX = Object.freeze({
+    SUN: 0,
+    MON: 1,
+    TUE: 2,
+    WED: 3,
+    THU: 4,
+    FRI: 5,
+    SAT: 6
+});
+const INDEX_TO_LONG = Object.freeze(['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']);
+const DEFAULT_WEEKLY_SCHEDULE = Object.freeze({
+    en_weekday_kst: 'WED',
+    kor_weekdays_kst: ['MON', 'WED', 'FRI']
+});
 
 function shouldAutoSyncQueue(env = process.env) {
     return String(env.AUTO_SYNC_QUEUE || '').toLowerCase() === 'true';
@@ -31,6 +48,67 @@ function syncQueueToMain(queuePath = QUEUE_PATH, env = process.env, syncFn = pus
         console.warn("⚠️ Git sync failed (running locally?):", gitError.message);
         return false;
     }
+}
+
+function normalizeWeekdayKey(value, fieldName) {
+    const key = String(value || '').trim().toUpperCase();
+    if (!Object.prototype.hasOwnProperty.call(WEEKDAY_INDEX, key)) {
+        throw new Error(`Invalid ${fieldName}: ${value}`);
+    }
+    return key;
+}
+
+function formatWeekdayList(indices = []) {
+    return indices.map((index) => INDEX_TO_LONG[index]).join('/');
+}
+
+function loadWeeklyScheduleConfig() {
+    if (!fs.existsSync(WEEKLY_SCHEDULE_PATH)) {
+        return {
+            enWeekday: DEFAULT_WEEKLY_SCHEDULE.en_weekday_kst,
+            korWeekdays: [...DEFAULT_WEEKLY_SCHEDULE.kor_weekdays_kst]
+        };
+    }
+
+    const raw = fs.readFileSync(WEEKLY_SCHEDULE_PATH, 'utf8');
+    const parsed = JSON.parse(raw);
+
+    const enWeekday = normalizeWeekdayKey(
+        parsed.en_weekday_kst || DEFAULT_WEEKLY_SCHEDULE.en_weekday_kst,
+        'en_weekday_kst'
+    );
+
+    const korWeekdays = Array.isArray(parsed.kor_weekdays_kst) && parsed.kor_weekdays_kst.length > 0
+        ? parsed.kor_weekdays_kst.map((value) => normalizeWeekdayKey(value, 'kor_weekdays_kst'))
+        : [...DEFAULT_WEEKLY_SCHEDULE.kor_weekdays_kst];
+
+    return {
+        enWeekday,
+        korWeekdays
+    };
+}
+
+function deriveWeeklyTopicSlots(schedule = loadWeeklyScheduleConfig()) {
+    const enDayIndex = WEEKDAY_INDEX[schedule.enWeekday];
+    const korDayIndices = [...new Set(schedule.korWeekdays.map((key) => WEEKDAY_INDEX[key]))];
+
+    const slots = [];
+    for (let dayIndex = 0; dayIndex < 7; dayIndex += 1) {
+        if (dayIndex === enDayIndex) {
+            slots.push('en');
+        }
+        if (korDayIndices.includes(dayIndex)) {
+            slots.push('ko');
+        }
+    }
+
+    return {
+        slots,
+        enCount: slots.filter((slot) => slot === 'en').length,
+        koCount: slots.filter((slot) => slot === 'ko').length,
+        enDayIndex,
+        korDayIndices
+    };
 }
 
 function normalizeTopicField(value, fieldName, index) {
@@ -80,9 +158,13 @@ function normalizeGeneratedTopics(result) {
 
         const category = normalizeCategory(topic.category, index);
         const rawTitle = normalizeTopicField(topic.title, 'title', index);
-        const title = category === 'Productivity' && !rawTitle.includes(KR_ONLY_TAG)
-            ? `${KR_ONLY_TAG} ${rawTitle}`
-            : rawTitle;
+        let title = rawTitle;
+        if (category === 'Productivity' && !title.includes(KR_ONLY_TAG)) {
+            title = `${KR_ONLY_TAG} ${title}`;
+        }
+        if (category === 'Global Dev' && !title.includes(EN_ONLY_TAG)) {
+            title = `${EN_ONLY_TAG} ${title}`;
+        }
 
         return {
             category,
@@ -94,10 +176,10 @@ function normalizeGeneratedTopics(result) {
     });
 }
 
-function enforceWeeklyTopicMix(topics) {
+function enforceWeeklyTopicMix(topics, schedule = loadWeeklyScheduleConfig()) {
     const normalizedTopics = Array.isArray(topics) ? topics : [];
-    if (normalizedTopics.length < 3) {
-        throw new Error('Invalid response format: need at least 3 topics.');
+    if (normalizedTopics.length < 2) {
+        throw new Error('Invalid response format: need at least 2 topics.');
     }
 
     const uniqueTopics = [];
@@ -111,12 +193,27 @@ function enforceWeeklyTopicMix(topics) {
 
     const globalTopics = uniqueTopics.filter((topic) => topic.category === 'Global Dev');
     const productivityTopics = uniqueTopics.filter((topic) => topic.category === 'Productivity');
+    const slotPlan = deriveWeeklyTopicSlots(schedule);
 
-    if (globalTopics.length < 1 || productivityTopics.length < 2) {
-        throw new Error('Invalid response format: require at least 1 Global Dev and 2 Productivity topics.');
+    if (globalTopics.length < slotPlan.enCount || productivityTopics.length < slotPlan.koCount) {
+        throw new Error(
+            `Invalid response format: require at least ${slotPlan.enCount} Global Dev and ${slotPlan.koCount} Productivity topics.`
+        );
     }
 
-    return [productivityTopics[0], globalTopics[0], productivityTopics[1]];
+    const enPool = [...globalTopics];
+    const koPool = [...productivityTopics];
+    const ordered = [];
+
+    for (const slot of slotPlan.slots) {
+        if (slot === 'en') {
+            ordered.push(enPool.shift());
+        } else if (slot === 'ko') {
+            ordered.push(koPool.shift());
+        }
+    }
+
+    return ordered.filter(Boolean);
 }
 
 async function selectTopic() {
@@ -126,6 +223,14 @@ async function selectTopic() {
         // 1. Read Context
         const archiveContent = fs.existsSync(ARCHIVE_PATH) ? fs.readFileSync(ARCHIVE_PATH, 'utf8') : "";
         const queueContent = fs.existsSync(QUEUE_PATH) ? fs.readFileSync(QUEUE_PATH, 'utf8') : "";
+        const weeklySchedule = loadWeeklyScheduleConfig();
+        const slotPlan = deriveWeeklyTopicSlots(weeklySchedule);
+        const enScheduleDay = INDEX_TO_LONG[slotPlan.enDayIndex];
+        const koScheduleDays = formatWeekdayList(slotPlan.korDayIndices);
+
+        console.log(
+            `📅 Weekly slot plan: EN ${slotPlan.enCount} topic(s) on ${enScheduleDay}, KO ${slotPlan.koCount} topic(s) on ${koScheduleDays}`
+        );
 
         // 2. Formulate the Prompt
         const systemPrompt = `
@@ -145,31 +250,36 @@ ${archiveContent}
 
 [Current Queue]:
 ${queueContent}
+
+Weekly schedule in KST:
+- English channel day: ${enScheduleDay}
+- Korean channel days: ${koScheduleDays}
 `;
 
         const userPrompt = `
-Please analyze the current context and generate **3 distinct topics** in TWO categories:
+Please analyze the current context and generate **${slotPlan.enCount + slotPlan.koCount} distinct topics** in TWO categories:
 
-### Category A: Global Developer Trends (Generate 1 Topic)
+### Category A: Global Developer Trends (Generate ${slotPlan.enCount} Topic${slotPlan.enCount > 1 ? 's' : ''})
 - **Focus**: Technical depth, coding best practices, system architecture, engineering career.
 - **Target**: Global developers (Dev.to, Hashnode).
 - **Style**: Professional, technical, insightful.
-- **Schedule**: This will be published on **Wednesday**.
+- **Constraint**: **MUST** include the tag "[EN-Only]" in the title.
+- **Schedule**: This will be published on **${enScheduleDay}**.
 
-### Category B: Productivity & MandaAct (Generate 2 Topics)
+### Category B: Productivity & MandaAct (Generate ${slotPlan.koCount} Topic${slotPlan.koCount > 1 ? 's' : ''})
 - **Focus**: Goal setting, Mandalart usage, life-hacking, overcoming procrastination, self-improvement.
 - **Target**: Korean productivity seekers (Naver Blog, Blogger).
 - **Style**: Motivational, practical, easy to read.
 - **Constraint**: **MUST** include the tag "[KR-Only]" in the title (e.g., "[KR-Only] How to...").
-- **Schedule**: These will be published on **Monday and Friday**.
+- **Schedule**: These will be published on **${koScheduleDays}**.
 
 ### Output Format
-Return a JSON object with a "topics" array containing all 3 topics (1 Global, 2 Productivity).
+Return a JSON object with a "topics" array containing all topics (${slotPlan.enCount} Global + ${slotPlan.koCount} Productivity).
 {
     "topics": [
         {
             "category": "Global Dev",
-            "title": "Title of the article",
+            "title": "[EN-Only] Title of the article",
             "rationale": "Why this is trending...",
             "mandaact_angle": "Connection to MandaAct...",
             "target_audience": "Senior Devs, etc."
@@ -191,7 +301,9 @@ Return a JSON object with a "topics" array containing all 3 topics (1 Global, 2 
 `;
 
         // 3. Call AI (GitHub Models - GPT-4o)
-        console.log("🤖 Consulting the Oracle (GPT-4o) for 3 topics (1 Tech / 2 Prod)...");
+        console.log(
+            `🤖 Consulting the Oracle (GPT-4o) for ${slotPlan.enCount + slotPlan.koCount} topics (${slotPlan.enCount} Tech / ${slotPlan.koCount} Productivity)...`
+        );
         const response = await client.chat.completions.create({
             messages: [
                 { role: "system", content: systemPrompt },
@@ -204,18 +316,17 @@ Return a JSON object with a "topics" array containing all 3 topics (1 Global, 2 
         });
 
         const result = JSON.parse(response.choices[0].message.content);
-        const topics = enforceWeeklyTopicMix(normalizeGeneratedTopics(result));
+        const topics = enforceWeeklyTopicMix(normalizeGeneratedTopics(result), weeklySchedule);
 
         console.log(`\n✅ Committee Decision: Generated ${topics.length} topics.`);
 
         // 4. Update Queue with Strict Ordering
-        // Order: 1. Productivity (Mon), 2. Global Dev (Wed), 3. Productivity (Fri)
         let newEntries = "";
 
         // Helper to formatting
         const formatTopic = (t) => `*   **${t.title}**\n    *   *Rationale*: ${t.rationale}\n    *   *MandaAct Angle*: ${t.mandaact_angle}\n    *   *Target*: ${t.target_audience}\n\n`;
 
-        // Sequence: [Productivity, Global Dev, Productivity]
+        // Sequence follows schedule-derived slot order.
         topics.forEach((topic) => {
             newEntries += formatTopic(topic);
         });
@@ -229,7 +340,7 @@ Return a JSON object with a "topics" array containing all 3 topics (1 Global, 2 
         }
 
         fs.writeFileSync(QUEUE_PATH, newQueueContent, 'utf8');
-        console.log("📝 3 Topics added to TOPIC_QUEUE.md");
+        console.log(`📝 ${topics.length} topics added to TOPIC_QUEUE.md`);
 
         // 5. Automated Sync (Git Push)
         // Safe default: disabled unless AUTO_SYNC_QUEUE=true.
@@ -262,6 +373,8 @@ module.exports = {
     selectTopic,
     shouldAutoSyncQueue,
     syncQueueToMain,
+    loadWeeklyScheduleConfig,
+    deriveWeeklyTopicSlots,
     normalizeGeneratedTopics,
     enforceWeeklyTopicMix,
     normalizeTopicField,

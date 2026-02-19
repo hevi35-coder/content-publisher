@@ -1,6 +1,10 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { shouldVerifyPublishedUrls, verifyPublishedUrl } = require('../lib/publish-url-verifier');
+const {
+    shouldVerifyPublishedUrls,
+    shouldVerifyUrlForPlatform,
+    verifyPublishedUrl
+} = require('../lib/publish-url-verifier');
 
 function withEnv(vars, fn) {
     const prev = {};
@@ -67,4 +71,27 @@ test('verifyPublishedUrl returns false when fetch throws', async () => {
 test('verifyPublishedUrl returns false for invalid url input', async () => {
     assert.equal(await verifyPublishedUrl(''), false);
     assert.equal(await verifyPublishedUrl('not-http://abc'), false);
+});
+
+test('shouldVerifyUrlForPlatform skips hashnode url checks by default', () => {
+    withEnv({ VERIFY_HASHNODE_URLS: undefined }, () => {
+        assert.equal(
+            shouldVerifyUrlForPlatform('hashnode', 'https://example.hashnode.dev/some-post'),
+            false
+        );
+    });
+});
+
+test('shouldVerifyUrlForPlatform allows hashnode checks when explicitly enabled', () => {
+    withEnv({ VERIFY_HASHNODE_URLS: 'true' }, () => {
+        assert.equal(
+            shouldVerifyUrlForPlatform('hashnode', 'https://example.hashnode.dev/some-post'),
+            true
+        );
+    });
+});
+
+test('shouldVerifyUrlForPlatform validates non-hashnode urls normally', () => {
+    assert.equal(shouldVerifyUrlForPlatform('devto', 'https://dev.to/post'), true);
+    assert.equal(shouldVerifyUrlForPlatform('blogger', ''), false);
 });

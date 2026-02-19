@@ -27,12 +27,18 @@ const { sanitizeDraftMarkdownContent } = require('./lib/draft-cleaner');
 const QUEUE_PATH = config.paths.queue;
 const CONTEXT_PATH = config.paths.context;
 const DRAFTS_DIR = config.paths.drafts;
+const WEEKLY_SCHEDULE_PATH = path.join(__dirname, 'config', 'weekly-schedule.json');
 
 // Configuration
 const MAX_REGENERATION_ATTEMPTS = 3;
 const QUALITY_THRESHOLD = 70;
 const KR_ONLY_TAG = '[KR-Only]';
 const EN_ONLY_TAG = '[EN-Only]';
+const INDEX_TO_WEEKDAY_KEY = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+const DEFAULT_SCHEDULE = Object.freeze({
+    en_weekday_kst: 'WED',
+    kor_weekdays_kst: ['MON', 'WED', 'FRI']
+});
 
 function allowLowQualityDrafts() {
     return String(process.env.ALLOW_LOW_QUALITY_DRAFTS || '').toLowerCase() === 'true';
@@ -40,6 +46,10 @@ function allowLowQualityDrafts() {
 
 function shouldSkipCoverMainSync() {
     return String(process.env.SKIP_COVER_MAIN_SYNC || '').toLowerCase() === 'true';
+}
+
+function allowSameDayRegeneration() {
+    return String(process.env.ALLOW_SAME_DAY_REGEN || '').toLowerCase() === 'true';
 }
 
 function createTopicSlug(title) {
@@ -82,6 +92,189 @@ function resolveTargetProfilesFromTitle(title) {
     return { profiles, isKROnly, isENOnly };
 }
 
+function stripTopicTags(title) {
+    return String(title || '').replace(/\[.*?\]\s*/g, '').trim();
+}
+
+function topicMatchesProfile(title, profileId) {
+    const rawTitle = String(title || '');
+    const isKROnly = rawTitle.includes(KR_ONLY_TAG);
+    const isENOnly = rawTitle.includes(EN_ONLY_TAG);
+
+    if (isKROnly && isENOnly) {
+        return false;
+    }
+
+    if (profileId === 'blogger_kr') {
+        return isKROnly && !isENOnly;
+    }
+
+    if (profileId === 'devto') {
+        return !isKROnly;
+    }
+
+    return true;
+}
+
+function normalizeWeekdayKey(value, fieldName) {
+    const key = String(value || '').trim().toUpperCase();
+    if (!INDEX_TO_WEEKDAY_KEY.includes(key)) {
+        throw new Error(`Invalid ${fieldName}: ${value}`);
+    }
+    return key;
+}
+
+function loadWeeklyScheduleConfig() {
+    if (!fs.existsSync(WEEKLY_SCHEDULE_PATH)) {
+        return {
+            enWeekdayKst: DEFAULT_SCHEDULE.en_weekday_kst,
+            korWeekdaysKst: [...DEFAULT_SCHEDULE.kor_weekdays_kst]
+        };
+    }
+
+    const raw = fs.readFileSync(WEEKLY_SCHEDULE_PATH, 'utf8');
+    const json = JSON.parse(raw);
+
+    const enWeekdayKst = normalizeWeekdayKey(
+        json.en_weekday_kst || DEFAULT_SCHEDULE.en_weekday_kst,
+        'en_weekday_kst'
+    );
+    const korWeekdaysKst = Array.isArray(json.kor_weekdays_kst) && json.kor_weekdays_kst.length > 0
+        ? json.kor_weekdays_kst.map((value) => normalizeWeekdayKey(value, 'kor_weekdays_kst'))
+        : [...DEFAULT_SCHEDULE.kor_weekdays_kst];
+
+    return {
+        enWeekdayKst,
+        korWeekdaysKst
+    };
+}
+
+function getKstWeekdayKey(now = new Date()) {
+    const weekday = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Seoul',
+        weekday: 'short'
+    }).format(now);
+
+    switch (weekday) {
+    case 'Sun':
+        return 'SUN';
+    case 'Mon':
+        return 'MON';
+    case 'Tue':
+        return 'TUE';
+    case 'Wed':
+        return 'WED';
+    case 'Thu':
+        return 'THU';
+    case 'Fri':
+        return 'FRI';
+    case 'Sat':
+        return 'SAT';
+    default:
+        throw new Error(`Unexpected KST weekday token: ${weekday}`);
+    }
+}
+
+function resolveProfilesForKstWeekday(weekdayKey, schedule = loadWeeklyScheduleConfig()) {
+    const key = normalizeWeekdayKey(weekdayKey, 'weekdayKey');
+    const profiles = [];
+
+    if (key === schedule.enWeekdayKst) {
+        profiles.push('devto');
+    }
+
+    if (schedule.korWeekdaysKst.includes(key)) {
+        profiles.push('blogger_kr');
+    }
+
+    return profiles;
+}
+
+function getProfilesForCurrentRun(now = new Date(), schedule = loadWeeklyScheduleConfig()) {
+    const weekdayKey = getKstWeekdayKey(now);
+    const scheduledProfiles = resolveProfilesForKstWeekday(weekdayKey, schedule);
+
+    if (scheduledProfiles.length > 0) {
+        return {
+            weekdayKey,
+            profiles: scheduledProfiles,
+            fromSchedule: true
+        };
+    }
+
+    return {
+        weekdayKey,
+        profiles: ['devto', 'blogger_kr'],
+        fromSchedule: false
+    };
+}
+
+function toKstDateString(now = new Date()) {
+    return new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Seoul',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    }).format(now);
+}
+
+function hasExistingDraftForProfile(profileId, kstDateString, draftsDir = DRAFTS_DIR) {
+    if (!fs.existsSync(draftsDir)) {
+        return false;
+    }
+
+    const prefix = `${String(kstDateString || '').trim()}-`;
+    if (!prefix || prefix === '-') {
+        return false;
+    }
+
+    const entries = fs.readdirSync(draftsDir, { withFileTypes: true });
+    return entries.some((entry) => {
+        if (!entry.isFile()) return false;
+        const name = entry.name;
+        if (!name.startsWith(prefix) || !name.endsWith('.md')) {
+            return false;
+        }
+
+        const isKoreanDraft = /-ko\.md$/i.test(name);
+        if (profileId === 'blogger_kr') {
+            return isKoreanDraft;
+        }
+        if (profileId === 'devto') {
+            return !isKoreanDraft;
+        }
+
+        return false;
+    });
+}
+
+function filterProfilesWithoutSameDayDraft(profileIds, now = new Date(), draftsDir = DRAFTS_DIR) {
+    const kstDate = toKstDateString(now);
+    if (allowSameDayRegeneration()) {
+        return {
+            kstDate,
+            activeProfiles: [...profileIds],
+            skippedProfiles: []
+        };
+    }
+
+    const activeProfiles = [];
+    const skippedProfiles = [];
+    for (const profileId of profileIds) {
+        if (hasExistingDraftForProfile(profileId, kstDate, draftsDir)) {
+            skippedProfiles.push(profileId);
+        } else {
+            activeProfiles.push(profileId);
+        }
+    }
+
+    return {
+        kstDate,
+        activeProfiles,
+        skippedProfiles
+    };
+}
+
 function escapeRegExp(string) {
     return String(string || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -116,11 +309,29 @@ function buildDraftedQueueContent(queueContent, originalTitle, qualityBadge) {
     );
 }
 
-function extractNextTopicFromQueue(queueContent) {
+function normalizeUsedTitlesSet(usedTitles) {
+    if (usedTitles instanceof Set) {
+        return new Set([...usedTitles].map((title) => String(title || '').trim().toLowerCase()));
+    }
+
+    if (!usedTitles) {
+        return new Set();
+    }
+
+    if (Array.isArray(usedTitles)) {
+        return new Set(usedTitles.map((title) => String(title || '').trim().toLowerCase()));
+    }
+
+    return new Set([String(usedTitles || '').trim().toLowerCase()]);
+}
+
+function extractNextTopicFromQueue(queueContent, options = {}) {
+    const { profileId = null, usedTitles = null } = options;
     const lines = String(queueContent || '').split(/\r?\n/);
     const titleRegex = /^\*\s+\*\*(.+?)\*\*(.*)$/;
     const rationaleRegex = /^\s*\*\s+\*Rationale\*:\s+(.+?)\s*$/i;
     const angleRegex = /^\s*\*\s+\*MandaAct Angle\*:\s+(.+?)\s*$/i;
+    const usedTitleSet = normalizeUsedTitlesSet(usedTitles);
 
     for (let index = 0; index < lines.length; index++) {
         const titleMatch = lines[index].match(titleRegex);
@@ -130,6 +341,15 @@ function extractNextTopicFromQueue(queueContent) {
 
         const suffix = String(titleMatch[2] || '');
         if (/\((?:Drafted|Published)\b/i.test(suffix)) {
+            continue;
+        }
+
+        const rawTitle = titleMatch[1].trim();
+        if (usedTitleSet.has(rawTitle.toLowerCase())) {
+            continue;
+        }
+
+        if (profileId && !topicMatchesProfile(rawTitle, profileId)) {
             continue;
         }
 
@@ -162,13 +382,30 @@ function extractNextTopicFromQueue(queueContent) {
 
         return {
             fullMatch: lines.slice(index, blockEnd + 1).join('\n'),
-            title: titleMatch[1].trim(),
+            title: rawTitle,
             rationale,
             angle
         };
     }
 
     return null;
+}
+
+function selectTopicsForProfiles(queueContent, profileIds = []) {
+    const selected = [];
+    const usedTitles = new Set();
+
+    for (const profileId of profileIds) {
+        const topic = extractNextTopicFromQueue(queueContent, { profileId, usedTitles });
+        if (!topic) {
+            throw new Error(`No pending topic available for profile "${profileId}".`);
+        }
+
+        usedTitles.add(topic.title);
+        selected.push({ profileId, topic });
+    }
+
+    return selected;
 }
 
 /**
@@ -444,74 +681,99 @@ async function generateDraft() {
         console.log('✍️  Ghostwriter v2 is waking up...');
         console.log('═══════════════════════════════════════════════\n');
 
-        // 1. Read Topic
-        const topic = readTopic();
-        if (!topic) {
-            console.log('⚠️ No topics found in queue. Exiting.');
+        // 1. Resolve profiles for this run from KST schedule
+        const now = new Date();
+        const schedule = loadWeeklyScheduleConfig();
+        const runPlan = getProfilesForCurrentRun(now, schedule);
+        console.log(`🗓️ KST Weekday: ${runPlan.weekdayKey}`);
+        if (runPlan.fromSchedule) {
+            console.log(`🎯 Scheduled profiles: ${runPlan.profiles.join(', ')}`);
+        } else {
+            console.warn('⚠️ Current day is outside configured schedule. Falling back to both profiles (devto, blogger_kr).');
+        }
+
+        const profileFilter = filterProfilesWithoutSameDayDraft(runPlan.profiles, now);
+        if (profileFilter.skippedProfiles.length > 0) {
+            console.warn(
+                `⚠️ Existing same-day drafts detected for ${profileFilter.kstDate}: ${profileFilter.skippedProfiles.join(', ')}. Skipping.`
+            );
+        }
+        if (profileFilter.activeProfiles.length === 0) {
+            console.log('⚠️ All scheduled profiles already have same-day drafts. Exiting without new generation.');
             return;
         }
-        console.log(`📝 Selected Topic: ${topic.title}\n`);
 
-        // 2. Read Context
+        // 2. Select independent queue topics per profile
+        const queueContent = fs.readFileSync(QUEUE_PATH, 'utf8');
+        const selections = selectTopicsForProfiles(queueContent, profileFilter.activeProfiles);
+        if (selections.length === 0) {
+            console.log('⚠️ No pending topics found in queue. Exiting.');
+            return;
+        }
+
+        console.log('📝 Selected Topics:');
+        selections.forEach(({ profileId, topic }) => {
+            const cleanTitle = stripTopicTags(topic.title);
+            console.log(`   - [${profileId}] ${topic.title} → "${cleanTitle}"`);
+        });
+        console.log('');
+
+        // 3. Read Context
         const context = fs.existsSync(CONTEXT_PATH)
             ? fs.readFileSync(CONTEXT_PATH, 'utf8')
             : 'MandaAct is a 9x9 Mandalart grid app for iOS.';
 
-        // 3. Trend Validation
-        console.log('🔍 Phase 1: Trend Validation');
-        const trendResult = await validateTrend(topic);
+        // 4. Generate drafts per profile/topic pair (no cross-language translation)
+        console.log('🔍 Phase 1: Trend Validation + Draft Generation');
+        const generated = [];
+        let updatedQueue = queueContent;
 
-        if (shouldRejectTopic(trendResult)) {
-            console.log('❌ Topic rejected due to low trend relevance.');
-            return;
+        for (const { profileId, topic } of selections) {
+            const originalTitle = topic.title;
+            const cleanTitle = stripTopicTags(originalTitle);
+            if (!cleanTitle) {
+                throw new Error(`Invalid topic title after tag normalization: "${originalTitle}"`);
+            }
+
+            const generationTopic = {
+                ...topic,
+                title: cleanTitle
+            };
+
+            console.log(`\n🔍 Trend validation for [${profileId}] "${cleanTitle}"...`);
+            const trendResult = await validateTrend(generationTopic);
+            if (shouldRejectTopic(trendResult)) {
+                throw new Error(`[${profileId}] Topic rejected due to low trend relevance: "${cleanTitle}"`);
+            }
+
+            console.log(`🚀 Generating profile draft: ${profileId}`);
+            const result = await processDraft(generationTopic, profileId, trendResult, context);
+            generated.push({
+                ...result,
+                originalTitle
+            });
+
+            const enScore = result.language === 'en' ? `EN:${result.qualityReport.score}` : 'EN:Skip';
+            const koScore = result.language === 'ko' ? `KO:${result.qualityReport.score}` : 'KO:Skip';
+            const qualityBadge = `✅ ${enScore} ${koScore}`;
+            updatedQueue = buildDraftedQueueContent(updatedQueue, originalTitle, qualityBadge);
         }
-
-        // 4. Determine target platforms based on tags
-        console.log('\n🚀 Phase 2: Parallel Draft Generation');
-
-        const { profiles, isKROnly, isENOnly } = resolveTargetProfilesFromTitle(topic.title);
-
-        // Clean title for AI generation (remove tags like [KR-Only], [SEO], etc)
-        const originalTitle = topic.title;
-        topic.title = topic.title.replace(/\[.*?\]\s*/g, '').trim();
-        if (!topic.title) {
-            throw new Error('Invalid topic title after tag normalization.');
-        }
-        console.log(`   Targeting: ${isKROnly ? 'KR Only' : isENOnly ? 'EN Only' : 'All Channels'}`);
-        console.log(`   Clean Title: "${topic.title}"`);
-
-        const tasks = profiles.map((profileId) => processDraft(topic, profileId, trendResult, context));
-
-        const results = await Promise.all(tasks);
-        const resultEN = results.find(r => r.language === 'en');
-        const resultKO = results.find(r => r.language === 'ko');
 
         // 5. Results Summary
         console.log('\n═══════════════════════════════════════════════');
         console.log('📊 GENERATION COMPLETE');
         console.log('═══════════════════════════════════════════════\n');
 
-        if (resultEN) {
-            console.log('📄 English Draft:');
-            console.log(`   File: drafts/${resultEN.filename}`);
-            console.log(`   Quality: ${resultEN.qualityReport.score}/100 (${resultEN.qualityReport.grade})`);
-            console.log(`   Attempts: ${resultEN.attempts}`);
-        }
+        generated.forEach((result) => {
+            const label = result.language === 'ko' ? 'Korean' : 'English';
+            console.log(`📄 ${label} Draft (${result.profileId}):`);
+            console.log(`   Topic: ${result.originalTitle}`);
+            console.log(`   File: drafts/${result.filename}`);
+            console.log(`   Quality: ${result.qualityReport.score}/100 (${result.qualityReport.grade})`);
+            console.log(`   Attempts: ${result.attempts}`);
+        });
 
-        if (resultKO) {
-            console.log('\n📄 Korean Draft:');
-            console.log(`   File: drafts/${resultKO.filename}`);
-            console.log(`   Quality: ${resultKO.qualityReport.score}/100 (${resultKO.qualityReport.grade})`);
-            console.log(`   Attempts: ${resultKO.attempts}`);
-        }
-
-        // 6. Update Queue (Dynamic specific to result existence)
-        const queueContent = fs.readFileSync(QUEUE_PATH, 'utf8');
-        const enScore = resultEN ? `EN:${resultEN.qualityReport.score}` : 'EN:Skip';
-        const koScore = resultKO ? `KO:${resultKO.qualityReport.score}` : 'KO:Skip';
-        const qualityBadge = `✅ ${enScore} ${koScore}`;
-
-        const updatedQueue = buildDraftedQueueContent(queueContent, originalTitle, qualityBadge);
+        // 6. Update Queue (each selected topic independently)
         fs.writeFileSync(QUEUE_PATH, updatedQueue, 'utf8');
 
         // 7. Auto-push cover images to main (optional in CI PR flow)
@@ -519,7 +781,8 @@ async function generateDraft() {
             console.log('⏭️ Skipping cover sync to main (SKIP_COVER_MAIN_SYNC=true).');
         } else {
             console.log('🔄 Syncing cover images to GitHub...');
-            const coverSyncSuccess = pushCoversToMain(`Add cover images for: ${topic.title}`);
+            const coverTitleSummary = generated.map((item) => stripTopicTags(item.originalTitle)).join(' | ');
+            const coverSyncSuccess = pushCoversToMain(`Add cover images for: ${coverTitleSummary}`);
             if (!coverSyncSuccess) {
                 if (shouldRequireGitSyncSuccess()) {
                     throw new Error('Cover image sync failed. Aborting to avoid broken cover URLs.');
@@ -531,11 +794,13 @@ async function generateDraft() {
         // 8. Send notification
         const files = [];
         const qualityScores = {};
-        if (resultEN) { files.push(resultEN.filename); qualityScores.en = resultEN.qualityReport.score; }
-        if (resultKO) { files.push(resultKO.filename); qualityScores.ko = resultKO.qualityReport.score; }
+        generated.forEach((item) => {
+            files.push(item.filename);
+            qualityScores[item.language] = item.qualityReport.score;
+        });
 
         await notifier.stepComplete('draft_generation', {
-            title: topic.title,
+            title: generated.map((item) => stripTopicTags(item.originalTitle)).join(' | '),
             files: files,
             qualityScores: qualityScores
         });
@@ -559,8 +824,19 @@ module.exports = {
     generateWithProfile,
     processDraft,
     shouldSkipCoverMainSync,
+    allowSameDayRegeneration,
     createTopicSlug,
+    stripTopicTags,
+    topicMatchesProfile,
+    loadWeeklyScheduleConfig,
+    getKstWeekdayKey,
+    resolveProfilesForKstWeekday,
+    getProfilesForCurrentRun,
+    toKstDateString,
+    hasExistingDraftForProfile,
+    filterProfilesWithoutSameDayDraft,
     resolveTargetProfilesFromTitle,
+    selectTopicsForProfiles,
     buildDraftedQueueContent,
     extractNextTopicFromQueue
 };
