@@ -24,7 +24,7 @@
     *   *Target*: Korean students, junior developers, and professionals dealing with high-pressure projects and seeking a practical way to stay organized.
 
 
-*   **Optimizing Developer Onboarding: A Blueprint for Scalable Teams**
+*   **Optimizing Developer Onboarding: A Blueprint for Scalable Teams** (Drafted ✅ EN:75 KO:75)
     *   *Rationale*: As tech teams scale, efficient onboarding is critical to ensure productivity and maintain team cohesion. Poor onboarding processes lead to prolonged ramp-up times and decreased team performance. This article provides actionable insights on how to design and implement an effective developer onboarding framework.
     *   *MandaAct Angle*: MandaAct's 9x9 framework can help engineering teams design structured onboarding processes by breaking them down into key phases: pre-joining preparation, first-week tasks, mentorship matching, tools training, project familiarization, and feedback loops. By visualizing onboarding milestones, teams can ensure new hires are set up for success.
     *   *Target*: Senior developers, team leads, engineering managers, HR professionals in tech companies.
