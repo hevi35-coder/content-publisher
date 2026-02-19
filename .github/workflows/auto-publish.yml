@@ -51,11 +51,17 @@ jobs:
         if: github.event_name == 'workflow_dispatch' && (github.event.inputs.dry_run || 'true') == 'false' && github.actor != 'github-actions[bot]'
         env:
           LIVE_PUBLISH_CONFIRM: ${{ github.event.inputs.live_publish_confirm || '' }}
-          LIVE_PUBLISH_CONFIRM_TOKEN: ${{ vars.LIVE_PUBLISH_CONFIRM_TOKEN || 'LIVE_PUBLISH_OK' }}
+          LIVE_PUBLISH_CONFIRM_TOKEN: ${{ secrets.LIVE_PUBLISH_CONFIRM_TOKEN }}
         run: |
+          if [ -z "${LIVE_PUBLISH_CONFIRM_TOKEN}" ]; then
+            echo "::error::Manual live publish blocked. Missing required secret: LIVE_PUBLISH_CONFIRM_TOKEN."
+            echo "::error::Set repository secret LIVE_PUBLISH_CONFIRM_TOKEN, then retry with matching live_publish_confirm input."
+            exit 1
+          fi
+
           if [ "${LIVE_PUBLISH_CONFIRM}" != "${LIVE_PUBLISH_CONFIRM_TOKEN}" ]; then
             echo "::error::Manual live publish blocked. Set workflow_dispatch input live_publish_confirm to the expected token."
-            echo "::error::Hint: repository variable LIVE_PUBLISH_CONFIRM_TOKEN overrides the default token."
+            echo "::error::Hint: value must match repository secret LIVE_PUBLISH_CONFIRM_TOKEN."
             exit 1
           fi
 

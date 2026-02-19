@@ -78,6 +78,7 @@ fi
 ```bash
 set -euo pipefail
 gh auth status >/dev/null 2>&1 || { echo "::error::gh 인증 미구성. GH_TOKEN 설정 또는 gh auth login 필요"; exit 1; }
+[ -n "${LIVE_PUBLISH_CONFIRM_TOKEN:-}" ] || { echo "::error::LIVE_PUBLISH_CONFIRM_TOKEN 환경변수가 비어 있습니다."; exit 1; }
 
 gh workflow run "Auto Publish (Content Publisher)" \
   -R "$REPO" \
@@ -123,7 +124,7 @@ gh workflow run "Auto Publish (Content Publisher)" \
   -R "$REPO" \
   -f draft_files="$RUNBOOK_FILES" \
   -f dry_run=false \
-  -f live_publish_confirm="${LIVE_PUBLISH_CONFIRM_TOKEN:-LIVE_PUBLISH_OK}"
+  -f live_publish_confirm="$LIVE_PUBLISH_CONFIRM_TOKEN"
 ```
 
 ```bash

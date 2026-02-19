@@ -57,7 +57,7 @@ node scripts/export-naver.js drafts/my-article.md
 - 수동 실행의 `dry_run` 기본값은 `true`입니다(안전 기본값).
 - `dry_run=true`이면 실제 게시 없이 시뮬레이션만 수행됩니다.
 - `dry_run=false` 수동 실행은 `live_publish_confirm` 입력이 필요합니다.
-- 기본 확인 토큰은 `LIVE_PUBLISH_OK`이며, Repository Variable `LIVE_PUBLISH_CONFIRM_TOKEN`으로 변경할 수 있습니다.
+- `live_publish_confirm` 값은 Repository Secret `LIVE_PUBLISH_CONFIRM_TOKEN`과 정확히 일치해야 합니다.
 - `dry_run=false`일 때는 워크플로우에서 채널별 필수 시크릿을 사전 검증합니다(누락 시 즉시 실패).
 - 프리플라이트에서 draft 파일 무결성도 검증합니다(파일 존재, frontmatter `title`, 본문 최소 길이).
 - 본문 최소 길이는 Repository Variable `MIN_DRAFT_BODY_CHARS`(기본 `120`)로 조정할 수 있습니다.

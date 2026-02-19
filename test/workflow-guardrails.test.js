@@ -132,7 +132,8 @@ test('auto-publish workflow keeps manual safety defaults and guardrails', () => 
     assert.match(yml, /dry_run:\s*\n[\s\S]*default:\s*'true'/m);
     assert.match(yml, /live_publish_confirm:/m);
     assert.match(yml, /name:\s*Manual Live Publish Confirmation Guard/m);
-    assert.match(yml, /LIVE_PUBLISH_CONFIRM_TOKEN:\s*\$\{\{\s*vars\.LIVE_PUBLISH_CONFIRM_TOKEN/m);
+    assert.match(yml, /LIVE_PUBLISH_CONFIRM_TOKEN:\s*\$\{\{\s*secrets\.LIVE_PUBLISH_CONFIRM_TOKEN/m);
+    assert.match(yml, /Missing required secret:\s*LIVE_PUBLISH_CONFIRM_TOKEN/m);
     assert.match(yml, /name:\s*Preflight Secret Validation/m);
     assert.match(yml, /VERIFY_PUBLISHED_URLS:\s*\$\{\{\s*vars\.VERIFY_PUBLISHED_URLS/m);
     assert.match(yml, /MIN_DRAFT_BODY_CHARS:\s*\$\{\{\s*vars\.MIN_DRAFT_BODY_CHARS/m);
