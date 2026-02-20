@@ -1,0 +1,4 @@
+watchdog_rehearsal_run=22188799398
+weekly_rehearsal_run=22188812835
+smoke_run=22189726653
+slot_health_now=## Slot Health Report - Repo: hevi35-coder/content-publisher - Weekly workflow ref: .github/workflows/weekly-content.yml - Now UTC: 2026-02-19T23:59:20.421Z - Now KST: 2026-02-20 08:59:20 - Health status: HEALTHY - Due slot UTC: 2026-02-19T07:07:00.000Z - Due slot KST: 2026-02-19 16:07:00 - Matched scheduled run UTC: 2026-02-19T07:54:19.000Z - Matched scheduled run KST: 2026-02-19 16:54:19 - Latest schedule run: 22173222589 (completed/success) - Created UTC: 2026-02-19T07:54:19Z 

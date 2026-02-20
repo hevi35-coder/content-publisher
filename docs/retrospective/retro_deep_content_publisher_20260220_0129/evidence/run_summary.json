@@ -1,0 +1,93 @@
+{
+  "total": 186,
+  "byWorkflow": [
+    {
+      "workflow": "Auto Publish (Content Publisher)",
+      "total": 28,
+      "success": 14,
+      "failure": 14,
+      "timed_out": 0,
+      "cancelled": 0
+    },
+    {
+      "workflow": "Notify on Workflow Failure",
+      "total": 51,
+      "success": 18,
+      "failure": 4,
+      "timed_out": 0,
+      "cancelled": 0
+    },
+    {
+      "workflow": "PR Sanity",
+      "total": 58,
+      "success": 55,
+      "failure": 3,
+      "timed_out": 0,
+      "cancelled": 0
+    },
+    {
+      "workflow": "Publish Smoke (Dry Run)",
+      "total": 4,
+      "success": 4,
+      "failure": 0,
+      "timed_out": 0,
+      "cancelled": 0
+    },
+    {
+      "workflow": "Weekly Content Automation",
+      "total": 33,
+      "success": 24,
+      "failure": 9,
+      "timed_out": 0,
+      "cancelled": 0
+    },
+    {
+      "workflow": "Weekly Ops Report",
+      "total": 2,
+      "success": 2,
+      "failure": 0,
+      "timed_out": 0,
+      "cancelled": 0
+    },
+    {
+      "workflow": "Weekly Schedule Watchdog",
+      "total": 10,
+      "success": 10,
+      "failure": 0,
+      "timed_out": 0,
+      "cancelled": 0
+    }
+  ],
+  "byEvent": [
+    {
+      "event": "pull_request",
+      "total": 57,
+      "success": 54,
+      "failure": 3
+    },
+    {
+      "event": "push",
+      "total": 6,
+      "success": 0,
+      "failure": 6
+    },
+    {
+      "event": "schedule",
+      "total": 17,
+      "success": 13,
+      "failure": 4
+    },
+    {
+      "event": "workflow_dispatch",
+      "total": 55,
+      "success": 42,
+      "failure": 13
+    },
+    {
+      "event": "workflow_run",
+      "total": 51,
+      "success": 18,
+      "failure": 4
+    }
+  ]
+}

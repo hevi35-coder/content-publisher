@@ -1,0 +1,86 @@
+e4a5956\t2026-02-16 11:31:06 +0900\tci: reschedule weekly run to 01:00 KST and enforce auto-merge guard (#7)
+56185de\t2026-02-16 02:33:08 +0000\tchore(content): generate weekly draft (#6)
+d4ff256\t2026-02-16 12:31:23 +0900\tci: harden workflows and stabilize branch strategy (#9)
+a9f6b54\t2026-02-16 12:42:44 +0900\tfeat: add safe dry-run mode for workflow dispatch (#10)
+0000c02\t2026-02-16 13:05:56 +0900\tci: route topic updates through PR to satisfy branch protection (#11)
+deb3331\t2026-02-16 13:08:02 +0900\tci: set GH_TOKEN for gh CLI in weekly workflow (#12)
+0cd5b64\t2026-02-16 13:11:25 +0900\tci: run pr-sanity on topic/draft branch pushes (#14)
+9e421b0\t2026-02-16 04:12:10 +0000\t🧭 Weekly Topic Queue: 2026-02-16 (#13)
+69d2b34\t2026-02-16 13:17:08 +0900\tci: default workflow dispatch to dry-run mode (#15)
+763e4a8\t2026-02-16 13:21:15 +0900\tci: auto-delete topic and draft branches after merge (#16)
+63894de\t2026-02-16 13:25:39 +0900\tfix(ci): trigger pr-sanity for bot-created weekly PRs (#18)
+267c158\t2026-02-16 13:29:14 +0900\tchore(topic): weekly topic selection (#19)
+1cbe3ec\t2026-02-16 13:31:14 +0900\tfix(ci): publish required pr-sanity status for bot PRs (#20)
+168f315\t2026-02-16 13:31:56 +0900\tchore(topic): weekly topic selection (#21)
+3892ee5\t2026-02-16 13:40:30 +0900\tfix(publisher): enforce channel routing and dry-run safety (#22)
+b3e681c\t2026-02-16 13:47:02 +0900\ttest(ci): add routing regression suite and enforce PR gate (#23)
+17fbcf2\t2026-02-16 13:53:03 +0900\tfix(hashnode): prevent duplicate posts with title lookup (#24)
+4f27ac5\t2026-02-16 13:55:30 +0900\tfix(hashnode): fail closed when duplicate check cannot run (#25)
+2d35f76\t2026-02-16 13:59:54 +0900\tdocs: align workflow docs with multi-channel automation (#26)
+72c274b\t2026-02-16 14:03:54 +0900\ttest: add naver export regression coverage (#27)
+a43338a\t2026-02-16 14:08:26 +0900\trefactor: centralize platform routing and validate overrides (#28)
+6f96643\t2026-02-16 14:13:18 +0900\tfix: make quality gate language and profile aware (#29)
+3214e25\t2026-02-16 14:16:23 +0900\trefactor: split publish quality gate from draft quality scoring (#30)
+d7b0ec8\t2026-02-16 14:20:25 +0900\trefactor: rename draft quality gate with compatibility shim (#31)
+34d98c6\t2026-02-16 14:23:16 +0900\tfix: fail fast on invalid draft quality profile (#32)
+3498b1a\t2026-02-16 14:25:54 +0900\tfix: enforce draft quality threshold after regeneration (#33)
+2d1374b\t2026-02-16 14:29:11 +0900\trefactor: lazily initialize shared ai client (#34)
+63eaeb5\t2026-02-16 14:31:46 +0900\tfix: default topic auto sync to safe-off (#35)
+d3d1029\t2026-02-16 14:34:37 +0900\tfix: normalize and validate topic committee responses (#36)
+98ebef7\t2026-02-16 14:37:03 +0900\tfix: sync main before draft step in combined weekly run (#37)
+0ac7b1e\t2026-02-16 14:42:01 +0900\tfix: enforce weekly topic mix from committee output (#38)
+acdd6f5\t2026-02-16 14:44:44 +0900\tfix: run npm test before posting pr-sanity status (#39)
+41c0754\t2026-02-16 15:30:33 +0900\tfix: harden draft target routing and unicode slug generation (#40)
+b1ae853\t2026-02-16 15:32:49 +0900\tfix: skip deleted draft paths in auto publish workflow (#41)
+79afdaf\t2026-02-16 15:35:36 +0900\tfix: fail fast on unknown topic categories (#42)
+be6c8cd\t2026-02-16 15:38:38 +0900\tfix: fail fast when queue draft-marking target is ambiguous (#43)
+22caae1\t2026-02-16 15:41:46 +0900\tfix: enforce git asset sync failure in CI paths (#44)
+1c603b6\t2026-02-16 15:46:26 +0900\tfix: allow git sync on CI detached main refs (#45)
+a900afc\t2026-02-16 15:49:40 +0900\tfix: harden naver clipboard copy against shell injection (#46)
+17ae748\t2026-02-16 15:52:35 +0900\tfix: push current head when syncing assets to main (#47)
+f97dbbf\t2026-02-16 15:55:04 +0900\trefactor: harden topic queue auto-sync path (#48)
+8b98b65\t2026-02-16 15:59:23 +0900\tfix: harden queue topic parsing for draft generation (#49)
+a0e39fe\t2026-02-16 17:28:26 +0900\tfeat(workflow): allow manual draft file override for auto publish (#50)
+e0f4492\t2026-02-16 18:44:36 +0900\tfix: restore auto-publish workflow manual draft parsing (#51)
+65e7d4f\t2026-02-16 19:07:26 +0900\tci: lint workflow files in pr sanity (#52)
+0f6afeb\t2026-02-16 19:12:25 +0900\tci: align workflows to node 20 runtime (#53)
+97ce3d9\t2026-02-16 19:15:50 +0900\tci: fail manual auto-publish when no draft files resolve (#54)
+50e8f8b\t2026-02-16 19:25:08 +0900\tfeat: add automatic workflow failure diagnosis and guidance (#55)
+9c65601\t2026-02-16 19:51:15 +0900\tfeat: add weekly schedule watchdog for missed trigger detection (#56)
+4f5bc17\t2026-02-16 19:56:13 +0900\tfix: make schedule watchdog track workflow by file ref (#57)
+55c012e\t2026-02-16 20:01:33 +0900\tfix: add watchdog api retry and classify api outages (#58)
+7b3f255\t2026-02-16 20:07:44 +0900\tfeat: add weekly ops reliability report automation (#59)
+e1a304b\t2026-02-16 20:14:11 +0900\tfeat: send weekly ops report email and monitor report failures (#60)
+3dbc339\t2026-02-17 18:46:28 +0900\tdocs: add cloud execution runbook entrypoints
+9ad06c0\t2026-02-17 19:12:32 +0900\tdocs: make cloud runbook resilient on main
+21c2aab\t2026-02-18 00:39:35 +0900\tCodex/ci hardening 20260216 (#61)
+c93e8f8\t2026-02-18 12:57:33 +0900\tci: move weekly schedule to 13:00 KST and harden gh auth preflight
+3a43fc5\t2026-02-18 15:54:09 +0900\tci: move weekly automation windows to 17:00 KST
+82bd670\t2026-02-18 16:21:20 +0900\tfix: harden weekly schedule changes and skip cover main sync in CI
+343ee65\t2026-02-18 16:22:15 +0900\ttest: lock skip-cover-sync behavior for weekly draft flow
+67c6fdf\t2026-02-18 17:52:46 +0900\tchore(content): generate weekly draft (#62)
+096fd6a\t2026-02-18 18:22:17 +0900\tfix: stabilize schedule trigger windows and document troubleshooting
+c87bcc3\t2026-02-18 18:29:03 +0900\tci: move weekly schedule window to 19:07 KST
+09d1072\t2026-02-18 19:56:17 +0900\tchore(content): generate weekly draft (#63)
+930177f\t2026-02-18 21:15:46 +0900\tfix(workflow): stabilize weekly publish handoff (#64)
+ad3c947\t2026-02-18 22:04:33 +0900\tchore(schedule): move weekly automation to 23:07 KST (#65)
+1e69dc9\t2026-02-18 23:58:15 +0900\tchore(content): generate weekly draft (#66)
+1dd1afa\t2026-02-19 14:53:26 +0900\tfix(publish): sanitize leaked notes and enforce dual-link CTA
+bcca161\t2026-02-19 15:21:34 +0900\tchore(schedule): move EN/KOR slots to 16:07 KST
+2d3e341\t2026-02-19 16:24:40 +0900\tchore(content): generate weekly draft (#67)
+4def998\t2026-02-19 16:57:06 +0900\tchore(content): generate weekly draft (#68)
+1390797\t2026-02-19 17:09:16 +0900\tfix: harden profile-separated generation and hashnode idempotency
+81dbaa4\t2026-02-19 23:07:30 +0900\tfix(ops): enforce manual fallback window and hashnode dedupe
+c293b18\t2026-02-19 23:39:22 +0900\tfix(ops): make failure notification workflow fail-safe
+540a699\t2026-02-19 23:45:40 +0900\tdocs(ops): record schedule RCA re-check evidence
+d6737ca\t2026-02-19 23:56:55 +0900\tfix(hashnode): harden dedupe with safe auto-delete window
+cb36e40\t2026-02-20 00:01:52 +0900\tfix(ops): make hashnode dedupe failure policy explicit
+d789a9f\t2026-02-20 00:10:31 +0900\tfix(ops): require confirmation token for manual live publish
+728e6d8\t2026-02-20 00:21:49 +0900\tfix(ops): require secret-backed manual live publish token
+4139ef8\t2026-02-20 00:28:12 +0900\tfix(ops): auto-dispatch draft fallback on missed schedule
+2e79d28\t2026-02-20 00:31:12 +0900\tfix(ops): harden notify summary against multiline output
+c95411b\t2026-02-20 00:37:43 +0900\tfix(ops): add watchdog missed-slot rehearsal dispatch
+d076d43\t2026-02-20 00:41:11 +0900\tfix(ops): make watchdog rehearsal non-invasive
+1f4209d\t2026-02-20 00:44:51 +0900\tfix(ops): close bot-dispatch notification gaps
+86f523b\t2026-02-20 01:10:29 +0900\tdocs(ops): add pre-slot readiness snapshot for next live window
+7d3ca0a\t2026-02-20 01:29:22 +0900\tfeat(ops): add one-command slot health monitor
