@@ -5,6 +5,7 @@ const { execSync } = require('child_process');
 const { summarizeWorkflowFailure } = require('../lib/workflow-failure-diagnoser');
 const {
     summarizeRuns,
+    summarizeFailureClasses,
     summarizeRootCauses,
     toWeeklyOpsMarkdown
 } = require('../lib/ops-report');
@@ -243,6 +244,7 @@ async function main() {
     }
 
     const rootCauseCounts = summarizeRootCauses(diagnosedFailures);
+    const failureClassCounts = summarizeFailureClasses(diagnosedFailures);
     const recentFailures = diagnosedFailures.slice(0, 12);
 
     const reportPayload = {
@@ -252,6 +254,7 @@ async function main() {
         windowStart: toIso(windowStart),
         windowEnd: toIso(now),
         workflowStats,
+        failureClassCounts,
         rootCauseCounts,
         recentFailures
     };

@@ -5,6 +5,8 @@ const {
     summarizeRuns,
     calculateSuccessRate,
     summarizeRootCauses,
+    classifyFailureClass,
+    summarizeFailureClasses,
     toWeeklyOpsMarkdown
 } = require('../lib/ops-report');
 
@@ -50,6 +52,29 @@ test('summarizeRootCauses aggregates and sorts by count', () => {
     ]);
 });
 
+test('classifyFailureClass maps root causes into reliability classes', () => {
+    assert.equal(classifyFailureClass('MANUAL_LIVE_PUBLISH_CONFIRM_BLOCKED'), 'EXPECTED_GUARD_BLOCK');
+    assert.equal(classifyFailureClass('WATCHDOG_GITHUB_API_UNAVAILABLE'), 'PLATFORM_OR_EXTERNAL_RISK');
+    assert.equal(classifyFailureClass('PUBLISH_SECRETS_MISSING'), 'ACTIONABLE_RUNTIME_FAILURE');
+    assert.equal(classifyFailureClass('UNKNOWN_FAILURE'), 'UNKNOWN_OR_UNTRIAGED');
+});
+
+test('summarizeFailureClasses aggregates failure diagnoses by class', () => {
+    const result = summarizeFailureClasses([
+        { rootCauseCode: 'MANUAL_DRAFT_TARGET_MISSING' },
+        { rootCauseCode: 'PUBLISH_SECRETS_MISSING' },
+        { rootCauseCode: 'WATCHDOG_GITHUB_API_UNAVAILABLE' },
+        { rootCauseCode: 'UNKNOWN_FAILURE' }
+    ]);
+
+    assert.deepEqual(result, [
+        { klass: 'EXPECTED_GUARD_BLOCK', count: 1 },
+        { klass: 'ACTIONABLE_RUNTIME_FAILURE', count: 1 },
+        { klass: 'PLATFORM_OR_EXTERNAL_RISK', count: 1 },
+        { klass: 'UNKNOWN_OR_UNTRIAGED', count: 1 }
+    ]);
+});
+
 test('toWeeklyOpsMarkdown renders key report sections', () => {
     const markdown = toWeeklyOpsMarkdown({
         repository: 'owner/repo',
@@ -69,6 +94,7 @@ test('toWeeklyOpsMarkdown renders key report sections', () => {
                 }
             }
         ],
+        failureClassCounts: [{ klass: 'EXPECTED_GUARD_BLOCK', count: 1 }],
         rootCauseCounts: [{ code: 'MANUAL_DRAFT_TARGET_MISSING', count: 1 }],
         recentFailures: [
             {
@@ -84,5 +110,7 @@ test('toWeeklyOpsMarkdown renders key report sections', () => {
     assert.match(markdown, /Weekly Ops Reliability Report/);
     assert.match(markdown, /Workflow Health/);
     assert.match(markdown, /MANUAL_DRAFT_TARGET_MISSING/);
+    assert.match(markdown, /Failure Class Split/);
+    assert.match(markdown, /EXPECTED_GUARD_BLOCK/);
     assert.match(markdown, /123456/);
 });

@@ -11,6 +11,7 @@ const WEEKLY_CONTENT_WORKFLOW = path.resolve(__dirname, '../.github/workflows/we
 const SCHEDULE_WATCHDOG_WORKFLOW = path.resolve(__dirname, '../.github/workflows/schedule-watchdog.yml');
 const NOTIFY_ON_FAILURE_WORKFLOW = path.resolve(__dirname, '../.github/workflows/notify-on-failure.yml');
 const CI_SANITY_SCRIPT = path.resolve(__dirname, '../scripts/ci-sanity-checks.sh');
+const WRITE_INCIDENT_SUMMARY_SCRIPT = path.resolve(__dirname, '../scripts/write-workflow-incident-summary.js');
 const WEEKLY_SCHEDULE_CONFIG = path.resolve(__dirname, '../config/weekly-schedule.json');
 
 const WEEKDAY_INDEX = {
@@ -254,6 +255,7 @@ test('weekly-content workflow includes preflight checks for topic/draft paths', 
 
 test('notify-on-failure watches all critical workflows', () => {
     const yml = read(NOTIFY_ON_FAILURE_WORKFLOW);
+    const summaryScript = read(WRITE_INCIDENT_SUMMARY_SCRIPT);
     assert.match(yml, /"Weekly Content Automation"/m);
     assert.match(yml, /"Publish Smoke \(Dry Run\)"/m);
     assert.match(yml, /"Auto Publish \(Content Publisher\)"/m);
@@ -272,12 +274,6 @@ test('notify-on-failure watches all critical workflows', () => {
     assert.match(yml, /HIGHLIGHT_NOTE:\s*\$\{\{\s*steps\.context\.outputs\.highlight_note\s*\}\}/m);
     assert.match(yml, /name:\s*Write Incident Summary/m);
     assert.match(yml, /SUMMARY_ERROR_HIGHLIGHTS:\s*\$\{\{\s*steps\.context\.outputs\.error_highlights\s*\}\}/m);
-    assert.match(yml, /printf '%s\\n' "\$\{SUMMARY_ERROR_HIGHLIGHTS\}"/m);
-    assert.match(yml, /Notification: skipped \(non-failure conclusion\)/m);
-    assert.match(yml, /Notification: sent/m);
-    assert.match(yml, /## Action Guidance/m);
-    assert.match(yml, /## Error Highlights/m);
-    assert.match(yml, /## Fetch Note/m);
-    assert.match(yml, /## Highlight Note/m);
-    assert.match(yml, /\$GITHUB_STEP_SUMMARY/m);
+    assert.match(yml, /node scripts\/write-workflow-incident-summary\.js/m);
+    assert.match(summaryScript, /GITHUB_STEP_SUMMARY/m);
 });

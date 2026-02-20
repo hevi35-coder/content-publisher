@@ -54,6 +54,77 @@ test('summarizeWorkflowFailure falls back to unknown signature', () => {
     assert.ok(diagnosis.suggestedActions.length > 0);
 });
 
+test('summarizeWorkflowFailure classifies manual live publish confirmation guard block', () => {
+    const diagnosis = summarizeWorkflowFailure({
+        workflowName: 'Auto Publish (Content Publisher)',
+        eventName: 'workflow_dispatch',
+        failedJobs: [
+            {
+                name: 'publish',
+                failedSteps: ['Manual Live Publish Confirmation Guard']
+            }
+        ],
+        failedLogExcerpt:
+            '::error::Manual live publish blocked. Set workflow_dispatch input live_publish_confirm to the expected token.'
+    });
+
+    assert.equal(diagnosis.rootCauseCode, 'MANUAL_LIVE_PUBLISH_CONFIRM_BLOCKED');
+});
+
+test('summarizeWorkflowFailure classifies manual fallback guard block', () => {
+    const diagnosis = summarizeWorkflowFailure({
+        workflowName: 'Weekly Content Automation',
+        eventName: 'workflow_dispatch',
+        failedJobs: [
+            {
+                name: 'automation',
+                failedSteps: ['Enforce Manual Fallback Window']
+            }
+        ],
+        failedLogExcerpt:
+            '::error::MANUAL_FALLBACK_BLOCKED_ALREADY_TRIGGERED matched_schedule_run=2026-02-19T07:54:19Z due_slot=2026-02-19T07:07:00Z.'
+    });
+
+    assert.equal(diagnosis.rootCauseCode, 'MANUAL_FALLBACK_BLOCKED_ALREADY_TRIGGERED');
+});
+
+test('summarizeWorkflowFailure classifies draft quality gate block', () => {
+    const diagnosis = summarizeWorkflowFailure({
+        workflowName: 'Weekly Content Automation',
+        eventName: 'workflow_dispatch',
+        failedJobs: [
+            {
+                name: 'automation',
+                failedSteps: ['Run Draft Writer (Tue, Thu, Sat)']
+            }
+        ],
+        failedLogExcerpt:
+            'Error: [QualityGate:draft] blogger_kr score 65/70 after 3/3 attempts (blocked)'
+    });
+
+    assert.equal(diagnosis.rootCauseCode, 'DRAFT_QUALITY_GATE_BLOCKED');
+});
+
+test('summarizeWorkflowFailure does not misclassify manual guard block as dependency install failure', () => {
+    const diagnosis = summarizeWorkflowFailure({
+        workflowName: 'Auto Publish (Content Publisher)',
+        eventName: 'workflow_dispatch',
+        failedJobs: [
+            {
+                name: 'publish',
+                failedSteps: ['Manual Live Publish Confirmation Guard']
+            }
+        ],
+        failedLogExcerpt: [
+            'Install Dependencies',
+            'npm ci',
+            '::error::Manual live publish blocked. Missing required secret: LIVE_PUBLISH_CONFIRM_TOKEN.'
+        ].join('\n')
+    });
+
+    assert.equal(diagnosis.rootCauseCode, 'MANUAL_LIVE_PUBLISH_CONFIRM_BLOCKED');
+});
+
 test('summarizeWorkflowFailure classifies watchdog missed schedule signature', () => {
     const diagnosis = summarizeWorkflowFailure({
         workflowName: 'Weekly Schedule Watchdog',
@@ -88,6 +159,26 @@ test('summarizeWorkflowFailure classifies watchdog github api unavailable signat
 
     assert.equal(diagnosis.rootCauseCode, 'WATCHDOG_GITHUB_API_UNAVAILABLE');
     assert.match(diagnosis.summary, /api availability/i);
+});
+
+test('summarizeWorkflowFailure classifies notify summary render failure', () => {
+    const diagnosis = summarizeWorkflowFailure({
+        workflowName: 'Notify on Workflow Failure',
+        eventName: 'workflow_run',
+        failedJobs: [
+            {
+                name: 'notify-failure',
+                failedSteps: ['Write Incident Summary']
+            }
+        ],
+        failedLogExcerpt: [
+            'Write Incident Summary',
+            'syntax error near unexpected token `)`',
+            'Process completed with exit code 2.'
+        ].join('\n')
+    });
+
+    assert.equal(diagnosis.rootCauseCode, 'NOTIFY_SUMMARY_RENDER_FAILED');
 });
 
 test('toDiagnosisMarkdown renders key diagnosis fields', () => {
