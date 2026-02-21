@@ -34,7 +34,7 @@
     *   *MandaAct Angle*: MandaAct's digital Mandalart tool helps users break down their goals into smaller, actionable tasks and design a structured plan to achieve them. By utilizing features like reminders and progress tracking, users can maintain consistent progress and avoid feeling stuck.
     *   *Target*: Korean professionals, students, and self-improvement enthusiasts who struggle with maintaining motivation and progress on their goals.
 
-*   **[KR-Only] How to Turn Daily Chaos into Clarity with the 9x9 Grid**
+*   **[KR-Only] How to Turn Daily Chaos into Clarity with the 9x9 Grid** (Drafted ✅ EN:Skip KO:75)
     *   *Rationale*: Korean professionals and students often face overwhelming daily schedules and struggle to prioritize tasks effectively. This article addresses the need to bring clarity and structure to daily routines, helping readers regain a sense of control and focus.
     *   *MandaAct Angle*: MandaAct's 9x9 grid allows users to visually organize their daily tasks by priority, categorize them by context (e.g., work, study, and personal time), and align smaller daily tasks with larger goals. This approach ensures that users can stay productive without losing sight of the bigger picture.
     *   *Target*: Korean professionals, students, and indie hackers looking for practical ways to organize daily tasks and maintain clarity in their routines.
