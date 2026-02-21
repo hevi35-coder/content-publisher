@@ -592,6 +592,13 @@ async function generateCoverImage(title, slug, lang = 'en') {
     return { coverFilename, coverPath, coverUrl };
 }
 
+function resolveCoverTitleFromDraft(draft, fallbackTitle) {
+    const safeFallback = String(fallbackTitle || '').trim();
+    const parsed = matter(String(draft || ''));
+    const frontmatterTitle = String(parsed.data?.title || '').trim();
+    return frontmatterTitle || safeFallback;
+}
+
 /**
  * Process single draft with quality loop
  */
@@ -648,7 +655,8 @@ async function processDraft(topic, profileId, trendResult, context) {
 
     // Generate cover image
     const slug = createTopicSlug(topic.title);
-    const coverInfo = await generateCoverImage(topic.title, slug, lang);
+    const coverTitle = resolveCoverTitleFromDraft(draft, topic.title);
+    const coverInfo = await generateCoverImage(coverTitle, slug, lang);
 
     // Update draft with cover URL
     draft = draft.replace(/cover_image: ".*?"/, `cover_image: "${coverInfo.coverUrl}"`);
@@ -838,5 +846,6 @@ module.exports = {
     resolveTargetProfilesFromTitle,
     selectTopicsForProfiles,
     buildDraftedQueueContent,
-    extractNextTopicFromQueue
+    extractNextTopicFromQueue,
+    resolveCoverTitleFromDraft
 };

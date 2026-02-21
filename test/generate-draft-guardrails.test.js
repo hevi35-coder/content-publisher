@@ -16,7 +16,8 @@ const {
     resolveTargetProfilesFromTitle,
     selectTopicsForProfiles,
     buildDraftedQueueContent,
-    extractNextTopicFromQueue
+    extractNextTopicFromQueue,
+    resolveCoverTitleFromDraft
 } = require('../generate_draft');
 
 function withEnv(vars, fn) {
@@ -327,4 +328,23 @@ test('extractNextTopicFromQueue tolerates CRLF and ignores incomplete blocks', (
     assert.equal(topic.title, '[KR-Only] Valid Topic');
     assert.equal(topic.rationale, 'clear steps');
     assert.equal(topic.angle, 'break into execution cells');
+});
+
+
+test('resolveCoverTitleFromDraft prefers generated frontmatter title for localized covers', () => {
+    const draft = [
+        '---',
+        'title: 9x9 그리드로 일상의 혼란을 명확하게 정리하기',
+        'published: false',
+        '---',
+        '본문'
+    ].join('\n');
+
+    const resolved = resolveCoverTitleFromDraft(draft, 'How to turn daily chaos into clarity');
+    assert.equal(resolved, '9x9 그리드로 일상의 혼란을 명확하게 정리하기');
+});
+
+test('resolveCoverTitleFromDraft falls back to topic title when frontmatter title is missing', () => {
+    const resolved = resolveCoverTitleFromDraft('본문만 있는 draft', 'Fallback Topic Title');
+    assert.equal(resolved, 'Fallback Topic Title');
 });
