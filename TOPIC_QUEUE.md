@@ -8,6 +8,27 @@
 *This file is automatically updated by the Sunday Topic Committee.*
 
 ## On Deck (Next Up)
+*   **[KR-Only] How to Build a 30-Day Success Plan with the 9x9 Mandalart Framework**
+    *   *Rationale*: Many people in Korea set ambitious goals at the start of the month but struggle to follow through due to a lack of structure and actionable steps. By providing a clear framework, this article will help readers create a 30-day plan that keeps them on track and motivated.
+    *   *MandaAct Angle*: MandaAct's 9x9 grid is the perfect tool for breaking down a month-long goal into weekly milestones and daily tasks. It helps users visualize the entire journey and track their progress, ensuring they stay focused and achieve meaningful results.
+    *   *Target*: Korean professionals, students, and indie hackers looking for a practical way to achieve monthly goals.
+
+*   **[EN-Only] The Rise of Platform Engineering: Bridging DevOps and Developer Productivity**
+    *   *Rationale*: Platform engineering is emerging as a key trend in the software development world, aiming to improve developer experience and efficiency by creating internal platforms that streamline workflows, tools, and environments. As companies scale, this concept is crucial for reducing cognitive load on developers and fostering innovation.
+    *   *MandaAct Angle*: MandaAct's 9x9 grid can help platform engineers map out the components of an internal developer platform, from defining key features like CI/CD pipelines, monitoring tools, and self-service APIs, to tracking progress and prioritizing tasks. The structured approach ensures seamless coordination and alignment with developer needs.
+    *   *Target*: DevOps engineers, platform engineers, senior developers, and engineering managers looking to adopt or improve platform engineering practices.
+
+*   **[KR-Only] Unlocking Your Potential: How the 9x9 Grid Can Help You Build New Habits**
+    *   *Rationale*: Building new habits is often challenging, especially for those juggling work, studies, and personal commitments. This article will explore how to use the Mandalart framework to establish and maintain habits that lead to long-term success.
+    *   *MandaAct Angle*: MandaAct's 9x9 grid enables users to break down the habit-building process into small, manageable steps, such as identifying triggers, creating routines, and tracking consistency. By leveraging the visual structure, users can stay motivated and focused on forming habits that align with their goals.
+    *   *Target*: Korean students, young professionals, and self-improvement enthusiasts who want to build lasting habits.
+
+*   **[KR-Only] Mastering Weekly Planning: How to Stay Organized with the Mandalart Framework**
+    *   *Rationale*: Weekly planning is essential for staying productive, but many struggle with balancing priorities and effectively distributing their workload. This article introduces the Mandalart framework as a solution to create a balanced and actionable weekly plan.
+    *   *MandaAct Angle*: MandaAct's 9x9 grid helps users visually organize their weekly tasks by categorizing them into focus areas such as work, learning, and personal growth. By aligning weekly plans with long-term goals, users can ensure that they are making consistent progress.
+    *   *Target*: Korean professionals, students, and productivity enthusiasts seeking to improve their weekly planning and time management skills.
+
+
 *   **[KR-Only] How to Start the Perfect Morning Routine with the 9x9 Grid** (Drafted ✅ EN:Skip KO:70)
     *   *Rationale*: Many Korean professionals and students struggle to establish a consistent morning routine that sets the tone for a productive day. This article addresses the need for a structured method to create a personalized routine focused on achieving daily goals and maintaining mental clarity.
     *   *MandaAct Angle*: MandaAct's 9x9 grid can be used to design an ideal morning routine by categorizing activities into focus areas such as health, learning, and planning. By visually organizing the routine and tracking progress, users can build habits that align with their broader goals.
