@@ -8,7 +8,7 @@
 *This file is automatically updated by the Sunday Topic Committee.*
 
 ## On Deck (Next Up)
-*   **[KR-Only] How to Build a 30-Day Success Plan with the 9x9 Mandalart Framework**
+*   **[KR-Only] How to Build a 30-Day Success Plan with the 9x9 Mandalart Framework** (Drafted ✅ EN:Skip KO:75)
     *   *Rationale*: Many people in Korea set ambitious goals at the start of the month but struggle to follow through due to a lack of structure and actionable steps. By providing a clear framework, this article will help readers create a 30-day plan that keeps them on track and motivated.
     *   *MandaAct Angle*: MandaAct's 9x9 grid is the perfect tool for breaking down a month-long goal into weekly milestones and daily tasks. It helps users visualize the entire journey and track their progress, ensuring they stay focused and achieve meaningful results.
     *   *Target*: Korean professionals, students, and indie hackers looking for a practical way to achieve monthly goals.
