@@ -105,6 +105,31 @@ test('stripTopicTags removes bracket tags used for routing', () => {
     assert.equal(cleaned, '목표 분해 실전 가이드');
 });
 
+test('resolveCoverTitleFromDraft prefers frontmatter title over queue fallback', () => {
+    const draft = [
+        '---',
+        'title: 한국어 제목',
+        'published: false',
+        '---',
+        '본문'
+    ].join('\n');
+
+    const title = resolveCoverTitleFromDraft(draft, 'Fallback English Topic');
+    assert.equal(title, '한국어 제목');
+});
+
+test('resolveCoverTitleFromDraft falls back when frontmatter title is missing', () => {
+    const draft = [
+        '---',
+        'published: false',
+        '---',
+        '본문'
+    ].join('\n');
+
+    const title = resolveCoverTitleFromDraft(draft, 'Fallback English Topic');
+    assert.equal(title, 'Fallback English Topic');
+});
+
 test('topicMatchesProfile enforces profile-specific language target tags', () => {
     assert.equal(topicMatchesProfile('[KR-Only] Focus Tactics', 'blogger_kr'), true);
     assert.equal(topicMatchesProfile('[KR-Only] Focus Tactics', 'devto'), false);

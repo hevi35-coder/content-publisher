@@ -96,6 +96,17 @@ function stripTopicTags(title) {
     return String(title || '').replace(/\[.*?\]\s*/g, '').trim();
 }
 
+function resolveCoverTitleFromDraft(draftContent, fallbackTitle) {
+    const fallback = String(fallbackTitle || '').trim();
+    try {
+        const { data } = matter(String(draftContent || ''));
+        const parsed = String(data?.title || '').trim();
+        return parsed || fallback;
+    } catch {
+        return fallback;
+    }
+}
+
 function topicMatchesProfile(title, profileId) {
     const rawTitle = String(title || '');
     const isKROnly = rawTitle.includes(KR_ONLY_TAG);
@@ -681,6 +692,32 @@ async function processDraft(topic, profileId, trendResult, context) {
     };
 }
 
+async function runNaverPreparationForKoreanDrafts(generatedDrafts) {
+    const koreanDrafts = generatedDrafts.filter((item) => item.language === 'ko');
+    if (koreanDrafts.length === 0) {
+        return [];
+    }
+
+    const { exportForNaver } = require('./scripts/export-naver');
+    const prepared = [];
+
+    for (const draft of koreanDrafts) {
+        console.log(`\n📦 Preparing Naver package: drafts/${draft.filename}`);
+        try {
+            const result = await exportForNaver(draft.filePath);
+            prepared.push({
+                filename: draft.filename,
+                title: result.title
+            });
+        } catch (error) {
+            await notifier.stepFailed('naver_export', error);
+            throw error;
+        }
+    }
+
+    return prepared;
+}
+
 /**
  * Main draft generation function
  */
@@ -812,6 +849,11 @@ async function generateDraft() {
             files: files,
             qualityScores: qualityScores
         });
+
+        const naverPrepared = await runNaverPreparationForKoreanDrafts(generated);
+        if (naverPrepared.length > 0) {
+            console.log(`📬 Naver prep completed for ${naverPrepared.length} draft(s).`);
+        }
 
         console.log('\n✅ All drafts generated successfully!');
 

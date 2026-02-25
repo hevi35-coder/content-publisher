@@ -135,6 +135,7 @@ NOTIFY_EMAIL_TO=xxx@email.com
 - ✅ 발행 성공 (플랫폼별 URL 포함)
 - ❌ 발행 실패 (에러 상세)
 - 🎉 파이프라인 완료 요약
+- 📋 KO 초안 생성 시 네이버 수동발행 준비 메일(`naver_export`, HTML/TXT/커버 첨부)
 - `notify-on-failure`는 Weekly/Smoke/Auto Publish 워크플로우의 비정상 종료(`failure`, `timed_out`, `cancelled` 등)를 별도로 감시합니다.
 - 실패 메일에는 workflow/job 실패 요약(실패 job/step, 브랜치, 트리거, 실행 URL)이 포함됩니다.
 - 실패 메일에는 failed log에서 추출한 `Error Highlights`(최대 25줄)가 포함됩니다.

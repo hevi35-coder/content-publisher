@@ -90,6 +90,24 @@ function extractImages(markdown) {
     return images;
 }
 
+function isLikelyKoreanText(text) {
+    return /[가-힣]/.test(String(text || ''));
+}
+
+function shouldUseSourceAsKoreanDraft(draftPath, title, markdown) {
+    const fileName = path.basename(String(draftPath || '')).toLowerCase();
+    if (fileName.endsWith('-ko.md')) {
+        return true;
+    }
+
+    if (isLikelyKoreanText(title)) {
+        return true;
+    }
+
+    const sample = String(markdown || '').slice(0, 500);
+    return isLikelyKoreanText(sample);
+}
+
 function copyToClipboard(text, options = {}) {
     const platform = options.platform || process.platform;
     const run = options.run || spawnSync;
@@ -128,11 +146,15 @@ async function exportForNaver(draftPath) {
     let koTitle = frontmatter.title;
     let koContent = markdown;
 
+    const sourceIsKoreanDraft = shouldUseSourceAsKoreanDraft(draftPath, koTitle, koContent);
+
     // Check if Korean content exists (from Blogger publish)
     const slug = path.basename(draftPath, '.md');
     const koCachePath = path.join(__dirname, '../.cache/ko', `${slug}.json`);
 
-    if (fs.existsSync(koCachePath)) {
+    if (sourceIsKoreanDraft) {
+        console.log('✅ 한국어 원본 초안 감지: 번역 단계 생략');
+    } else if (fs.existsSync(koCachePath)) {
         const cached = JSON.parse(fs.readFileSync(koCachePath, 'utf8'));
         koTitle = cached.title;
         koContent = cached.content;
@@ -371,4 +393,9 @@ if (require.main === module) {
         });
 }
 
-module.exports = { exportForNaver, toNaverHtml, copyToClipboard };
+module.exports = {
+    exportForNaver,
+    toNaverHtml,
+    copyToClipboard,
+    shouldUseSourceAsKoreanDraft
+};

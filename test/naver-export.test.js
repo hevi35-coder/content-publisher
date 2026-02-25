@@ -1,6 +1,10 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { toNaverHtml, copyToClipboard } = require('../scripts/export-naver');
+const {
+    toNaverHtml,
+    copyToClipboard,
+    shouldUseSourceAsKoreanDraft
+} = require('../scripts/export-naver');
 
 test('toNaverHtml converts markdown headers and paragraphs', () => {
     const markdown = [
@@ -83,5 +87,34 @@ test('copyToClipboard returns false when pbcopy fails', () => {
         platform: 'darwin',
         run: () => ({ status: 1 })
     });
+    assert.equal(result, false);
+});
+
+test('shouldUseSourceAsKoreanDraft returns true for -ko draft paths', () => {
+    const result = shouldUseSourceAsKoreanDraft(
+        'drafts/2026-02-24-topic-ko.md',
+        'English title',
+        'English body'
+    );
+    assert.equal(result, true);
+});
+
+test('shouldUseSourceAsKoreanDraft returns true for Hangul title/content', () => {
+    assert.equal(
+        shouldUseSourceAsKoreanDraft('drafts/topic.md', '한국어 제목', 'English body'),
+        true
+    );
+    assert.equal(
+        shouldUseSourceAsKoreanDraft('drafts/topic.md', 'English title', '본문에 한글이 포함됨'),
+        true
+    );
+});
+
+test('shouldUseSourceAsKoreanDraft returns false for english-only source draft', () => {
+    const result = shouldUseSourceAsKoreanDraft(
+        'drafts/2026-02-24-topic.md',
+        'English title',
+        'English body only'
+    );
     assert.equal(result, false);
 });
