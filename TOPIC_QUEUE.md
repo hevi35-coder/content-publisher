@@ -13,12 +13,12 @@
     *   *MandaAct Angle*: MandaAct's 9x9 grid is the perfect tool for breaking down a month-long goal into weekly milestones and daily tasks. It helps users visualize the entire journey and track their progress, ensuring they stay focused and achieve meaningful results.
     *   *Target*: Korean professionals, students, and indie hackers looking for a practical way to achieve monthly goals.
 
-*   **[EN-Only] The Rise of Platform Engineering: Bridging DevOps and Developer Productivity**
+*   **[EN-Only] The Rise of Platform Engineering: Bridging DevOps and Developer Productivity** (Drafted ✅ EN:70 KO:Skip)
     *   *Rationale*: Platform engineering is emerging as a key trend in the software development world, aiming to improve developer experience and efficiency by creating internal platforms that streamline workflows, tools, and environments. As companies scale, this concept is crucial for reducing cognitive load on developers and fostering innovation.
     *   *MandaAct Angle*: MandaAct's 9x9 grid can help platform engineers map out the components of an internal developer platform, from defining key features like CI/CD pipelines, monitoring tools, and self-service APIs, to tracking progress and prioritizing tasks. The structured approach ensures seamless coordination and alignment with developer needs.
     *   *Target*: DevOps engineers, platform engineers, senior developers, and engineering managers looking to adopt or improve platform engineering practices.
 
-*   **[KR-Only] Unlocking Your Potential: How the 9x9 Grid Can Help You Build New Habits**
+*   **[KR-Only] Unlocking Your Potential: How the 9x9 Grid Can Help You Build New Habits** (Drafted ✅ EN:Skip KO:75)
     *   *Rationale*: Building new habits is often challenging, especially for those juggling work, studies, and personal commitments. This article will explore how to use the Mandalart framework to establish and maintain habits that lead to long-term success.
     *   *MandaAct Angle*: MandaAct's 9x9 grid enables users to break down the habit-building process into small, manageable steps, such as identifying triggers, creating routines, and tracking consistency. By leveraging the visual structure, users can stay motivated and focused on forming habits that align with their goals.
     *   *Target*: Korean students, young professionals, and self-improvement enthusiasts who want to build lasting habits.
