@@ -23,7 +23,7 @@
     *   *MandaAct Angle*: MandaAct's 9x9 grid enables users to break down the habit-building process into small, manageable steps, such as identifying triggers, creating routines, and tracking consistency. By leveraging the visual structure, users can stay motivated and focused on forming habits that align with their goals.
     *   *Target*: Korean students, young professionals, and self-improvement enthusiasts who want to build lasting habits.
 
-*   **[KR-Only] Mastering Weekly Planning: How to Stay Organized with the Mandalart Framework**
+*   **[KR-Only] Mastering Weekly Planning: How to Stay Organized with the Mandalart Framework** (Drafted ✅ EN:Skip KO:75)
     *   *Rationale*: Weekly planning is essential for staying productive, but many struggle with balancing priorities and effectively distributing their workload. This article introduces the Mandalart framework as a solution to create a balanced and actionable weekly plan.
     *   *MandaAct Angle*: MandaAct's 9x9 grid helps users visually organize their weekly tasks by categorizing them into focus areas such as work, learning, and personal growth. By aligning weekly plans with long-term goals, users can ensure that they are making consistent progress.
     *   *Target*: Korean professionals, students, and productivity enthusiasts seeking to improve their weekly planning and time management skills.
