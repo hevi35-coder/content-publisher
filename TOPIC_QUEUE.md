@@ -8,6 +8,27 @@
 *This file is automatically updated by the Sunday Topic Committee.*
 
 ## On Deck (Next Up)
+*   **[KR-Only] How to Prioritize Like a Pro: Using the 9x9 Grid to Focus on What Matters**
+    *   *Rationale*: Many Korean productivity seekers struggle with prioritizing their tasks effectively, often feeling overwhelmed by competing demands in their personal and professional lives. This article aims to provide actionable strategies for identifying and focusing on high-priority tasks to achieve meaningful results.
+    *   *MandaAct Angle*: MandaAct's 9x9 grid helps users visually categorize and prioritize their tasks, ensuring that essential goals are not overshadowed by less important activities. By structuring priorities into manageable clusters, users can maintain focus and make steady progress.
+    *   *Target*: Korean professionals, students, and productivity enthusiasts seeking to improve their prioritization skills.
+
+*   **[EN-Only] Beyond Monoliths: Designing Resilient Systems with Domain-Oriented Microservices**
+    *   *Rationale*: As organizations grow, traditional monolithic architectures often become bottlenecks for scalability and team autonomy. Domain-Oriented Microservices (DOM) are gaining traction as they emphasize aligning services with business domains, promoting operational independence and focused development teams. This article will explore the principles and implementation strategies for creating a domain-oriented microservices architecture, along with best practices for design, deployment, and collaboration in cross-functional teams.
+    *   *MandaAct Angle*: MandaAct's 9x9 grid can be used to map the transition to Domain-Oriented Microservices by breaking down the process into actionable steps like domain modeling, service decomposition, CI/CD integration, and observability setup. The visual framework ensures clarity and alignment throughout the migration process.
+    *   *Target*: Senior developers, system architects, engineering managers, DevOps professionals interested in modernizing system architecture.
+
+*   **[KR-Only] From Overwhelmed to Organized: Streamlining Your Day with the Mandalart Approach**
+    *   *Rationale*: With busy schedules and endless to-do lists, many Korean professionals and students feel overwhelmed and disorganized. This article will provide practical insights on how to use the Mandalart framework to bring structure and clarity to daily routines, helping users to regain control and focus.
+    *   *MandaAct Angle*: By utilizing MandaAct's 9x9 grid, users can organize their daily tasks into categories, set achievable goals, and track their progress visually. This structured approach helps users make sense of their day and align their tasks with long-term objectives.
+    *   *Target*: Korean students, professionals, and indie hackers who struggle with daily organization and want a practical framework to regain clarity.
+
+*   **[KR-Only] Achieve Your 2026 Goals with the Mandalart Framework**
+    *   *Rationale*: As the year progresses, many people in Korea may feel their New Year's resolutions slipping away. This article will focus on how to use the Mandalart framework to revisit, refine, and create a clear action plan for achieving their 2026 goals.
+    *   *MandaAct Angle*: MandaAct's digital tools simplify the Mandalart framework, enabling users to deconstruct their annual goals into actionable steps. By aligning these steps with daily and weekly plans, users can stay on track and make consistent progress throughout the year.
+    *   *Target*: Korean professionals, students, and self-improvement enthusiasts looking for practical ways to achieve their goals in 2026.
+
+
 *   **[KR-Only] How to Build a 30-Day Success Plan with the 9x9 Mandalart Framework** (Drafted ✅ EN:Skip KO:75)
     *   *Rationale*: Many people in Korea set ambitious goals at the start of the month but struggle to follow through due to a lack of structure and actionable steps. By providing a clear framework, this article will help readers create a 30-day plan that keeps them on track and motivated.
     *   *MandaAct Angle*: MandaAct's 9x9 grid is the perfect tool for breaking down a month-long goal into weekly milestones and daily tasks. It helps users visualize the entire journey and track their progress, ensuring they stay focused and achieve meaningful results.
