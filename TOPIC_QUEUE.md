@@ -8,7 +8,7 @@
 *This file is automatically updated by the Sunday Topic Committee.*
 
 ## On Deck (Next Up)
-*   **[KR-Only] How to Prioritize Like a Pro: Using the 9x9 Grid to Focus on What Matters**
+*   **[KR-Only] How to Prioritize Like a Pro: Using the 9x9 Grid to Focus on What Matters** (Drafted ✅ EN:Skip KO:75)
     *   *Rationale*: Many Korean productivity seekers struggle with prioritizing their tasks effectively, often feeling overwhelmed by competing demands in their personal and professional lives. This article aims to provide actionable strategies for identifying and focusing on high-priority tasks to achieve meaningful results.
     *   *MandaAct Angle*: MandaAct's 9x9 grid helps users visually categorize and prioritize their tasks, ensuring that essential goals are not overshadowed by less important activities. By structuring priorities into manageable clusters, users can maintain focus and make steady progress.
     *   *Target*: Korean professionals, students, and productivity enthusiasts seeking to improve their prioritization skills.
