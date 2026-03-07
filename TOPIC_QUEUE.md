@@ -18,7 +18,7 @@
     *   *MandaAct Angle*: MandaAct's 9x9 grid can be used to map the transition to Domain-Oriented Microservices by breaking down the process into actionable steps like domain modeling, service decomposition, CI/CD integration, and observability setup. The visual framework ensures clarity and alignment throughout the migration process.
     *   *Target*: Senior developers, system architects, engineering managers, DevOps professionals interested in modernizing system architecture.
 
-*   **[KR-Only] From Overwhelmed to Organized: Streamlining Your Day with the Mandalart Approach**
+*   **[KR-Only] From Overwhelmed to Organized: Streamlining Your Day with the Mandalart Approach** (Drafted ✅ EN:Skip KO:75)
     *   *Rationale*: With busy schedules and endless to-do lists, many Korean professionals and students feel overwhelmed and disorganized. This article will provide practical insights on how to use the Mandalart framework to bring structure and clarity to daily routines, helping users to regain control and focus.
     *   *MandaAct Angle*: By utilizing MandaAct's 9x9 grid, users can organize their daily tasks into categories, set achievable goals, and track their progress visually. This structured approach helps users make sense of their day and align their tasks with long-term objectives.
     *   *Target*: Korean students, professionals, and indie hackers who struggle with daily organization and want a practical framework to regain clarity.
