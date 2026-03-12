@@ -13,7 +13,7 @@
     *   *MandaAct Angle*: MandaAct's 9x9 grid helps users visually categorize and prioritize their tasks, ensuring that essential goals are not overshadowed by less important activities. By structuring priorities into manageable clusters, users can maintain focus and make steady progress.
     *   *Target*: Korean professionals, students, and productivity enthusiasts seeking to improve their prioritization skills.
 
-*   **[EN-Only] Beyond Monoliths: Designing Resilient Systems with Domain-Oriented Microservices**
+*   **[EN-Only] Beyond Monoliths: Designing Resilient Systems with Domain-Oriented Microservices** (Drafted ✅ EN:70 KO:Skip)
     *   *Rationale*: As organizations grow, traditional monolithic architectures often become bottlenecks for scalability and team autonomy. Domain-Oriented Microservices (DOM) are gaining traction as they emphasize aligning services with business domains, promoting operational independence and focused development teams. This article will explore the principles and implementation strategies for creating a domain-oriented microservices architecture, along with best practices for design, deployment, and collaboration in cross-functional teams.
     *   *MandaAct Angle*: MandaAct's 9x9 grid can be used to map the transition to Domain-Oriented Microservices by breaking down the process into actionable steps like domain modeling, service decomposition, CI/CD integration, and observability setup. The visual framework ensures clarity and alignment throughout the migration process.
     *   *Target*: Senior developers, system architects, engineering managers, DevOps professionals interested in modernizing system architecture.
@@ -87,7 +87,7 @@
     *   *MandaAct Angle*: MandaAct's 9x9 grid offers a systematic approach to simplifying the transition process. Developers can break down the migration into clear steps, such as identifying service boundaries, setting up CI/CD for individual services, and creating a roadmap for data migration. By visualizing the process in the grid, teams can ensure a smooth and efficient shift.
     *   *Target*: Mid to senior developers, architects, and tech leads considering or undergoing a transition to microservices.
 
-*   **[KR-Only] How to Achieve Work-Life Balance with the 9x9 Mandalart Framework**
+*   **[KR-Only] How to Achieve Work-Life Balance with the 9x9 Mandalart Framework** (Drafted ✅ EN:Skip KO:75)
     *   *Rationale*: Work-life balance is a growing concern among Korean professionals and developers, who often face long work hours and high pressure to perform. This article provides actionable steps to help readers prioritize their goals and allocate time effectively to achieve balance between their personal and professional lives.
     *   *MandaAct Angle*: MandaAct's 9x9 grid can help users visually map out their work and personal priorities, ensuring that neither is neglected. By breaking down each aspect of life into actionable goals, users can maintain alignment and create healthy boundaries for a more balanced lifestyle.
     *   *Target*: Korean professionals, junior developers, and productivity enthusiasts looking to improve their work-life balance.
