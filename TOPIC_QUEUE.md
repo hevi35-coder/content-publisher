@@ -92,7 +92,7 @@
     *   *MandaAct Angle*: MandaAct's 9x9 grid can help users visually map out their work and personal priorities, ensuring that neither is neglected. By breaking down each aspect of life into actionable goals, users can maintain alignment and create healthy boundaries for a more balanced lifestyle.
     *   *Target*: Korean professionals, junior developers, and productivity enthusiasts looking to improve their work-life balance.
 
-*   **[KR-Only] Breaking Big Dreams into Daily Actions: A Beginner’s Guide to Mandalart**
+*   **[KR-Only] Breaking Big Dreams into Daily Actions: A Beginner’s Guide to Mandalart** (Drafted ✅ EN:Skip KO:75)
     *   *Rationale*: Many individuals in Korea have big dreams but struggle to take the first steps or stay consistent. This article introduces beginner-friendly ways to use the Mandalart framework to deconstruct ambitious goals into smaller, actionable tasks, empowering readers to make daily progress.
     *   *MandaAct Angle*: MandaAct simplifies the process of using the Mandalart framework by digitizing the workflow. Users can easily create their own 9x9 grid, set reminders, and track their progress, making it easier to stay on top of their goals.
     *   *Target*: Korean students, young professionals, and indie hackers who are new to goal-setting and need guidance on starting and maintaining progress.
