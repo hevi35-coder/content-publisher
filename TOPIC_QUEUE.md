@@ -82,7 +82,7 @@
     *   *Target*: Korean professionals, students, and indie hackers looking for practical ways to organize daily tasks and maintain clarity in their routines.
 
 
-*   **Scaling Beyond the Monolith: A Practical Guide to Transitioning to Microservices**
+*   **Scaling Beyond the Monolith: A Practical Guide to Transitioning to Microservices** (Drafted ✅ EN:70 KO:Skip)
     *   *Rationale*: As companies grow, monolithic architectures often become bottlenecks for scalability, reliability, and development velocity. Microservices have emerged as a leading solution, but the transition from monolith to microservices is complex and fraught with potential pitfalls. This article provides a structured, actionable guide for developers looking to make the shift while minimizing technical debt.
     *   *MandaAct Angle*: MandaAct's 9x9 grid offers a systematic approach to simplifying the transition process. Developers can break down the migration into clear steps, such as identifying service boundaries, setting up CI/CD for individual services, and creating a roadmap for data migration. By visualizing the process in the grid, teams can ensure a smooth and efficient shift.
     *   *Target*: Mid to senior developers, architects, and tech leads considering or undergoing a transition to microservices.
@@ -103,7 +103,7 @@
     *   *MandaAct Angle*: MandaAct's 9x9 grid helps developers break down the app launch process into manageable sub-goals, such as ideation, prototyping, development, testing, marketing, and publishing. By visually organizing and tracking these steps, developers can stay focused and execute their app launch efficiently. Features like Goal Diagnosis and AI Suggestions further refine the plan, ensuring no critical aspect is overlooked.
     *   *Target*: Indie hackers, junior developers, and developers planning to launch their first app.
 
-*   **[KR-Only] How to Break Free from the Never-Ending To-Do List with Mandalart**
+*   **[KR-Only] How to Break Free from the Never-Ending To-Do List with Mandalart** (Drafted ✅ EN:Skip KO:85)
     *   *Rationale*: Many productivity enthusiasts in Korea find themselves overwhelmed by endless to-do lists, leading to frustration and burnout. This article addresses the common pitfalls of traditional to-do lists and introduces the Mandalart framework as a superior alternative for setting clear, actionable goals.
     *   *MandaAct Angle*: MandaAct's digital Mandalart framework helps users move beyond static to-do lists by providing a structured way to organize tasks and goals visually. By breaking down each major objective into smaller, actionable items, users can focus on progress rather than feeling stuck in an endless loop of tasks.
     *   *Target*: Korean productivity seekers, students, professionals looking for better ways to manage their time and goals.
