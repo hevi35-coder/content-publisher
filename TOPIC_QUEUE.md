@@ -113,7 +113,7 @@
     *   *MandaAct Angle*: Developers can use MandaAct's 9x9 grid to break down the transition to micro-frontends or modular architectures into clear steps. For example, planning the decomposition of monolithic front ends into reusable modules, setting up CI/CD pipelines, and defining team ownership for each module can all be structured within the grid.
     *   *Target*: Senior developers, system architects, full-stack developers, and engineering teams transitioning to modern development practices.
 
-*   **[KR-Only] From Procrastination to Progress: Using the 9x9 Grid to Take Action Today**
+*   **[KR-Only] From Procrastination to Progress: Using the 9x9 Grid to Take Action Today** (Drafted ✅ EN:Skip KO:75)
     *   *Rationale*: Procrastination is a common struggle faced by Korean students, professionals, and indie hackers alike. This article tackles the psychological barriers to starting tasks and offers actionable strategies for overcoming procrastination using the 9x9 Mandalart framework.
     *   *MandaAct Angle*: MandaAct makes it easy to translate overwhelming tasks into smaller, manageable steps using the 9x9 grid. By visually organizing priorities and tracking progress, users can build momentum and turn 'someday' goals into 'today' actions.
     *   *Target*: Korean indie hackers, students, and professionals who struggle with procrastination and want clear strategies for overcoming it.
