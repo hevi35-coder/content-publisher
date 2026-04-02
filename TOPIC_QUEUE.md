@@ -108,7 +108,7 @@
     *   *MandaAct Angle*: MandaAct's digital Mandalart framework helps users move beyond static to-do lists by providing a structured way to organize tasks and goals visually. By breaking down each major objective into smaller, actionable items, users can focus on progress rather than feeling stuck in an endless loop of tasks.
     *   *Target*: Korean productivity seekers, students, professionals looking for better ways to manage their time and goals.
 
-*   **The Future of Full-Stack Development: Micro-Frontends and Modular Architectures**
+*   **The Future of Full-Stack Development: Micro-Frontends and Modular Architectures** (Drafted ✅ EN:70 KO:Skip)
     *   *Rationale*: As applications grow in complexity and scale, micro-frontends and modular architectures are becoming essential to building scalable, maintainable systems. This trend aligns with the shift towards microservices in backend development and addresses the challenges of managing large front-end codebases in distributed teams. Developers need to understand the best practices for implementing these patterns to stay ahead in the industry.
     *   *MandaAct Angle*: Developers can use MandaAct's 9x9 grid to break down the transition to micro-frontends or modular architectures into clear steps. For example, planning the decomposition of monolithic front ends into reusable modules, setting up CI/CD pipelines, and defining team ownership for each module can all be structured within the grid.
     *   *Target*: Senior developers, system architects, full-stack developers, and engineering teams transitioning to modern development practices.
@@ -129,7 +129,7 @@
     *   *MandaAct Angle*: MandaAct's 9x9 grid can help teams organize the process of conducting and managing code reviews. Developers can use the grid to define standards, assign reviewers, and track progress, ensuring a consistent and effective review process.
     *   *Target*: Junior to senior developers, team leads, engineering managers.
 
-*   **[KR-Only] How to Crush Procrastination with the 9x9 Mandalart Framework**
+*   **[KR-Only] How to Crush Procrastination with the 9x9 Mandalart Framework** (Drafted ✅ EN:Skip KO:75)
     *   *Rationale*: Procrastination is a universal challenge, and many people struggle to turn their ideas into actions. By providing a clear, visual method for breaking down large goals into smaller, actionable steps, the Mandalart framework can help users overcome procrastination and achieve their goals more effectively.
     *   *MandaAct Angle*: MandaAct's digital implementation of the Mandalart framework makes it easy to break down overwhelming tasks into smaller, more manageable actions. The app helps users prioritize their tasks, track progress, and build momentum towards their goals, all while staying organized.
     *   *Target*: Korean productivity enthusiasts, students, professionals seeking better goal-setting strategies.
